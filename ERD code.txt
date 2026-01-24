@@ -1,0 +1,223 @@
+erDiagram
+
+    USER {
+        int user_id PK
+        string email
+        string name
+        string phone
+        string role
+        datetime created_at
+    }
+
+    USER_ADDRESS {
+        int user_address_id PK
+        int user_id FK
+        string street
+        string city
+        string postal_code
+        string country
+        string apartment_number
+    }
+
+    PHARMACY_OWNER {
+        int owner_id PK
+        int user_id FK
+    }
+
+    PHARMACY {
+        int pharmacy_id PK
+        int owner_id FK
+        string name
+        datetime created_at
+        float total_rating
+        string image_url
+    }
+
+    PHARMACY_ADDRESS {
+        int pharmacy_address_id PK
+        int pharmacy_id FK
+        string street
+        string city
+        string postal_code
+        string country
+        string apartment_number
+    }
+
+    CATEGORY {
+        int category_id PK
+        string category_name
+        string image_url
+    }
+
+    BRAND {
+        int brand_id PK
+        string brand_name
+        string brand_image
+    }
+
+    MEDICINE {
+        int medicine_id PK
+        string name
+        string description
+        boolean requires_prescription
+        string dosage_form
+        string strength
+        string manufacturer
+        int category_id FK
+        int brand_id FK
+    }
+
+    INVENTORY {
+        int inventory_id PK
+        int pharmacy_id FK
+    }
+
+    INVENTORY_RECORD {
+        int inventory_id FK
+        int medicine_id FK
+        int quantity
+        date expiry_date
+        string availability_status
+    }
+
+    PRESCRIPTION {
+        int prescription_id PK
+        int customer_id FK
+        datetime uploaded_at
+        string status
+        string prescription_image_url
+    }
+
+    CART {
+        int cart_id PK
+        int customer_id FK
+        int pharmacy_id FK
+        datetime created_at
+        float total_price
+    }
+
+    CART_ITEM {
+        int cart_item_id PK
+        int cart_id FK
+        int medicine_id FK
+        int quantity
+        float price
+    }
+
+    ORDER {
+        int order_id PK
+        int customer_id FK
+        int pharmacy_id FK
+        float total_amount
+        string delivery_type
+        string payment_method
+        string status
+        datetime created_at
+    }
+
+    ORDER_ITEM {
+        int order_item_id PK
+        int order_id FK
+        int medicine_id FK
+        int quantity
+        float price
+    }
+
+    NOTIFICATION {
+        int notification_id PK
+        int user_id FK
+        string type
+        string message
+        boolean is_read
+        datetime created_at
+    }
+
+    MEDICATION_REMINDER {
+        int reminder_id PK
+        int customer_id FK
+        string medicine_name
+        time dosage_time
+        int notify_before_minutes
+    }
+
+    P2P_LISTING {
+        int listing_id PK
+        int seller_id FK
+        string medicine_name
+        int quantity
+        date expiry_date
+        float price
+        string image_url
+        string status
+        datetime created_at
+    }
+
+    P2P_TRANSACTION {
+        int transaction_id PK
+        int listing_id FK
+        int buyer_id FK
+        string status
+        datetime created_at
+    }
+
+    SELLER_RATING {
+        int rating_id PK
+        int seller_id FK
+        int buyer_id FK
+        int rating
+        string comment
+        datetime created_at
+    }
+
+    PHARMACY_REVIEW {
+        int review_id PK
+        int pharmacy_id FK
+        int customer_id FK
+        int rating
+        string comment
+        datetime created_at
+    }
+
+    INVOICE {
+        int invoice_id PK
+        int order_id FK
+        string invoice_url
+        datetime created_at
+    }
+
+    %% Relationships
+
+    USER ||--o{ USER_ADDRESS : has
+    USER ||--|| PHARMACY_OWNER : is
+    PHARMACY_OWNER ||--o{ PHARMACY : owns
+    PHARMACY ||--|| PHARMACY_ADDRESS : has
+
+    CATEGORY ||--o{ MEDICINE : categorizes
+    BRAND ||--o{ MEDICINE : brands
+
+    PHARMACY ||--|| INVENTORY : has
+    INVENTORY ||--o{ INVENTORY_RECORD : contains
+    MEDICINE ||--o{ INVENTORY_RECORD : stocked_as
+
+    USER ||--o{ PRESCRIPTION : uploads
+
+    USER ||--o{ CART : owns
+    CART ||--o{ CART_ITEM : contains
+    MEDICINE ||--o{ CART_ITEM : added_to
+
+    USER ||--o{ ORDER : places
+    PHARMACY ||--o{ ORDER : receives
+    ORDER ||--o{ ORDER_ITEM : includes
+    MEDICINE ||--o{ ORDER_ITEM : sold_as
+
+    USER ||--o{ NOTIFICATION : receives
+    USER ||--o{ MEDICATION_REMINDER : sets
+
+    USER ||--o{ P2P_LISTING : creates
+    P2P_LISTING ||--|| P2P_TRANSACTION : results_in
+    USER ||--o{ P2P_TRANSACTION : participates
+
+    USER ||--o{ SELLER_RATING : gives
+    PHARMACY ||--o{ PHARMACY_REVIEW : receives
+
+    ORDER ||--|| INVOICE : generates
