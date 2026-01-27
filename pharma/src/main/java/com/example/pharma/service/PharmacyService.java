@@ -1,0 +1,14 @@
+package com.example.pharma.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class PharmacyService {
+/*
+Register pharmacies
+
+Update pharmacy info
+ */
+}
