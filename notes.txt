@@ -1,2 +1,1 @@
-1)study AOP to create (created_at) columns
 2)store cart in database in memory cache
