@@ -1,5 +1,6 @@
 package com.example.pharma.model.P2P;
 
+import com.example.pharma.model.core.CreatedAtColumn;
 import com.example.pharma.model.core.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,5 +27,5 @@ public class P2PTransaction {
     private User buyer;
 
     private String status;
-    private LocalDateTime createdAt;
-}
+    @Embedded
+    private CreatedAtColumn createdAt;}

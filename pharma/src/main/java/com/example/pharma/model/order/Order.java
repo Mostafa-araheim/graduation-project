@@ -1,5 +1,6 @@
 package com.example.pharma.model.order;
 
+import com.example.pharma.model.core.CreatedAtColumn;
 import com.example.pharma.model.pharmacy.Pharmacy;
 import com.example.pharma.model.core.User;
 import jakarta.persistence.*;
@@ -30,5 +31,5 @@ public class Order {
     private String deliveryType;
     private String paymentMethod;
     private String status;
-    private LocalDateTime createdAt;
-}
+    @Embedded
+    private CreatedAtColumn createdAt;}

@@ -29,8 +29,8 @@ public class User {
     @Column(name = "role", nullable = false)
     private UserRole role;
 
-    private LocalDateTime createdAt;
-
+    @Embedded
+    private CreatedAtColumn createdAt;
     @OneToMany(mappedBy = "user")
     private List<UserAddress> addresses;
 }

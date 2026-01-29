@@ -1,5 +1,6 @@
 package com.example.pharma.model.pharmacy;
 
+import com.example.pharma.model.core.CreatedAtColumn;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,5 +24,5 @@ public class Pharmacy {
     private String name;
     private Float totalRating;
     private String imageUrl;
-    private LocalDateTime createdAt;
-}
+    @Embedded
+    private CreatedAtColumn createdAt;}

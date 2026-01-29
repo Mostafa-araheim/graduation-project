@@ -1,5 +1,6 @@
 package com.example.pharma.model.cart;
 
+import com.example.pharma.model.core.CreatedAtColumn;
 import com.example.pharma.model.pharmacy.Pharmacy;
 import com.example.pharma.model.core.User;
 import jakarta.persistence.*;
@@ -27,5 +28,5 @@ public class Cart {
     private Pharmacy pharmacy;
 
     private Float totalPrice;
-    private LocalDateTime createdAt;
-}
+    @Embedded
+    private CreatedAtColumn createdAt;}
