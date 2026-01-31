@@ -1,5 +1,6 @@
 package com.example.pharma.model.review;
 
+import com.example.pharma.model.core.CreatedAtColumn;
 import com.example.pharma.model.pharmacy.Pharmacy;
 import com.example.pharma.model.core.User;
 import jakarta.persistence.*;
@@ -28,5 +29,5 @@ public class PharmacyReview {
 
     private Integer rating;
     private String comment;
-    private LocalDateTime createdAt;
-}
+    @Embedded
+    private CreatedAtColumn createdAt;}

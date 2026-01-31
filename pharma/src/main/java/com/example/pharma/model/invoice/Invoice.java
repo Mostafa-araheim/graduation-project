@@ -1,5 +1,6 @@
 package com.example.pharma.model.invoice;
 
+import com.example.pharma.model.core.CreatedAtColumn;
 import com.example.pharma.model.order.Order;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,5 +26,5 @@ public class Invoice {
     private String invoiceUrl;
 
 
-    private LocalDateTime createdAt;
-}
+    @Embedded
+    private CreatedAtColumn createdAt;}

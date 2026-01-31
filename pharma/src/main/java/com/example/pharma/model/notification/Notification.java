@@ -1,5 +1,6 @@
 package com.example.pharma.model.notification;
 
+import com.example.pharma.model.core.CreatedAtColumn;
 import com.example.pharma.model.core.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -24,5 +25,5 @@ public class Notification {
     private String type;
     private String message;
     private boolean isRead;
-    private LocalDateTime createdAt;
-}
+    @Embedded
+    private CreatedAtColumn createdAt;}
