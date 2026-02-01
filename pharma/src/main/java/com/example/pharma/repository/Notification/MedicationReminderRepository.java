@@ -1,6 +1,6 @@
 package com.example.pharma.repository.Notification;
 
-import com.example.pharma.model.notification.MedicationReminder;
+import com.example.pharma.model.entity.notification.MedicationReminder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
