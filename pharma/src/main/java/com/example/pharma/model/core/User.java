@@ -31,6 +31,8 @@ public class User {
 
     private LocalDateTime createdAt;
 
+    private boolean emailVerified;
+
     @OneToMany(mappedBy = "user")
     private List<UserAddress> addresses;
 }
