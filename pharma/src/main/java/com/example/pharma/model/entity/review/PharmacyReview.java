@@ -1,8 +1,8 @@
 package com.example.pharma.model.entity.review;
 
 import com.example.pharma.model.entity.core.CreatedAtColumn;
-import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

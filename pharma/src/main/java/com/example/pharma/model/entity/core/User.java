@@ -30,6 +30,8 @@ public class User {
 
     @Embedded
     private CreatedAtColumn createdAt;
+    private boolean emailVerified;
+
     @OneToMany(mappedBy = "user")
     private List<UserAddress> addresses;
 }
