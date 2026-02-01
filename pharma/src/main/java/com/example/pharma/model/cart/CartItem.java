@@ -1,28 +1,20 @@
 package com.example.pharma.model.cart;
 
-import com.example.pharma.model.catalog.Medicine;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Entity
-@Getter
-@Setter
-@Table(name = "cart_item")
+import java.math.BigDecimal;
+import java.time.Instant;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class CartItem {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer cartItemId;
-
-    @ManyToOne
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
-
-    @ManyToOne
-    @JoinColumn(name = "medicine_id")
-    private Medicine medicine;
-
+    private Long productId;
     private Integer quantity;
-    private Float price;
+    private BigDecimal pricePerUnit;
+    private Instant addedAt;
 }

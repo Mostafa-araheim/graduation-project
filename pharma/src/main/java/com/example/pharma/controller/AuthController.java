@@ -2,12 +2,11 @@ package com.example.pharma.controller;
 
 import com.example.pharma.dto.EmailLoginRequest;
 import com.example.pharma.dto.EmailSignUpRequest;
-import com.example.pharma.model.core.User;
+import com.example.pharma.model.entity.core.User;
 import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.auth_services.EmailAuthService;
 import com.example.pharma.service.auth_services.TokenVerificationService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.Email;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

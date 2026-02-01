@@ -1,7 +1,8 @@
 package com.example.pharma.service.auth_services;
 
 import com.example.pharma.model.auth.VerificationToken;
-import com.example.pharma.model.core.User;
+
+import com.example.pharma.model.entity.core.User;
 import com.example.pharma.repository.Auth.VerificationTokenRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

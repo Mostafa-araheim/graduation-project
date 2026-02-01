@@ -1,6 +1,7 @@
 package com.example.pharma.model.auth;
 
-import com.example.pharma.model.core.User;
+
+import com.example.pharma.model.entity.core.User;
 import jakarta.persistence.*;
 import lombok.Data;
 

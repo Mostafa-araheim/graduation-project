@@ -2,8 +2,8 @@ package com.example.pharma.service.auth_services;
 
 import com.example.pharma.model.auth.AuthProvider;
 import com.example.pharma.model.auth.Provider;
-import com.example.pharma.model.core.User;
-import com.example.pharma.model.core.UserRole;
+import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.UserRole;
 import com.example.pharma.repository.Auth.AuthProviderRepository;
 import com.example.pharma.repository.Core.UserRepository;
 import lombok.RequiredArgsConstructor;

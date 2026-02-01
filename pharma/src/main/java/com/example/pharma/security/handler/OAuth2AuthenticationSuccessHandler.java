@@ -1,6 +1,6 @@
 package com.example.pharma.security.handler;
 
-import com.example.pharma.model.core.User;
+import com.example.pharma.model.entity.core.User;
 import com.example.pharma.repository.Core.UserRepository;
 import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.auth_services.TokenVerificationService;
