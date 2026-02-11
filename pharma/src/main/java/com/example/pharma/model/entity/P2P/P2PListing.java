@@ -1,7 +1,7 @@
 package com.example.pharma.model.entity.P2P;
 
 import com.example.pharma.model.entity.core.CreatedAtColumn;
-import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.CustomerProfile;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,9 +18,9 @@ public class P2PListing {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer listingId;
 
-    @ManyToOne
-    @JoinColumn(name = "seller_id")
-    private User seller;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private CustomerProfile seller;
 
     private String medicineName;
     private Integer quantity;
@@ -28,5 +28,7 @@ public class P2PListing {
     private Float price;
     private String imageUrl;
     private String status;
+
     @Embedded
-    private CreatedAtColumn createdAt;}
+    private CreatedAtColumn createdAt;
+}

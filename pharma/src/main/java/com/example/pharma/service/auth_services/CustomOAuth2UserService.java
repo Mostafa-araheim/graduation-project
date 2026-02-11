@@ -12,6 +12,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -40,8 +42,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     User u = new User();
                     u.setName(name);
                     u.setEmail(email);
-                    u.setRole(UserRole.CUSTOMER);
-                    u.setEmailVerified(true);
+                    u.setRoles(Set.of(UserRole.CUSTOMER));
                     return userRepo.save(u);
                 });
 

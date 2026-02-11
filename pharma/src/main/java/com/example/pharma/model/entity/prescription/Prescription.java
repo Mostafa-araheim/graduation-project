@@ -1,6 +1,6 @@
 package com.example.pharma.model.entity.prescription;
 
-import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.CustomerProfile;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,16 +22,13 @@ public class Prescription {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
-    private User customer;
+    private CustomerProfile customer;
 
     @Column(name = "uploaded_at", nullable = false, updatable = false)
     private LocalDateTime uploadedAt;
 
-    @Column(name = "status")
     private String status;
 
     @Column(name = "prescription_image_url")
     private String prescriptionImageUrl;
-
-
 }

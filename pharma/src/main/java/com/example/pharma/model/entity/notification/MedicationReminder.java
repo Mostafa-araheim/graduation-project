@@ -1,6 +1,6 @@
 package com.example.pharma.model.entity.notification;
 
-import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.CustomerProfile;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,9 +17,9 @@ public class MedicationReminder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer reminderId;
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id")
-    private User customer;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private CustomerProfile customer;
 
     private String medicineName;
     private LocalTime dosageTime;

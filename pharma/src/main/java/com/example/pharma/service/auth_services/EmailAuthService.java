@@ -19,6 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class EmailAuthService {
@@ -27,26 +29,26 @@ public class EmailAuthService {
     private final EmailService emailService;
     private final TokenVerificationService tokenVerificationService;
     private final JwtService jwtService;
+
     @Transactional
     public void signup(EmailSignUpRequest request) {
 
         validateSignUpRequest(request);
 
-        User existingUser = userRepo.findByEmail(request.getEmail()).orElse(null);
+        User existingUser = userRepo.findByEmail(request.email()).orElse(null);
 
-        if (existingUser != null && existingUser.isEmailVerified()) {
+        if (existingUser != null ) {
             throw new IllegalStateException("Email already registered");
         }
         User user;
         if (existingUser != null) {
             user = existingUser;
-            user.setName(request.getUserName());
+            user.setName(request.userName());
         } else {
             user = new User();
-            user.setName(request.getUserName());
-            user.setEmail(request.getEmail());
-            user.setRole(UserRole.CUSTOMER);
-            user.setEmailVerified(false);
+            user.setName(request.userName());
+            user.setEmail(request.email());
+            user.setRoles(Set.of(UserRole.CUSTOMER));
             userRepo.save(user);
         }
 
@@ -62,14 +64,11 @@ public class EmailAuthService {
                 "Email Verification"
         );
     }
+
     @Transactional
-    public void login(EmailLoginRequest request)
-    {
+    public void login(EmailLoginRequest request) {
         User user = userRepo.findByEmail(request.email()).orElseThrow(() -> new BadCredentialsException("Email Not found"));
-        if(!user.isEmailVerified())
-        {
-            throw new BadCredentialsException("Email not verified");
-        }
+
         String token = tokenVerificationService.generateVerificationToken(user);
         emailService.sendEmail(
                 user.getEmail(),
@@ -77,21 +76,23 @@ public class EmailAuthService {
                 "Login Verification"
         );
     }
+
     private void validateSignUpRequest(EmailSignUpRequest request) {
-        if (request.getEmail() == null || !request.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+        if (request.email() == null || !request.email().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             throw new IllegalArgumentException("Invalid email format");
         }
-        if (request.getUserName() == null || request.getUserName().trim().isEmpty()) {
+        if (request.userName() == null || request.userName().trim().isEmpty()) {
             throw new IllegalArgumentException("Username is required");
         }
     }
+
     @Transactional
-    public String verifyEmail(String token)
-    {
+    public String verifyEmail(String token) {
         User user = tokenVerificationService.validateToken(token);
-        user.setEmailVerified(true);
         userRepo.save(user);
-        Authentication auth = UsernamePasswordAuthenticationToken.authenticated(user.getEmail(),null,  AuthorityUtils.commaSeparatedStringToAuthorityList(user.getRole().name()));
+        Authentication auth = UsernamePasswordAuthenticationToken.authenticated(user.getEmail(), null, AuthorityUtils.commaSeparatedStringToAuthorityList(user.getRoles().stream()
+                .map(r -> "ROLE_" + r.name())
+                .toList().get(0)));
         return jwtService.generateToken(auth);
     }
 

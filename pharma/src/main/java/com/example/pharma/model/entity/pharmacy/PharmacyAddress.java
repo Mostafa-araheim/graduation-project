@@ -14,7 +14,7 @@ public class PharmacyAddress {
     @Column(name = "pharmacy_id")
     private Integer pharmacyId;
 
-    @OneToOne(optional = false)
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "pharmacy_id")
     private Pharmacy pharmacy;

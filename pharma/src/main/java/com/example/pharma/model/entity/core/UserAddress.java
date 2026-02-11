@@ -14,8 +14,8 @@ public class UserAddress {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userAddressId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     private String street;
