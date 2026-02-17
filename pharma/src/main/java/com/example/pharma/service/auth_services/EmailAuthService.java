@@ -2,6 +2,8 @@ package com.example.pharma.service.auth_services;
 
 import com.example.pharma.dto.EmailLoginRequest;
 import com.example.pharma.dto.EmailSignUpRequest;
+import com.example.pharma.exception.auth_exception.EmailAlreadyRegisteredException;
+import com.example.pharma.exception.auth_exception.InvalidLoginException;
 import com.example.pharma.model.auth.AuthProvider;
 import com.example.pharma.model.auth.Provider;
 import com.example.pharma.model.entity.core.User;
@@ -10,10 +12,8 @@ import com.example.pharma.repository.Auth.AuthProviderRepository;
 import com.example.pharma.repository.Core.UserRepository;
 import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.EmailService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -35,7 +35,7 @@ public class EmailAuthService {
         User existingUser = userRepo.findByEmail(request.getEmail()).orElse(null);
 
         if (existingUser != null && existingUser.isEmailVerified()) {
-            throw new IllegalStateException("Email already registered");
+            throw new EmailAlreadyRegisteredException("Email already registered");
         }
         User user;
         if (existingUser != null) {
@@ -65,10 +65,10 @@ public class EmailAuthService {
     @Transactional
     public void login(EmailLoginRequest request)
     {
-        User user = userRepo.findByEmail(request.email()).orElseThrow(() -> new BadCredentialsException("Email Not found"));
+        User user = userRepo.findByEmail(request.email()).orElseThrow(() -> new InvalidLoginException("Invalid Credentials"));
         if(!user.isEmailVerified())
         {
-            throw new BadCredentialsException("Email not verified");
+            throw new InvalidLoginException("Invalid Credentials");
         }
         String token = tokenVerificationService.generateVerificationToken(user);
         emailService.sendEmail(
@@ -97,7 +97,7 @@ public class EmailAuthService {
 
     public void resendOtp(EmailLoginRequest request) {
         User user = userRepo.findByEmail(request.email())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new InvalidLoginException("User not found"));
 
         String token = tokenVerificationService.generateVerificationToken(user);
         emailService.sendEmail(
