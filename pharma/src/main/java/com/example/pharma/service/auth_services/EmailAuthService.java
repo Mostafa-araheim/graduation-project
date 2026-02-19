@@ -30,8 +30,6 @@ public class EmailAuthService {
     @Transactional
     public void signup(EmailSignUpRequest request) {
 
-        validateSignUpRequest(request);
-
         User existingUser = userRepo.findByEmail(request.getEmail()).orElse(null);
 
         if (existingUser != null && existingUser.isEmailVerified()) {
@@ -76,14 +74,6 @@ public class EmailAuthService {
                 "Your login code is: " + token,
                 "Login Verification"
         );
-    }
-    private void validateSignUpRequest(EmailSignUpRequest request) {
-        if (request.getEmail() == null || !request.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            throw new IllegalArgumentException("Invalid email format");
-        }
-        if (request.getUserName() == null || request.getUserName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username is required");
-        }
     }
     @Transactional
     public String verifyEmail(String token)

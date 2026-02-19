@@ -1,27 +1,49 @@
 package com.example.pharma.exception;
 
-import com.example.pharma.dto.ErrorResponse;
+import com.example.pharma.dto.ApiResponse;
 import com.example.pharma.exception.auth_exception.EmailAlreadyRegisteredException;
 import com.example.pharma.exception.auth_exception.InvalidLoginException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex)
+
+    public ResponseEntity<ApiResponse<Void>> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex)
     {
-        return new ErrorResponse(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.failure(ex.getMessage(), List.of(ex.getMessage())));
     }
 
     @ExceptionHandler(InvalidLoginException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleInvalidLogin(InvalidLoginException ex)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidLogin(InvalidLoginException ex)
     {
-        return new ErrorResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED.value());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.failure(ex.getMessage(), List.of(ex.getMessage())));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity< ApiResponse<Void>> handleValidation(
+            MethodArgumentNotValidException ex) {
+
+        List<String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .toList();
+
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.failure("Validation failed", errors));
     }
 
 }
