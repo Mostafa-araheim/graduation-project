@@ -7,7 +7,7 @@ import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.auth_services.EmailAuthService;
 import com.example.pharma.service.auth_services.TokenVerificationService;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NonNull;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,25 +24,25 @@ public class AuthController {
     private final TokenVerificationService verificationTokenService;
     private final JwtService jwtService;
     @PostMapping("/signup")
-    public ResponseEntity<@NonNull Void> signUpWithEmail(@RequestBody EmailSignUpRequest emailSignUpRequest)
+    public ResponseEntity<Void> signUpWithEmail(@Valid @RequestBody EmailSignUpRequest emailSignUpRequest)
     {
         emailAuthService.signup(emailSignUpRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
     @PostMapping("/verify")
-    public ResponseEntity<@NonNull Void> verifyEmail(@RequestParam String token, HttpServletResponse response)
+    public ResponseEntity<Void> verifyEmail(@RequestParam String token, HttpServletResponse response)
     {
         response.addHeader("jwt_token", emailAuthService.verifyEmail(token));
         return ResponseEntity.ok().build();
     }
     @PostMapping("/login")
-    public ResponseEntity<@NonNull Void> login(@RequestBody EmailLoginRequest request)
+    public ResponseEntity<Void> login(@Valid @RequestBody EmailLoginRequest request)
     {
         emailAuthService.login(request);
         return ResponseEntity.ok().build();
     }
     @PostMapping("/oauth/exchange")
-    public ResponseEntity<@NonNull Void> exchangeCode(@RequestParam String code, HttpServletResponse response)
+    public ResponseEntity<Void> exchangeCode(@RequestParam String code, HttpServletResponse response)
     {
         User user = verificationTokenService.validateToken(code);
         Authentication auth = UsernamePasswordAuthenticationToken.authenticated(user.getEmail(), null, AuthorityUtils.commaSeparatedStringToAuthorityList(user.getRole().name()));
@@ -51,7 +51,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
     @PostMapping("/resend-otp")
-    public ResponseEntity<@NonNull Void> resendOtp(@RequestBody EmailLoginRequest request) {
+    public ResponseEntity<Void> resendOtp(@Valid @RequestBody EmailLoginRequest request) {
         emailAuthService.resendOtp(request);
         return ResponseEntity.ok().build();
     }
