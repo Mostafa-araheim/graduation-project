@@ -48,7 +48,7 @@ public class EmailAuthService {
             user = new User();
             user.setName(request.userName());
             user.setEmail(request.email());
-            user.setRoles(Set.of(UserRole.CUSTOMER));
+            user.setRoles(Set.of(UserRole.ROLE_CUSTOMER));
             userRepo.save(user);
         }
 

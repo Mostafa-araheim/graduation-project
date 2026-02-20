@@ -41,7 +41,10 @@ public class CustomerAuthController {
                 user.getEmail(),
                 null,
                 AuthorityUtils.createAuthorityList(
-                        user.getRoles().stream().map(r -> "ROLE_" + r.name()).toArray(String[]::new)
+                        user.getRoles()
+                                .stream()
+                                .map(r -> r.name())
+                                .toArray(String[]::new)
                 )
         );
 

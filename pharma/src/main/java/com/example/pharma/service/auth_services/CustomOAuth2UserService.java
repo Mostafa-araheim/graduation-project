@@ -42,7 +42,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     User u = new User();
                     u.setName(name);
                     u.setEmail(email);
-                    u.setRoles(Set.of(UserRole.CUSTOMER));
+                    u.setRoles(Set.of(UserRole.ROLE_CUSTOMER));
                     return userRepo.save(u);
                 });
 

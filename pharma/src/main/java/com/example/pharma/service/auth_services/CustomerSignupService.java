@@ -107,7 +107,7 @@ public class CustomerSignupService {
         if (user.getRoles() == null) {
             user.setRoles(new java.util.HashSet<>());
         }
-        user.getRoles().add(UserRole.CUSTOMER);
+        user.getRoles().add(UserRole.ROLE_CUSTOMER);
 
         userRepo.save(user);
 
@@ -118,7 +118,7 @@ public class CustomerSignupService {
         return user;
     }
     private void ensureEmailNotRegistered(String email) {
-        if (userRepo.findByEmailAndRolesContaining(email,UserRole.CUSTOMER).isPresent()) {
+        if (userRepo.findByEmailAndRolesContaining(email,UserRole.ROLE_CUSTOMER).isPresent()) {
             throw new IllegalStateException("Email already registered");
         }
     }

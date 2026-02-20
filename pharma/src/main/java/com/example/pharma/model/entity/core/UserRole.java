@@ -1,5 +1,5 @@
 package com.example.pharma.model.entity.core;
 
 public enum UserRole {
-    CUSTOMER, OWNER, PHARMACIST, ADMIN
+    ROLE_CUSTOMER, ROLE_OWNER, ROLE_PHARMACIST, ROLE_ADMIN
 }
