@@ -96,7 +96,7 @@ public class OwnerSignupService {
             user.setName(name);
         }
 
-        user.getRoles().add(UserRole.OWNER);
+        user.getRoles().add(UserRole.ROLE_OWNER);
 
         userRepo.save(user);
 
@@ -108,7 +108,7 @@ public class OwnerSignupService {
 
 
     private void ensureEmailNotRegistered(String email) {
-        if (userRepo.findByEmailAndRolesContaining(email,UserRole.OWNER).isPresent()) {
+        if (userRepo.findByEmailAndRolesContaining(email,UserRole.ROLE_OWNER).isPresent()) {
             throw new IllegalStateException("Email already registered");
         }
     }

@@ -30,23 +30,23 @@ public class AuthController {
     @PostMapping("/customer/signup")
     public ResponseEntity<SignupResponse> customerSignup(@RequestBody EmailSignUpRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(signupService.startSignup(request, UserRole.CUSTOMER));
+                .body(signupService.startSignup(request, UserRole.ROLE_CUSTOMER));
     }
 
     @PostMapping("/owner/signup")
     public ResponseEntity<SignupResponse> ownerSignup(@RequestBody EmailSignUpRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(signupService.startSignup(request, UserRole.OWNER));
+                .body(signupService.startSignup(request, UserRole.ROLE_OWNER));
     }
 
     @PostMapping("/customer/verify")
     public ResponseEntity<Void> customerVerify(@RequestBody VerifySignupRequest request, HttpServletResponse response) {
-        return verifyAndReturnJwt(request, response, UserRole.CUSTOMER);
+        return verifyAndReturnJwt(request, response, UserRole.ROLE_CUSTOMER);
     }
 
     @PostMapping("/owner/verify")
     public ResponseEntity<Void> ownerVerify(@RequestBody VerifySignupRequest request, HttpServletResponse response) {
-        return verifyAndReturnJwt(request, response, UserRole.OWNER);
+        return verifyAndReturnJwt(request, response, UserRole.ROLE_OWNER);
     }
 
     private ResponseEntity<Void> verifyAndReturnJwt(VerifySignupRequest request,
@@ -59,7 +59,7 @@ public class AuthController {
                 user.getEmail(),
                 null,
                 AuthorityUtils.createAuthorityList(
-                        user.getRoles().stream().map(r -> "ROLE_" + r.name()).toArray(String[]::new)
+                        user.getRoles().stream().map(r ->  r.name()).toArray(String[]::new)
                 )
         );
 
