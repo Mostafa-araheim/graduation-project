@@ -17,7 +17,8 @@ public class Medicine {
     private String name;
     private String description;
     private boolean requiresPrescription;
-    private String dosageForm;
+    @Enumerated(EnumType.STRING)
+    private DosageForm dosageForm;
     private String strength;
     private String manufacturer;
 

@@ -29,7 +29,7 @@ public class JwtService {
     private final UserRepository userRepository;
 
     public String generateToken(Authentication authentication) {
-        String secret = environment.getProperty("JWT_SECRET", "d36d1a6448fbeb2b153814606126c5d39d12aa2be4c9a7153ff293baa6ac4b1a");
+        String secret = environment.getProperty("application.jwt.secret");
         SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return Jwts.builder()
@@ -52,7 +52,7 @@ public class JwtService {
 
 
     public SecretKey getSecretKey() {
-        String secret = environment.getProperty("JWT_SECRET", "d36d1a6448fbeb2b153814606126c5d39d12aa2be4c9a7153ff293baa6ac4b1a");
+        String secret = environment.getProperty("application.jwt.secret");
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
