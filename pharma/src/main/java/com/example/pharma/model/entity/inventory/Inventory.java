@@ -15,7 +15,7 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer inventoryId;
 
-    @OneToOne
-    @JoinColumn(name = "pharmacy_id")
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "pharmacy_id", nullable = false, unique = true)
     private Pharmacy pharmacy;
 }

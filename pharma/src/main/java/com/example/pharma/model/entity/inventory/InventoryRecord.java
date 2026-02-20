@@ -14,16 +14,18 @@ public class InventoryRecord {
     @EmbeddedId
     private InventoryRecordId id;
 
-    @ManyToOne
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @MapsId("inventoryId")
-    @JoinColumn(name = "inventory_id")
+    @JoinColumn(name = "inventory_id", nullable = false)
     private Inventory inventory;
 
-    @ManyToOne
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @MapsId("medicineId")
-    @JoinColumn(name = "medicine_id")
+    @JoinColumn(name = "medicine_id", nullable = false)
     private Medicine medicine;
 
     private Integer quantity;
+
+    @Column(name = "availability_status")
     private String availabilityStatus;
 }

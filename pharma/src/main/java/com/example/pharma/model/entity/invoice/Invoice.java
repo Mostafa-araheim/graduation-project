@@ -16,12 +16,12 @@ public class Invoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer invoiceId;
 
-    @OneToOne
-    @JoinColumn(name = "order_id")
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", unique = true, nullable = false)
     private Order order;
 
     private String invoiceUrl;
 
-
     @Embedded
-    private CreatedAtColumn createdAt;}
+    private CreatedAtColumn createdAt;
+}

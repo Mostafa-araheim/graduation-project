@@ -1,7 +1,7 @@
 package com.example.pharma.model.entity.order;
 
 import com.example.pharma.model.entity.core.CreatedAtColumn;
-import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.CustomerProfile;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -15,13 +15,14 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
     private Integer orderId;
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id")
-    private User customer;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private CustomerProfile customer;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pharmacy_id")
     private Pharmacy pharmacy;
 
@@ -29,5 +30,7 @@ public class Order {
     private String deliveryType;
     private String paymentMethod;
     private String status;
+
     @Embedded
-    private CreatedAtColumn createdAt;}
+    private CreatedAtColumn createdAt;
+}

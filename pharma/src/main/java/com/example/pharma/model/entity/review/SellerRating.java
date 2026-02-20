@@ -1,7 +1,7 @@
 package com.example.pharma.model.entity.review;
 
 import com.example.pharma.model.entity.core.CreatedAtColumn;
-import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.CustomerProfile;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,15 +16,17 @@ public class SellerRating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer ratingId;
 
-    @ManyToOne
-    @JoinColumn(name = "seller_id")
-    private User seller;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private CustomerProfile seller;
 
-    @ManyToOne
-    @JoinColumn(name = "buyer_id")
-    private User buyer;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "buyer_id", nullable = false)
+    private CustomerProfile buyer;
 
     private Integer rating;
     private String comment;
+
     @Embedded
-    private CreatedAtColumn createdAt;}
+    private CreatedAtColumn createdAt;
+}
