@@ -1,10 +1,10 @@
 package com.example.pharma.controller;
 
-import com.example.pharma.dto.CustomerSignupStartRequest;
-import com.example.pharma.dto.CustomerSignupStartResponse;
-import com.example.pharma.dto.CustomerSignupVerifyRequest;
+import com.example.pharma.dto.*;
 import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.UserRole;
 import com.example.pharma.security.jwt.JwtService;
+import com.example.pharma.service.auth_services.CustomerLoginService;
 import com.example.pharma.service.auth_services.CustomerSignupService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +25,7 @@ public class CustomerAuthController {
 
     private final CustomerSignupService signupService;
     private final JwtService jwtService;
+    private final CustomerLoginService loginService;
 
     @PostMapping("/signup/start")
     public ResponseEntity<CustomerSignupStartResponse> start(@RequestBody CustomerSignupStartRequest request) {
@@ -49,6 +50,36 @@ public class CustomerAuthController {
         );
 
         String jwt = jwtService.generateToken(auth);
+        response.setHeader("Authorization", "Bearer " + jwt);
+
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/login/start")
+    public ResponseEntity<CustomerLoginStartResponse> loginStart(
+            @RequestBody CustomerLoginStartRequest request) {
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(loginService.start(request));
+    }
+
+    @PostMapping("/login/verify")
+    public ResponseEntity<Void> loginVerify(
+            @RequestBody CustomerLoginVerifyRequest request,
+            HttpServletResponse response) {
+
+        User user = loginService.verify(request);
+
+        Authentication auth =
+                UsernamePasswordAuthenticationToken.authenticated(
+                        user.getEmail(),
+                        null,
+                        AuthorityUtils.createAuthorityList(
+                                UserRole.ROLE_CUSTOMER.name()
+                        )
+                );
+
+        String jwt = jwtService.generateToken(auth);
+
         response.setHeader("Authorization", "Bearer " + jwt);
 
         return ResponseEntity.ok().build();
