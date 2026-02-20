@@ -36,4 +36,12 @@ public final class RedisKeys {
     public static String ownerSignupSession(String signupId) {
         return "owner:signup:" + signupId;
     }
+
+    public static String customerLoginSession(String loginId) {
+        return "customer:login:" + loginId;
+    }
+
+    public static String ownerLoginSession(String loginId) {
+        return "owner:login:" + loginId;
+    }
 }
