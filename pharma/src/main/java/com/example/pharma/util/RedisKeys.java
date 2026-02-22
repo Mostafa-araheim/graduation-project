@@ -17,31 +17,11 @@ public final class RedisKeys {
         return "cart:" + cartId + ":items";
     }
 
-    public static String signupToken(String token) {
-        return "auth:signup:token:" + token;
-    }
-
-    public static String signupEmail(String email) {
-        return "auth:signup:email:" + email;
-    }
-
     public static String signupSession(String signupId) {
         return "auth:signup:" + signupId;
     }
 
-    public static String customerSignupSession(String signupId) {
-        return "customer:signup:" + signupId;
-    }
-
-    public static String ownerSignupSession(String signupId) {
-        return "owner:signup:" + signupId;
-    }
-
-    public static String customerLoginSession(String loginId) {
-        return "customer:login:" + loginId;
-    }
-
-    public static String ownerLoginSession(String loginId) {
-        return "owner:login:" + loginId;
+    public static String loginSession(String loginId) {
+        return "auth:login:" + loginId;
     }
 }
