@@ -3,6 +3,7 @@ package com.example.pharma.controller.auth;
 import com.example.pharma.dto.auth.login.LoginStartRequest;
 import com.example.pharma.dto.auth.login.LoginStartResponse;
 import com.example.pharma.dto.auth.login.LoginVerifyRequest;
+import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.auth_services.AuthLoginService;
@@ -27,16 +28,16 @@ public class AuthLoginController {
     private final JwtService jwtService;
 
     @PostMapping("/start")
-    public ResponseEntity<LoginStartResponse> start(
+    public ResponseEntity<ApiResponse<LoginStartResponse>> start(
             @Valid @RequestBody LoginStartRequest request) {
 
         LoginStartResponse response = loginService.start(request);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success("",response));
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Void> verify(
+    public ResponseEntity<ApiResponse<Void>> verify(
             @Valid @RequestBody LoginVerifyRequest request,
             HttpServletResponse response) {
 

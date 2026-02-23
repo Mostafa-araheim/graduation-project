@@ -29,7 +29,7 @@ public class JwtService {
     private final UserRepository userRepository;
 
     public String generateToken(Authentication authentication) {
-        String secret = environment.getProperty("application.jwt.secret");
+        String secret = environment.getProperty("spring.application.jwt.secret");
         SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return Jwts.builder()
@@ -52,7 +52,7 @@ public class JwtService {
 
 
     public SecretKey getSecretKey() {
-        String secret = environment.getProperty("application.jwt.secret");
+        String secret = environment.getProperty("spring.application.jwt.secret");
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
