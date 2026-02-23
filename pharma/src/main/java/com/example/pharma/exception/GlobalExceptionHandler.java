@@ -1,5 +1,6 @@
 package com.example.pharma.exception;
 
+import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.exception.ErrorCode;
 import com.example.pharma.dto.exception.ErrorResponse;
 import com.example.pharma.exception.common.BaseException;
@@ -24,7 +25,7 @@ public class GlobalExceptionHandler {
      * Handles all custom exceptions extending BaseException
      */
     @ExceptionHandler(BaseException.class)
-    public ResponseEntity<ErrorResponse> handleBaseException(
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleBaseException(
             BaseException ex,
             HttpServletRequest request
     ) {
@@ -35,14 +36,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(ex.getStatus())
-                .body(error);
+                .body(ApiResponse.failure("", error));
     }
 
     /**
      * Handles @Valid on @RequestBody
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
@@ -63,14 +64,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(error);
+                .body(ApiResponse.failure("",error));
     }
 
     /**
      * Handles validation on request params / path variables
      */
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolation(
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleConstraintViolation(
             ConstraintViolationException ex,
             HttpServletRequest request
     ) {
@@ -89,14 +90,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(error);
+                .body(ApiResponse.failure("",error));
     }
 
     /**
      * Handles malformed JSON or wrong data types
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex,
             HttpServletRequest request
     ) {
@@ -110,14 +111,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(error);
+                .body(ApiResponse.failure("",error));
     }
 
     /**
      * Fallback for any unhandled exception
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleGenericException(
             Exception ex,
             HttpServletRequest request
     ) {
@@ -131,7 +132,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(error);
+                .body(ApiResponse.failure("",error));
     }
 
     private ErrorResponse buildError(

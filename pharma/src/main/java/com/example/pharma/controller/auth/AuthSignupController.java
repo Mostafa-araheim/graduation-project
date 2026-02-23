@@ -3,6 +3,7 @@ package com.example.pharma.controller.auth;
 import com.example.pharma.dto.auth.signup.SignupStartRequest;
 import com.example.pharma.dto.auth.signup.SignupStartResponse;
 import com.example.pharma.dto.auth.signup.SignupVerifyRequest;
+import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.auth_services.AuthSignupService;
@@ -28,18 +29,18 @@ public class AuthSignupController {
     private final JwtService jwtService;
 
     @PostMapping("/start")
-    public ResponseEntity<SignupStartResponse> start(
+    public ResponseEntity<ApiResponse<SignupStartResponse>> start(
             @Valid @RequestBody SignupStartRequest request) {
 
         SignupStartResponse response = signupService.start(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(response);
+                .body(ApiResponse.success("",response));
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Void> verify(
+    public ResponseEntity<ApiResponse<Void>> verify(
             @Valid @RequestBody SignupVerifyRequest request,
             HttpServletResponse response) {
 
