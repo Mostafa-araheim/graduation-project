@@ -4,12 +4,15 @@ import com.example.pharma.dto.auth.signup.SignupSession;
 import com.example.pharma.dto.auth.signup.SignupStartRequest;
 import com.example.pharma.dto.auth.signup.SignupStartResponse;
 import com.example.pharma.dto.auth.signup.SignupVerifyRequest;
+import com.example.pharma.exception.access.AccessDeniedException;
+import com.example.pharma.exception.access.IllegalStateException;
+import com.example.pharma.exception.resource.EntityAlreadyExistsException;
+import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.model.entity.core.UserRole;
 import com.example.pharma.repository.Core.UserRepository;
 import com.example.pharma.service.EmailService;
 import com.example.pharma.util.RedisKeys;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -75,7 +78,7 @@ public class AuthSignupService {
 
         if (attempts >= MAX_ATTEMPTS) {
             redisTemplate.delete(key);
-            throw new IllegalStateException("Too many attempts");
+            throw new AccessDeniedException("Too many attempts");
         }
 
         attempts++;
@@ -125,7 +128,7 @@ public class AuthSignupService {
 
     private void ensureEmailNotRegistered(String email, UserRole role) {
         if (userRepo.findByEmailAndRolesContaining(email, role).isPresent()) {
-            throw new IllegalStateException("Email already registered for this role");
+            throw new EntityAlreadyExistsException("Email already registered for this role");
         }
     }
 
@@ -142,7 +145,7 @@ public class AuthSignupService {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(md.digest(s.getBytes()));
         } catch (Exception e) {
-            throw new IllegalStateException("Hashing failed", e);
+            throw new IllegalStateException("Hashing failed :" + e);
         }
     }
 }
