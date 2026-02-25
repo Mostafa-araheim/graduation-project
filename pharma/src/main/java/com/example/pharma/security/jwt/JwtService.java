@@ -1,5 +1,6 @@
 package com.example.pharma.security.jwt;
 
+import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.repository.Core.UserRepository;
 import io.jsonwebtoken.Claims;
@@ -11,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -31,7 +31,7 @@ public class JwtService {
     public String generateToken(Authentication authentication) {
         String secret = environment.getProperty("spring.application.jwt.secret");
         SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         return Jwts.builder()
                 .subject(authentication.getName())
                 .claim("user_id", user.getUserId())

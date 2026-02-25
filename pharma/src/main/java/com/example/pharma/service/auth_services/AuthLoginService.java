@@ -4,11 +4,12 @@ import com.example.pharma.dto.auth.login.LoginSession;
 import com.example.pharma.dto.auth.login.LoginStartRequest;
 import com.example.pharma.dto.auth.login.LoginStartResponse;
 import com.example.pharma.dto.auth.login.LoginVerifyRequest;
+import com.example.pharma.exception.access.IllegalStateException;
+import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.repository.Core.UserRepository;
 import com.example.pharma.service.EmailService;
 import com.example.pharma.util.RedisKeys;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -120,7 +121,7 @@ public class AuthLoginService {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(md.digest(s.getBytes()));
         } catch (Exception e) {
-            throw new IllegalStateException("Hashing failed", e);
+            throw new IllegalStateException("Hashing failed :" + e);
         }
     }
 }
