@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalTime;
+
 @Entity
 @Getter
 @Setter
@@ -17,8 +19,8 @@ public class Pharmacy {
     @Column(name = "pharmacy_id")
     private Integer pharmacyId;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_user_id", nullable = false)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_user_id", nullable = true)
     private OwnerProfile owner;
 
     private String name;
@@ -31,4 +33,16 @@ public class Pharmacy {
 
     @Embedded
     private CreatedAtColumn createdAt;
+
+    @OneToOne(mappedBy = "pharmacy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PharmacyAddress address;
+
+    @Column(name = "opening_time")
+    private LocalTime openingTime;
+
+    @Column(name = "closing_time")
+    private LocalTime closingTime;
+
+    @Column(name = "is_24_hours")
+    private Boolean is24Hours;
 }
