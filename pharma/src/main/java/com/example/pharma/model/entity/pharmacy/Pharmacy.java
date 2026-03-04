@@ -30,7 +30,11 @@ public class Pharmacy {
 
     @Column(name = "image_url")
     private String imageUrl;
+    @Column(name = "latitude", nullable = true)
+    private Double latitude;
 
+    @Column(name = "longitude", nullable = true)
+    private Double longitude;
     @Embedded
     private CreatedAtColumn createdAt;
 

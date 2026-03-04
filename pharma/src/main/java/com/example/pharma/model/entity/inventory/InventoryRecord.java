@@ -27,5 +27,6 @@ public class InventoryRecord {
     private Integer quantity;
 
     @Column(name = "availability_status")
-    private String availabilityStatus;
+    @Enumerated(EnumType.STRING)
+    private AvailabilityStatus availabilityStatus;
 }
