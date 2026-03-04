@@ -1,8 +1,11 @@
 package com.example.pharma.model.entity.catalog;
 
+import com.example.pharma.model.entity.inventory.InventoryRecord;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -29,4 +32,6 @@ public class Medicine {
     @ManyToOne
     @JoinColumn(name = "brand_id")
     private Brand brand;
+    @OneToMany(mappedBy = "medicine")
+    private List<InventoryRecord> inventoryRecords;
 }
