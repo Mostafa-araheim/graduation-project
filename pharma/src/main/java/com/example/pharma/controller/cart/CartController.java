@@ -8,6 +8,7 @@ import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +20,7 @@ public class CartController {
 
     // POST /carts
     @PostMapping
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<CartResponse> createCart(
             @Valid @RequestBody CreateCartRequest request
     ) {
@@ -31,6 +33,7 @@ public class CartController {
 
     // GET /carts/{cartId}
     @GetMapping("/{cartId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<CartResponse> getCart(
             @PathVariable Long cartId
     ) {
@@ -43,6 +46,7 @@ public class CartController {
 
     // POST /carts/{cartId}/items
     @PostMapping("/{cartId}/items")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> addItem(
             @PathVariable Long cartId,
             @Valid @RequestBody CartItemIdentifierRequest request
@@ -55,6 +59,7 @@ public class CartController {
 
     // DELETE /carts/{cartId}/items
     @DeleteMapping("/{cartId}/items")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> deleteItem(
             @PathVariable Long cartId,
             @Valid @RequestBody CartItemIdentifierRequest request
@@ -67,6 +72,7 @@ public class CartController {
 
     // PATCH /carts/{cartId}/items/quantity
     @PatchMapping("/{cartId}/items/quantity")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> updateQuantity(
             @PathVariable Long cartId,
             @Valid @RequestBody UpdateCartItemQuantityRequest request
@@ -79,6 +85,7 @@ public class CartController {
 
     // POST /carts/{cartId}/items/increase
     @PostMapping("/{cartId}/items/increase")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> increaseItemQuantity(
             @PathVariable Long cartId,
             @Valid @RequestBody CartItemIdentifierRequest request
@@ -91,6 +98,7 @@ public class CartController {
 
     // POST /carts/{cartId}/items/decrease
     @PostMapping("/{cartId}/items/decrease")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> decreaseItemQuantity(
             @PathVariable Long cartId,
             @Valid @RequestBody CartItemIdentifierRequest request
@@ -103,6 +111,7 @@ public class CartController {
 
     // DELETE /carts/{cartId}/clear
     @DeleteMapping("/{cartId}/clear")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> clearCart(
             @PathVariable Long cartId
     ) {
