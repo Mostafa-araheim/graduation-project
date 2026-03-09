@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface PharmacyStaffRepository extends JpaRepository<PharmacyStaff, PharmacyStaffId> {
-    List<PharmacyStaff> findByPharmacy_PharmacyId(Integer pharmacyId);
-    List<PharmacyStaff> findByPharmacist_UserId(Integer userId);
+    List<PharmacyStaff> findByPharmacy_PharmacyId(Long pharmacyId);
+    List<PharmacyStaff> findByPharmacist_UserId(Long userId);
 }

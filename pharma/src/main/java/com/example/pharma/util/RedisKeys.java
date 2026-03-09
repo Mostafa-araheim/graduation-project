@@ -24,4 +24,9 @@ public final class RedisKeys {
     public static String loginSession(String loginId) {
         return "auth:login:" + loginId;
     }
+
+    public static String cartItemField(Long inventoryId, Long medicineId) {
+        return "inventoryId:" + inventoryId + ":medicineId:" + medicineId;
+    }
+
 }

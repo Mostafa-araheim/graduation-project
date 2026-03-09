@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -24,7 +26,9 @@ public class InventoryRecord {
     @JoinColumn(name = "medicine_id", nullable = false)
     private Medicine medicine;
 
-    private Integer quantity;
+    private BigDecimal price;
+
+    private Long quantity;
 
     @Column(name = "availability_status")
     @Enumerated(EnumType.STRING)

@@ -1,4 +1,4 @@
-package com.example.pharma.service.auth_services;
+package com.example.pharma.service.auth;
 
 import com.example.pharma.dto.auth.signup.SignupSession;
 import com.example.pharma.dto.auth.signup.SignupStartRequest;
@@ -48,7 +48,7 @@ public class AuthSignupService {
                 req.name(),
                 req.role(),
                 codeHash,
-                0
+                0L
         );
 
         String key = RedisKeys.signupSession(signupId);
@@ -74,7 +74,7 @@ public class AuthSignupService {
         if (session == null)
             throw new EntityNotFoundException("Invalid or expired signup session");
 
-        int attempts = session.attempts();
+        Long attempts = session.attempts();
 
         if (attempts >= MAX_ATTEMPTS) {
             redisTemplate.delete(key);

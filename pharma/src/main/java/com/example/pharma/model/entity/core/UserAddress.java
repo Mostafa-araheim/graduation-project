@@ -12,7 +12,7 @@ public class UserAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer userAddressId;
+    private Long userAddressId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

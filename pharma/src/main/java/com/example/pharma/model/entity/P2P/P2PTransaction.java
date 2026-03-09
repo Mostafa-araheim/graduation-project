@@ -14,7 +14,7 @@ public class P2PTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer transactionId;
+    private Long transactionId;
 
     @OneToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "listing_id", nullable = false, unique = true)

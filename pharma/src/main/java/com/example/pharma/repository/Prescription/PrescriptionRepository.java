@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface PrescriptionRepository extends JpaRepository<Prescription, Integer> {
-    List<Prescription> findByCustomer_UserId(Integer userId);
+public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
+    List<Prescription> findByCustomer_UserId(Long userId);
 }

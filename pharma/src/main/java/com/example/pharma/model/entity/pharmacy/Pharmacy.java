@@ -22,7 +22,7 @@ public class Pharmacy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "pharmacy_id")
-    private Integer pharmacyId;
+    private Long pharmacyId;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_user_id", nullable = true)

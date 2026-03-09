@@ -15,7 +15,7 @@ public class MedicationReminder {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer reminderId;
+    private Long reminderId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -23,5 +23,5 @@ public class MedicationReminder {
 
     private String medicineName;
     private LocalTime dosageTime;
-    private Integer notifyBeforeMinutes;
+    private Long notifyBeforeMinutes;
 }

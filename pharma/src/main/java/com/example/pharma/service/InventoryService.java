@@ -17,7 +17,7 @@ public class InventoryService {
     private final InventoryRecordRepository inventoryRecordRepository;
     private final PharmacyRepository pharmacyRepository;
     // add invenbtory to the pharmacy
-    public Integer AddInventory(Integer pharmacyId)
+    public Long AddInventory(Long pharmacyId)
     {
         Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).orElseThrow(() ->
                 new EntityNotFoundException("Pharmacy is not found for"));

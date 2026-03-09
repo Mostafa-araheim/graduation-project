@@ -42,13 +42,17 @@ public class PharmacyController {
 
     @GetMapping("/{pharmacyId}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<PharmacyInfo> getPharmacyInfo(@PathVariable Integer pharmacyId) {
-        return ApiResponse.success("Pharmacy info fetched successfully", pharmacyService.getPharmacyInfo(pharmacyId));
-    }
 
-    @GetMapping("/{pharmacyId}/{categoryId}")// Not yet finished and not ready for production
-    public ApiResponse<PageResponse<Medicine>> getPharmacyMedicinesUnderACategory(@PathVariable Integer pharmacyId, @PathVariable Integer categoryId, @PageableDefault(sort = "medicineId") Pageable pageable) {
-        return ApiResponse.success("Medicines returned successfully", pharmacyService.getPharmacyMedicinesUnderACategory(pharmacyId, categoryId, pageable));
+
+    public ApiResponse<PharmacyInfo> getPharmacyInfo(@PathVariable Long pharmacyId)
+    {
+        return ApiResponse.success("Pharmacy info fetched successfully",pharmacyService.getPharmacyInfo(pharmacyId));
+    }
+    @GetMapping("/{pharmacyId}/{categoryId}")
+    public ApiResponse<PageResponse<Medicine>> getPharmacyMedicinesUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "medicineId") Pageable pageable)
+    {
+        return ApiResponse.success("Medicines returned successfully",pharmacyService.getPharmacyMedicinesUnderACategory(pharmacyId, categoryId, pageable));
+
     }
 
     @PostMapping

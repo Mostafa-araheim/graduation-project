@@ -24,8 +24,8 @@ public interface InventoryRecordRepository
         AND ir.medicine.category.categoryId = :categoryId
     """)
     Page<Medicine> findMedicinesByPharmacyAndCategory(
-            @Param("pharmacyId") Integer pharmacyId,
-            @Param("categoryId") Integer categoryId,
+            @Param("pharmacyId") Long pharmacyId,
+            @Param("categoryId") Long categoryId,
             Pageable pageable
     );
 }

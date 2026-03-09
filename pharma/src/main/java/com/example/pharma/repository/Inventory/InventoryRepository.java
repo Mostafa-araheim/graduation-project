@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
-    Optional<Inventory> findByPharmacy_PharmacyId(Integer id);
+public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+    Optional<Inventory> findByPharmacy_PharmacyId(Long id);
 }

@@ -17,8 +17,8 @@ import java.io.Serializable;
 public class PharmacyStaffId implements Serializable {
 
     @Column(name = "pharmacy_id")
-    private Integer pharmacyId;
+    private Long pharmacyId;
 
     @Column(name = "user_id")
-    private Integer userId;
+    private Long userId;
 }

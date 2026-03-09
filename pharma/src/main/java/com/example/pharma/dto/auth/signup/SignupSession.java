@@ -7,5 +7,5 @@ public record SignupSession(
         String name,
         UserRole role,
         String codeHash,
-        int attempts
+        Long attempts
 ) {}

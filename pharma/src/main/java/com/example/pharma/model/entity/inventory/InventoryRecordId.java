@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 
 @Embeddable
 @Getter
@@ -18,11 +17,9 @@ import java.time.LocalDate;
 public class InventoryRecordId implements Serializable {
 
     @Column(name = "inventory_id")
-    private Integer inventoryId;
+    private Long inventoryId;
 
     @Column(name = "medicine_id")
-    private Integer medicineId;
+    private Long medicineId;
 
-    @Column(name = "expiry_date")
-    private LocalDate expiryDate;
 }

@@ -55,7 +55,7 @@ public class PharmacyService {
         Page<PharmacyDto> pharmacyDtos = pharmacies.map(PharmacyMapper.INSTANCE::toDto);
         return PageResponse.from(pharmacyDtos);
     }
-    public PharmacyInfo getPharmacyInfo(Integer pharmacyId)
+    public PharmacyInfo getPharmacyInfo(Long pharmacyId)
     {
 
         List<Category> categories = categoryRepository.findAll();
@@ -65,7 +65,7 @@ public class PharmacyService {
         List<ReviewDto> pharmacyReviewDtos = pharmacyReviewRepository.findReviewDtosByPharmacyId(pharmacyId);
         return new PharmacyInfo(categories, pharmacyAddress, pharmacyDto, pharmacyReviewDtos);
     }
-    public PageResponse<Medicine> getPharmacyMedicinesUnderACategory(Integer pharmacyId, Integer categoryId, Pageable pageable)
+    public PageResponse<Medicine> getPharmacyMedicinesUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
     {
        Page<Medicine> medicines = inventoryRecordRepository.findMedicinesByPharmacyAndCategory(pharmacyId, categoryId, pageable);
        return PageResponse.from(medicines);

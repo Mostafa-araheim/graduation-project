@@ -16,14 +16,14 @@ public class P2PListing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer listingId;
+    private Long listingId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     private CustomerProfile seller;
 
     private String medicineName;
-    private Integer quantity;
+    private Long quantity;
     private LocalDate expiryDate;
     private Float price;
     private String imageUrl;

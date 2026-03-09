@@ -6,7 +6,7 @@ import com.example.pharma.dto.auth.signup.SignupVerifyRequest;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.security.jwt.JwtService;
-import com.example.pharma.service.auth_services.AuthSignupService;
+import com.example.pharma.service.auth.AuthSignupService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

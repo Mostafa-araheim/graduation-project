@@ -13,7 +13,7 @@ public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer orderItemId;
+    private Long orderItemId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
@@ -23,6 +23,6 @@ public class OrderItem {
     @JoinColumn(name = "medicine_id")
     private Medicine medicine;
 
-    private Integer quantity;
+    private Long quantity;
     private Float price;
 }

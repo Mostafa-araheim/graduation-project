@@ -13,7 +13,7 @@ public class Inventory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer inventoryId;
+    private Long inventoryId;
 
     @OneToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "pharmacy_id", nullable = false, unique = true)
