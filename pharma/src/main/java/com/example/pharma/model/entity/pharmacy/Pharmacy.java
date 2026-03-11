@@ -1,10 +1,15 @@
 package com.example.pharma.model.entity.pharmacy;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.example.pharma.model.entity.core.CreatedAtColumn;
 import com.example.pharma.model.entity.core.OwnerProfile;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 
 import java.time.LocalTime;
 
@@ -30,10 +35,13 @@ public class Pharmacy {
 
     @Column(name = "image_url")
     private String imageUrl;
-    @Column(name = "latitude", nullable = true)
+    @JsonIgnore
+    @Column(columnDefinition = "geometry(Point, 4326)")
+    private Point location;
+    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude", nullable = true)
+    @Column(name = "longitude")
     private Double longitude;
     @Embedded
     private CreatedAtColumn createdAt;
@@ -49,4 +57,9 @@ public class Pharmacy {
 
     @Column(name = "is_24_hours")
     private Boolean is24Hours;
+   // Sync the Point with Lat/Lon before saving
+    public void updateGeometry() {
+        GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
+        this.location = factory.createPoint(new Coordinate(this.longitude, this.latitude));
+    }
 }

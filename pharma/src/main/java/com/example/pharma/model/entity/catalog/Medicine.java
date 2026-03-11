@@ -1,6 +1,7 @@
 package com.example.pharma.model.entity.catalog;
 
 import com.example.pharma.model.entity.inventory.InventoryRecord;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +33,7 @@ public class Medicine {
     @ManyToOne
     @JoinColumn(name = "brand_id")
     private Brand brand;
+    @JsonIgnore
     @OneToMany(mappedBy = "medicine")
     private List<InventoryRecord> inventoryRecords;
 }

@@ -18,14 +18,14 @@ import java.util.Set;
 public class MedicationService {
 
     private final MedicineRepository medicineRepository;
-
+    private final LocationService locationService;
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("price", "name", "stockQuantity", "category");
 
         public List<Medicine> getMedicines(MedicineFilter filter, Sort sort) {
             validateFilter(filter);
             validateSort(sort);
 
-            Specification<Medicine> spec = MedicineSpecification.buildFromFilter(filter);
+            Specification<Medicine> spec = MedicineSpecification.buildFromFilter(filter, locationService);
 
             return medicineRepository.findAll(spec, sort);
     }
@@ -37,6 +37,10 @@ public class MedicationService {
         }
         if (filter.maxDistanceKm() != null && filter.maxDistanceKm() < 0) {
             throw new ValidationException("Distance cannot be negative");
+        }
+        if (filter.maxDistanceKm() != null &&
+                (filter.userLatitude() != null ||filter.userLongitude() != null )) {
+            throw new ValidationException("Latitude and longitude are required when filtering by distance");
         }
     }
 
