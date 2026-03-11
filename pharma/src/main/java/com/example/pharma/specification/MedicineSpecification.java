@@ -3,7 +3,10 @@ package com.example.pharma.specification;
 import com.example.pharma.dto.Medicine.MedicineFilter;
 import com.example.pharma.model.entity.catalog.Medicine;
 import com.example.pharma.model.entity.inventory.AvailabilityStatus;
+import com.example.pharma.service.LocationService;
 import jakarta.persistence.criteria.*;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.WKTWriter;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -14,7 +17,7 @@ public class MedicineSpecification {
     private MedicineSpecification() {
     }
 
-    public static Specification<Medicine> buildFromFilter(MedicineFilter filter) {
+    public static Specification<Medicine> buildFromFilter(MedicineFilter filter,LocationService locationService) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -38,7 +41,12 @@ public class MedicineSpecification {
 
             if (filter.maxDistanceKm() != null && filter.maxDistanceKm() > 0
                     && filter.userLatitude() != null && filter.userLongitude() != null) {
-                var distancePredicate = buildDistanceFilter(root, cb, query, filter);
+                Geometry polygon = locationService.getRoadReachPolygon(
+                        filter.userLatitude(),
+                        filter.userLongitude(),
+                        filter.maxDistanceKm() * 1000.0
+                );
+                var distancePredicate = buildDistanceFilter(root, cb, polygon);
                 predicates.add(distancePredicate);
             }
 
@@ -79,30 +87,26 @@ public class MedicineSpecification {
 
     private static Predicate buildDistanceFilter(Root<Medicine> root,
                                                  CriteriaBuilder cb,
-                                                 CriteriaQuery<?> query,
-                                                 MedicineFilter filter) {
+                                                 Geometry isochronePolygon) {
         var inventoryRecordJoin = root.join("inventoryRecords", JoinType.INNER);
         var inventoryJoin = inventoryRecordJoin.join("inventory", JoinType.INNER);
         var pharmacyJoin = inventoryJoin.join("pharmacy", JoinType.INNER);
-        Expression<Double> distanceInMeters = cb.function(
-                "ST_DistanceSphere",
-                Double.class,
-                cb.function("ST_MakePoint", Object.class,
-                        cb.literal(filter.userLongitude()).as(Double.class),
-                        cb.literal(filter.userLatitude()).as(Double.class)
-                ),
-                cb.function("ST_MakePoint", Object.class,
-                        pharmacyJoin.get("longitude").as(Double.class),
-                        pharmacyJoin.get("latitude").as(Double.class)
+
+        // Convert JTS Geometry to WKT so Hibernate/JDBC can bind it as a string
+        String wkt = new WKTWriter().write(isochronePolygon);
+
+        // ST_GeomFromText(wkt, srid) tells PostGIS how to interpret the literal
+        var polygonExpr = cb.function(
+                "ST_GeomFromText", Geometry.class,
+                cb.literal(wkt),
+                cb.literal(4326)
+        );
+
+        return cb.isTrue(
+                cb.function("ST_Within", Boolean.class,
+                        pharmacyJoin.get("location"),
+                        polygonExpr
                 )
         );
-
-        Predicate distancePredicate = cb.lessThanOrEqualTo(
-                distanceInMeters,
-                filter.maxDistanceKm() * 1000.0
-        );
-//        query.orderBy(cb.asc(distanceInMeters));
-        return distancePredicate;
-
     }
 }
