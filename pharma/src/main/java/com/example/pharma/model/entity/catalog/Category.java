@@ -1,13 +1,15 @@
 package com.example.pharma.model.entity.catalog;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "category")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Category {
 
     @Id
