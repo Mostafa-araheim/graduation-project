@@ -14,7 +14,7 @@ public class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer invoiceId;
+    private Long invoiceId;
 
     @OneToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", unique = true, nullable = false)

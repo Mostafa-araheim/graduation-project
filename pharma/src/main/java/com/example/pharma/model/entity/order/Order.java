@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -16,7 +18,7 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
-    private Integer orderId;
+    private Long orderId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -26,7 +28,7 @@ public class Order {
     @JoinColumn(name = "pharmacy_id")
     private Pharmacy pharmacy;
 
-    private Float totalAmount;
+    private BigDecimal totalAmount;
     private String deliveryType;
     private String paymentMethod;
     private String status;

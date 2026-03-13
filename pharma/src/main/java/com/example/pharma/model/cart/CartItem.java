@@ -6,15 +6,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class CartItem {
-    private Long productId;
-    private Integer quantity;
+
+    private Long pharmacyProductId;
+
+    private Long quantity;
+
     private BigDecimal pricePerUnit;
-    private Instant addedAt;
 }

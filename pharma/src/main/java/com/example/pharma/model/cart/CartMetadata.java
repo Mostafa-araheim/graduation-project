@@ -12,6 +12,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 public class CartMetadata {
+    private Long cartId;
     private Long userId;
     private String name;
     private Instant createdAt;

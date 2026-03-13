@@ -14,7 +14,7 @@ public class SellerRating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer ratingId;
+    private Long ratingId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
@@ -24,7 +24,7 @@ public class SellerRating {
     @JoinColumn(name = "buyer_id", nullable = false)
     private CustomerProfile buyer;
 
-    private Integer rating;
+    private Long rating;
     private String comment;
 
     @Embedded

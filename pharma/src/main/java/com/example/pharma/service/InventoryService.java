@@ -2,7 +2,7 @@ package com.example.pharma.service;
 
 import com.example.pharma.model.entity.inventory.Inventory;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
-import com.example.pharma.repository.Inventory.InventoryRecordRepository;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.repository.Inventory.InventoryRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
-    private final InventoryRecordRepository inventoryRecordRepository;
+    private final PharmacyProductRepository pharmacyProductRepository;
     private final PharmacyRepository pharmacyRepository;
     // add invenbtory to the pharmacy
-    public Integer AddInventory(Integer pharmacyId)
+    public Long AddInventory(Long pharmacyId)
     {
         Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).orElseThrow(() ->
                 new EntityNotFoundException("Pharmacy is not found for"));

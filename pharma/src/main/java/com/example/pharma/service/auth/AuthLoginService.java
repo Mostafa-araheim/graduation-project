@@ -1,4 +1,4 @@
-package com.example.pharma.service.auth_services;
+package com.example.pharma.service.auth;
 
 import com.example.pharma.dto.auth.login.LoginSession;
 import com.example.pharma.dto.auth.login.LoginStartRequest;
@@ -46,7 +46,7 @@ public class AuthLoginService {
                 user.getEmail(),
                 req.role(),
                 codeHash,
-                0
+                0L
         );
 
         redisTemplate.opsForValue()
@@ -71,7 +71,7 @@ public class AuthLoginService {
         if (session == null)
             throw new EntityNotFoundException("Invalid or expired login session");
 
-        int attempts = session.attempts();
+        Long attempts = session.attempts();
 
         if (attempts >= MAX_ATTEMPTS) {
             redisTemplate.delete(key);

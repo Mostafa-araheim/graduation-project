@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface P2PTransactionRepository extends JpaRepository<P2PTransaction, Integer> {
-    Optional<P2PTransaction> findByListing_ListingId(Integer listingId);
-    List<P2PTransaction> findByBuyer_UserId(Integer userId);
+public interface P2PTransactionRepository extends JpaRepository<P2PTransaction, Long> {
+    Optional<P2PTransaction> findByListing_ListingId(Long listingId);
+    List<P2PTransaction> findByBuyer_UserId(Long userId);
 }

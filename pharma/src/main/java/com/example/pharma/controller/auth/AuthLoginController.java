@@ -5,8 +5,9 @@ import com.example.pharma.dto.auth.login.LoginStartResponse;
 import com.example.pharma.dto.auth.login.LoginVerifyRequest;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.model.entity.core.User;
+import com.example.pharma.security.AuthenticatedUser;
 import com.example.pharma.security.jwt.JwtService;
-import com.example.pharma.service.auth_services.AuthLoginService;
+import com.example.pharma.service.auth.AuthLoginService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth/login")
+@RequestMapping("/api/v1/auth/login")
 @RequiredArgsConstructor
 public class AuthLoginController {
 
@@ -43,9 +44,15 @@ public class AuthLoginController {
 
         User user = loginService.verify(request);
 
+        AuthenticatedUser principal =
+                new AuthenticatedUser(
+                        user.getUserId(),
+                        user.getEmail()
+                );
+
         Authentication auth =
-                UsernamePasswordAuthenticationToken.authenticated(
-                        user.getEmail(),
+                new UsernamePasswordAuthenticationToken(
+                        principal,
                         null,
                         AuthorityUtils.createAuthorityList(
                                 user.getRoles()
@@ -54,6 +61,7 @@ public class AuthLoginController {
                                         .toArray(String[]::new)
                         )
                 );
+
 
         String jwt = jwtService.generateToken(auth);
 

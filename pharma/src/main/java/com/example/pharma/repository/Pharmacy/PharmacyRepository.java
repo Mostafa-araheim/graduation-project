@@ -3,9 +3,12 @@ package com.example.pharma.repository.Pharmacy;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-public interface PharmacyRepository extends JpaRepository<Pharmacy, Integer>, JpaSpecificationExecutor<Pharmacy> {
+@Repository
+public interface PharmacyRepository extends JpaRepository<Pharmacy, Long>, JpaSpecificationExecutor<Pharmacy> {
     List<Pharmacy> findByOwner_UserId(Integer ownerUserId);
+
 }

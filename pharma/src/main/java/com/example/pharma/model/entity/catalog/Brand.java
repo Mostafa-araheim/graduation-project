@@ -12,7 +12,7 @@ public class Brand {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer brandId;
+    private Long brandId;
 
     private String brandName;
     private String brandImage;

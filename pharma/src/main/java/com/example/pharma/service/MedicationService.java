@@ -2,7 +2,7 @@ package com.example.pharma.service;
 
 import com.example.pharma.dto.Medicine.MedicineFilter;
 import com.example.pharma.exception.validation.ValidationException;
-import com.example.pharma.model.entity.catalog.Medicine;
+import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.repository.Catalog.MedicineRepository;
 import com.example.pharma.specification.MedicineSpecification;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +21,13 @@ public class MedicationService {
     private final LocationService locationService;
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("price", "name", "stockQuantity", "category");
 
-        public List<Medicine> getMedicines(MedicineFilter filter, Sort sort) {
+        public List<Product> getMedicines(MedicineFilter filter, Sort sort) {
             validateFilter(filter);
             validateSort(sort);
 
-            Specification<Medicine> spec = MedicineSpecification.buildFromFilter(filter, locationService);
+
+            Specification<Product> spec = MedicineSpecification.buildFromFilter(filter,locationService);
+
 
             return medicineRepository.findAll(spec, sort);
     }

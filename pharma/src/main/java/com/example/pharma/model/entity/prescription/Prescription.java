@@ -18,7 +18,7 @@ public class Prescription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "prescription_id")
-    private Integer prescriptionId;
+    private Long prescriptionId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)

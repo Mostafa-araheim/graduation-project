@@ -145,7 +145,7 @@ public class GlobalExceptionHandler {
         return ErrorResponse.builder()
                 .errorCode(errorCode)
                 .message(message)
-                .status(errorCode.getStatus().value())
+                .status((long)errorCode.getStatus().value())
                 .timestamp(Instant.now())
                 .path(request.getRequestURI())
                 .build();

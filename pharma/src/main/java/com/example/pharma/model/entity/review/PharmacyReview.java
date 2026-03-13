@@ -15,7 +15,7 @@ public class PharmacyReview {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer reviewId;
+    private Long reviewId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "pharmacy_id", nullable = false)
@@ -25,7 +25,7 @@ public class PharmacyReview {
     @JoinColumn(name = "customer_id", nullable = false)
     private CustomerProfile customer;
 
-    private Integer rating;
+    private Long rating;
     private String comment;
 
     @Embedded

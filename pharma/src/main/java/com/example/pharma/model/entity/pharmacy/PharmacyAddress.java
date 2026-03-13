@@ -13,7 +13,7 @@ public class PharmacyAddress {
 
     @Id
     @Column(name = "pharmacy_id")
-    private Integer pharmacyId;
+    private Long pharmacyId;
 
     @JsonIgnore
     @OneToOne(optional = false, fetch = FetchType.LAZY)

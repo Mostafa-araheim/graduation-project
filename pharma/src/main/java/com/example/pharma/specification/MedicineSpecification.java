@@ -1,7 +1,7 @@
 package com.example.pharma.specification;
 
 import com.example.pharma.dto.Medicine.MedicineFilter;
-import com.example.pharma.model.entity.catalog.Medicine;
+import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.inventory.AvailabilityStatus;
 import com.example.pharma.service.LocationService;
 import jakarta.persistence.criteria.*;
@@ -17,7 +17,9 @@ public class MedicineSpecification {
     private MedicineSpecification() {
     }
 
-    public static Specification<Medicine> buildFromFilter(MedicineFilter filter,LocationService locationService) {
+
+    public static Specification<Product> buildFromFilter(MedicineFilter filter,LocationService locationService) {
+
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -54,7 +56,7 @@ public class MedicineSpecification {
         };
     }
 
-    private static Predicate buildCategoryFilter(Root<Medicine> root,
+    private static Predicate buildCategoryFilter(Root<Product> root,
                                                  CriteriaBuilder cb,
                                                  MedicineFilter filter) {
         var categoryJoin = root.join("category", JoinType.INNER);
@@ -64,19 +66,19 @@ public class MedicineSpecification {
         );
     }
 
-    private static Predicate buildMinPriceFilter(Root<Medicine> root,
+    private static Predicate buildMinPriceFilter(Root<Product> root,
                                                  CriteriaBuilder cb,
                                                  MedicineFilter filter) {
         return cb.greaterThanOrEqualTo(root.get("price"), filter.minPrice());
     }
 
-    private static Predicate buildMaxPriceFilter(Root<Medicine> root,
+    private static Predicate buildMaxPriceFilter(Root<Product> root,
                                                  CriteriaBuilder cb,
                                                  MedicineFilter filter) {
         return cb.lessThanOrEqualTo(root.get("price"), filter.maxPrice());
     }
 
-    private static Predicate buildInStockFilter(Root<Medicine> root,
+    private static Predicate buildInStockFilter(Root<Product> root,
                                                 CriteriaBuilder cb) {
         var inventoryRecordJoin = root.join("inventoryRecords", JoinType.INNER);
         return cb.equal(
@@ -85,7 +87,7 @@ public class MedicineSpecification {
         );
     }
 
-    private static Predicate buildDistanceFilter(Root<Medicine> root,
+    private static Predicate buildDistanceFilter(Root<Product> root,
                                                  CriteriaBuilder cb,
                                                  Geometry isochronePolygon) {
         var inventoryRecordJoin = root.join("inventoryRecords", JoinType.INNER);

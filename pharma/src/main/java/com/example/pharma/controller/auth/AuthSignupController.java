@@ -5,8 +5,9 @@ import com.example.pharma.dto.auth.signup.SignupStartResponse;
 import com.example.pharma.dto.auth.signup.SignupVerifyRequest;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.model.entity.core.User;
+import com.example.pharma.security.AuthenticatedUser;
 import com.example.pharma.security.jwt.JwtService;
-import com.example.pharma.service.auth_services.AuthSignupService;
+import com.example.pharma.service.auth.AuthSignupService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth/signup")
+@RequestMapping("api/v1/auth/signup")
 @RequiredArgsConstructor
 public class AuthSignupController {
 
@@ -36,7 +37,7 @@ public class AuthSignupController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("",response));
+                .body(ApiResponse.success("", response));
     }
 
     @PostMapping("/verify")
@@ -48,14 +49,14 @@ public class AuthSignupController {
 
         Authentication auth =
                 UsernamePasswordAuthenticationToken.authenticated(
-                        user.getEmail(),
-                        null,
-                        AuthorityUtils.createAuthorityList(
-                                user.getRoles()
-                                        .stream()
-                                        .map(Enum::name)
-                                        .toArray(String[]::new)
-                        )
+                        new AuthenticatedUser(user.getUserId(), user.getEmail())
+                        ,null,
+                AuthorityUtils.createAuthorityList(
+                        user.getRoles()
+                                .stream()
+                                .map(Enum::name)
+                                .toArray(String[]::new)
+                )
                 );
 
         String jwt = jwtService.generateToken(auth);

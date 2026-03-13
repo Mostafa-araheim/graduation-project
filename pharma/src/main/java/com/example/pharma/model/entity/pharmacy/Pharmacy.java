@@ -11,6 +11,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 
 @Entity
@@ -22,7 +23,7 @@ public class Pharmacy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "pharmacy_id")
-    private Integer pharmacyId;
+    private Long pharmacyId;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_user_id", nullable = true)
@@ -31,7 +32,7 @@ public class Pharmacy {
     private String name;
 
     @Column(name = "total_rating")
-    private Float totalRating;
+    private BigDecimal totalRating;
 
     @Column(name = "image_url")
     private String imageUrl;

@@ -6,5 +6,5 @@ public record LoginSession(
         String email,
         UserRole role,
         String codeHash,
-        int attempts
+        Long attempts
 ) {}

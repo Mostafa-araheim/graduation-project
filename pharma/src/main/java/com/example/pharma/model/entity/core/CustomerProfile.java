@@ -14,7 +14,7 @@ public class CustomerProfile {
 
     @Id
     @Column(name = "user_id")
-    private Integer userId;
+    private Long userId;
 
     @OneToOne(optional = false, fetch = FetchType.LAZY)
     @MapsId

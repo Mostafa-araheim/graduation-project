@@ -10,7 +10,7 @@ import java.time.Instant;
 public record ErrorResponse(
         ErrorCode errorCode,
         String message,
-        int status,
+        Long status,
         Instant timestamp,
         String path
 ) {
@@ -19,7 +19,7 @@ public record ErrorResponse(
         this(
                 ex.getErrorCode(),
                 ex.getMessage(),
-                ex.getStatus().value(),
+                Long.valueOf(ex.getStatus().value()),
                 Instant.now(),
                 request.getRequestURI()
         );

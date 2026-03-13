@@ -14,13 +14,13 @@ public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer notificationId;
+    private Long notificationId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private String type;
+    private NotificationType type;
     private String message;
 
     @Column(name = "is_read", nullable = false)
