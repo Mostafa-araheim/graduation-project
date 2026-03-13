@@ -7,9 +7,6 @@ public record CartItemIdentifierRequest(
 
         @NotNull(message = "InventoryId is required")
         @Positive(message = "InventoryId must be positive")
-        Long inventoryId,
+        Long inventoryRecordId
 
-        @NotNull(message = "MedicineId is required")
-        @Positive(message = "MedicineId must be positive")
-        Long medicineId
 ) {}

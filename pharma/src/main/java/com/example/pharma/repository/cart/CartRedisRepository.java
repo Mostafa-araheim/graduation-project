@@ -43,7 +43,7 @@ public class CartRedisRepository implements CartRepository {
 
     @Override
     public void deleteCart(Long cartId) {
-        Long userId = (Long) getMetadataField(cartId, "userId");
+        Long userId = ((Number) getMetadataField(cartId, "userId")).longValue();
         redisTemplate.opsForSet()
                 .remove(RedisKeys.userCarts(userId), cartId);
         redisTemplate.delete(RedisKeys.cart(cartId));
@@ -54,8 +54,7 @@ public class CartRedisRepository implements CartRepository {
     public void saveItem(Long cartId, CartItem item) {
 
         String field = RedisKeys.cartItemField(
-                item.getInventoryId(),
-                item.getMedicineId()
+                item.getInventoryRecordId()
         );
 
         redisTemplate.opsForHash()
@@ -65,7 +64,7 @@ public class CartRedisRepository implements CartRepository {
     @Override
     public CartItem getItem(Long cartId, CartItemIdentifierRequest cartItemId) {
 
-        String field = RedisKeys.cartItemField(cartItemId.inventoryId(), cartItemId.medicineId());
+        String field = RedisKeys.cartItemField(cartItemId.inventoryRecordId());
 
         Object value = redisTemplate.opsForHash()
                 .get(RedisKeys.cartItems(cartId), field);
@@ -138,7 +137,7 @@ public class CartRedisRepository implements CartRepository {
     public void deleteItem(Long cartId,
                            CartItemIdentifierRequest cartItemId) {
 
-        String field = RedisKeys.cartItemField(cartItemId.inventoryId(), cartItemId.medicineId());
+        String field = RedisKeys.cartItemField(cartItemId.inventoryRecordId());
 
         redisTemplate.opsForHash()
                 .delete(RedisKeys.cartItems(cartId), field);
@@ -227,5 +226,42 @@ public class CartRedisRepository implements CartRepository {
                 "updatedAt",
                 updatedAt
         );
+    }
+
+    @Override
+    public boolean cartBelongsToUser(Long cartId, Long userId) {
+
+        Object owner =
+                redisTemplate.opsForHash()
+                        .get(RedisKeys.cart(cartId), "userId");
+
+        return owner != null && ((Number) owner).longValue() == userId;
+    }
+
+    @Override
+    public CartItem getFirstCartItem(Long cartId) {
+
+        Object value = redisTemplate.opsForHash()
+                .values(RedisKeys.cartItems(cartId))
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        return value != null ? (CartItem) value : null;
+    }
+
+    @Override
+    public boolean cartAccessible(Long cartId, Long userId) {
+
+        Boolean cartExists = redisTemplate.hasKey(RedisKeys.cart(cartId));
+
+        if (cartExists == null || !cartExists) {
+            return false;
+        }
+
+        Boolean isOwner = redisTemplate.opsForSet()
+                .isMember(RedisKeys.userCarts(userId), cartId);
+
+        return Boolean.TRUE.equals(isOwner);
     }
 }

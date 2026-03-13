@@ -7,7 +7,7 @@ import com.example.pharma.dto.pharmacy.PharmacyInfo;
 import com.example.pharma.dto.review.ReviewDto;
 import com.example.pharma.mapper.PharmacyMapper;
 import com.example.pharma.model.entity.catalog.Category;
-import com.example.pharma.model.entity.catalog.Medicine;
+import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
 import com.example.pharma.repository.Catalog.CategoryRepository;
@@ -65,9 +65,9 @@ public class PharmacyService {
         List<ReviewDto> pharmacyReviewDtos = pharmacyReviewRepository.findReviewDtosByPharmacyId(pharmacyId);
         return new PharmacyInfo(categories, pharmacyAddress, pharmacyDto, pharmacyReviewDtos);
     }
-    public PageResponse<Medicine> getPharmacyMedicinesUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
+    public PageResponse<Product> getPharmacyMedicinesUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
     {
-       Page<Medicine> medicines = inventoryRecordRepository.findMedicinesByPharmacyAndCategory(pharmacyId, categoryId, pageable);
+       Page<Product> medicines = inventoryRecordRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
        return PageResponse.from(medicines);
     }
 

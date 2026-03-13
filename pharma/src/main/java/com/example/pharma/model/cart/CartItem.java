@@ -13,8 +13,7 @@ import java.math.BigDecimal;
 @Builder
 public class CartItem {
 
-    private Long inventoryId;
-    private Long medicineId;
+    private Long inventoryRecordId;
 
     private Long quantity;
 

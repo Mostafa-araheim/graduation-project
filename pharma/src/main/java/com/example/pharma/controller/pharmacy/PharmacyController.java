@@ -6,7 +6,7 @@ import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
 import com.example.pharma.dto.pharmacy.PharmacySearchFilter;
-import com.example.pharma.model.entity.catalog.Medicine;
+import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.service.PharmacyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class PharmacyController {
         return ApiResponse.success("Pharmacy info fetched successfully",pharmacyService.getPharmacyInfo(pharmacyId));
     }
     @GetMapping("/{pharmacyId}/{categoryId}")
-    public ApiResponse<PageResponse<Medicine>> getPharmacyMedicinesUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "medicineId") Pageable pageable)
+    public ApiResponse<PageResponse<Product>> getPharmacyMedicinesUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "medicineId") Pageable pageable)
     {
         return ApiResponse.success("Medicines returned successfully",pharmacyService.getPharmacyMedicinesUnderACategory(pharmacyId, categoryId, pageable));
 

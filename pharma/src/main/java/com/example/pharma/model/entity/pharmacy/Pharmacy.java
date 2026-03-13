@@ -11,6 +11,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 
 @Entity
@@ -31,7 +32,7 @@ public class Pharmacy {
     private String name;
 
     @Column(name = "total_rating")
-    private Float totalRating;
+    private BigDecimal totalRating;
 
     @Column(name = "image_url")
     private String imageUrl;

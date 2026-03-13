@@ -1,10 +1,11 @@
 package com.example.pharma.model.entity.order;
 
-import com.example.pharma.model.entity.catalog.Medicine;
+import com.example.pharma.model.entity.inventory.InventoryRecord;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 @Entity
 @Getter
 @Setter
@@ -20,9 +21,10 @@ public class OrderItem {
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "medicine_id")
-    private Medicine medicine;
+    @JoinColumn(name = "inventory_record_id", nullable = false)
+    private InventoryRecord inventoryRecord;
 
-    private Long quantity;
-    private Float price;
+    private Integer quantity;
+
+    private BigDecimal price;
 }

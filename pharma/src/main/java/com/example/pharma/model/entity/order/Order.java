@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -26,7 +28,7 @@ public class Order {
     @JoinColumn(name = "pharmacy_id")
     private Pharmacy pharmacy;
 
-    private Float totalAmount;
+    private BigDecimal totalAmount;
     private String deliveryType;
     private String paymentMethod;
     private String status;

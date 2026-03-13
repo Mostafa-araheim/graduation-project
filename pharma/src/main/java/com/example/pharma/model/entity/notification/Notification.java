@@ -20,7 +20,7 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private String type;
+    private NotificationType type;
     private String message;
 
     @Column(name = "is_read", nullable = false)

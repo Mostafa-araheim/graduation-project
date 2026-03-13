@@ -1,16 +1,20 @@
 package com.example.pharma.service.cart;
 
-import com.example.pharma.dto.cart.request.*;
+import com.example.pharma.dto.cart.request.AssignCartToUserRequest;
+import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
+import com.example.pharma.dto.cart.request.CartItemQuantityRequest;
+import com.example.pharma.dto.cart.request.CreateCartRequest;
 import com.example.pharma.dto.cart.response.CartItemResponse;
 import com.example.pharma.dto.cart.response.CartResponse;
+import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.exception.validation.BusinessRuleViolationException;
+import com.example.pharma.exception.validation.ValidationException;
 import com.example.pharma.mapper.cart.CartItemMapper;
-import com.example.pharma.mapper.cart.CartMapper;
+import com.example.pharma.mapper.cart.CartMetadataMapper;
 import com.example.pharma.model.cart.CartItem;
 import com.example.pharma.model.cart.CartMetadata;
 import com.example.pharma.model.entity.inventory.InventoryRecord;
-import com.example.pharma.model.entity.inventory.InventoryRecordId;
 import com.example.pharma.repository.Inventory.InventoryRecordRepository;
 import com.example.pharma.repository.cart.CartRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,41 +29,43 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class CartService {
+
     private final CartRepository cartRepository;
-    private final CartMapper cartMapper;
+    private final CartMetadataMapper cartMetadataMapper;
     private final CartItemMapper cartItemMapper;
     private final InventoryRecordRepository inventoryRecordRepository;
+
     private static final Duration CART_TTL = Duration.ofDays(7);
 
-    // i didn't check if the user id is existed or not because if the user is anonymous we can consider the session id
-    // is the user id then after login the front end make some requests create another cart but for the real user and  copy items there then delete the anonymous one
-    public CartResponse createCart(CreateCartRequest request) {
+    // POST /carts
+    public CartResponse createCart(CreateCartRequest request, Long userId) {
 
-        CartMetadata cartMetadata = cartMapper.toEntity(request);
+        CartMetadata cartMetadata = cartMetadataMapper.toEntity(userId, request);
 
         Long cartId = cartRepository.createCart(cartMetadata);
 
-        cartRepository.assignCartToUser(cartId, request.userId());
+        cartRepository.assignCartToUser(cartId, userId);
 
         cartRepository.expire(cartId, CART_TTL);
 
         return new CartResponse(
                 cartId,
-                List.of(),                 // items empty
-                0L,                        // totalItems
-                BigDecimal.ZERO,           // totalPrice
-                cartMetadata.getCreatedAt() // updatedAt = createdAt
+                List.of(),
+                0L,
+                BigDecimal.ZERO,
+                cartMetadata.getCreatedAt(),
+                request.name()
         );
     }
 
-    public CartResponse getCart(Long cartId) {
+    // GET /carts/{cartId}
+    public CartResponse getCart(Long cartId, Long userId) {
 
-        validateCart(cartId);
+        validateCartAccess(cartId, userId);
 
         CartMetadata metadata = cartRepository.getCartMetadata(cartId);
 
-        List<CartItem> items =
-                cartRepository.getAllCartItemsList(cartId);
+        List<CartItem> items = cartRepository.getAllCartItemsList(cartId);
 
         List<CartItemResponse> itemResponses =
                 items.stream()
@@ -79,49 +85,48 @@ public class CartService {
                 itemResponses,
                 totalItems,
                 totalPrice,
-                metadata.getUpdatedAt()
+                metadata.getUpdatedAt(),
+                metadata.getName()
         );
     }
 
+    // GET /carts/user
+    public List<CartResponse> getUserCarts(Long userId) {
 
-    private void refreshCart(Long cartId) {
+        if (userId == null) {
+            throw new ValidationException("UserId is required");
+        }
 
-        cartRepository.expire(cartId, CART_TTL);
+        Set<Long> cartIds = cartRepository.getUserCarts(userId);
 
-        cartRepository.updateCartUpdatedAt(cartId, Instant.now());
+        if (cartIds == null || cartIds.isEmpty()) {
+            return List.of();
+        }
+
+        return cartIds.stream()
+                .map(id -> getCart(id, userId))
+                .toList();
     }
 
-    public void addItem(Long cartId, CartItemIdentifierRequest request) {
+    // POST /carts/{cartId}/items
+    public void addItem(Long cartId, Long userId, CartItemIdentifierRequest request) {
 
-        validateCart(cartId);
+        validateCartAccess(cartId, userId);
 
         InventoryRecord inventoryRecord =
-                inventoryRecordRepository.findById(
-                        new InventoryRecordId(
-                                request.inventoryId(),
-                                request.medicineId()
-                        )
-                ).orElseThrow(() ->
-                        new EntityNotFoundException("Inventory record not found"));
+                getInventoryRecord(request.inventoryRecordId());
 
         if (inventoryRecord.getQuantity() <= 0) {
             throw new BusinessRuleViolationException("Item is out of stock");
         }
 
-        CartItem existing =
-                cartRepository.getItem(
-                        cartId,
-                        request
-                );
+        validateSamePharmacy(cartId, inventoryRecord);
+
+        CartItem existing = cartRepository.getItem(cartId, request);
 
         if (existing == null) {
 
-            CartItem newItem = CartItem.builder()
-                    .inventoryId(request.inventoryId())
-                    .medicineId(request.medicineId())
-                    .quantity(1L)
-                    .pricePerUnit(inventoryRecord.getPrice())
-                    .build();
+            CartItem newItem = cartItemMapper.toEntity(inventoryRecord);
 
             cartRepository.saveItem(cartId, newItem);
 
@@ -131,58 +136,24 @@ public class CartService {
                 throw new BusinessRuleViolationException("Not enough stock");
             }
 
-            cartRepository.incrementQuantity(
-                    cartId,
-                    request
-            );
+            cartRepository.incrementQuantity(cartId, request);
         }
 
         refreshCart(cartId);
     }
 
-    public void deleteItem(Long cartId, CartItemIdentifierRequest request) {
+    // PATCH /carts/{cartId}/items/quantity
+    public void updateItemQuantity(Long cartId, Long userId, CartItemQuantityRequest request) {
 
-        validateCart(cartId);
+        validateCartAccess(cartId, userId);
 
-        CartItem existing =
-                cartRepository.getItem(
-                        cartId,
-                        request
-                );
-
-        if (existing == null) {
-            throw new EntityNotFoundException("Item not found in cart");
-        }
-
-        cartRepository.deleteItem(
+        getExistingCartItem(
                 cartId,
-                request
+                new CartItemIdentifierRequest(request.inventoryRecordId())
         );
-
-        refreshCart(cartId);
-    }
-
-    public void updateItemQuantity(Long cartId, UpdateCartItemQuantityRequest request) {
-
-        validateCart(cartId);
-
-        CartItem existing = cartRepository.getItem(
-                cartId,
-                new CartItemIdentifierRequest(request.inventoryId(), request.medicineId())
-        );
-
-        if (existing == null) {
-            throw new EntityNotFoundException("Item not found in cart");
-        }
 
         InventoryRecord inventoryRecord =
-                inventoryRecordRepository.findById(
-                        new InventoryRecordId(
-                                request.inventoryId(),
-                                request.medicineId()
-                        )
-                ).orElseThrow(() ->
-                        new EntityNotFoundException("Inventory record not found"));
+                getInventoryRecord(request.inventoryRecordId());
 
         if (request.quantity() > inventoryRecord.getQuantity()) {
             throw new BusinessRuleViolationException("Not enough stock");
@@ -190,115 +161,174 @@ public class CartService {
 
         cartRepository.updateQuantity(
                 cartId,
-                new CartItemIdentifierRequest(request.inventoryId(), request.medicineId()),
+                new CartItemIdentifierRequest(request.inventoryRecordId()),
                 request.quantity()
         );
 
         refreshCart(cartId);
     }
 
-    public void increaseQuantity(Long cartId, CartItemIdentifierRequest request) {
+    // POST /carts/{cartId}/items/increase
+    public void increaseQuantity(Long cartId, Long userId, CartItemIdentifierRequest request) {
 
-        validateCart(cartId);
+        validateCartAccess(cartId, userId);
 
-        CartItem existing =
-                cartRepository.getItem(
-                        cartId,
-                        request
-                );
-
-        if (existing == null) {
-            throw new EntityNotFoundException("Item not found in cart");
-        }
+        CartItem existing = getExistingCartItem(cartId, request);
 
         InventoryRecord inventoryRecord =
-                inventoryRecordRepository.findById(
-                        new InventoryRecordId(
-                                request.inventoryId(),
-                                request.medicineId()
-                        )
-                ).orElseThrow(() ->
-                        new EntityNotFoundException("Inventory record not found"));
+                getInventoryRecord(request.inventoryRecordId());
 
         if (existing.getQuantity() >= inventoryRecord.getQuantity()) {
             throw new BusinessRuleViolationException("Not enough stock");
         }
 
-        cartRepository.incrementQuantity(
-                cartId,
-                request
-        );
+        cartRepository.incrementQuantity(cartId, request);
 
         refreshCart(cartId);
     }
 
-    public void decreaseQuantity(Long cartId, CartItemIdentifierRequest request) {
+    // POST /carts/{cartId}/items/decrease
+    public void decreaseQuantity(Long cartId, Long userId, CartItemIdentifierRequest request) {
 
-        validateCart(cartId);
+        validateCartAccess(cartId, userId);
 
-        CartItem existing = cartRepository.getItem(
-                cartId,
-                request
-        );
-
-        if (existing == null) {
-            throw new EntityNotFoundException("Item not found in cart");
-        }
+        CartItem existing = getExistingCartItem(cartId, request);
 
         if (existing.getQuantity() <= 1) {
 
-            cartRepository.deleteItem(
-                    cartId,
-                    request
-            );
+            cartRepository.deleteItem(cartId, request);
 
         } else {
 
-            cartRepository.decrementQuantity(
-                    cartId,
-                    request
-            );
+            cartRepository.decrementQuantity(cartId, request);
         }
 
         refreshCart(cartId);
     }
 
-    public void clearCart(Long cartId) {
+    // DELETE /carts/{cartId}/items
+    public void deleteItem(Long cartId, Long userId, CartItemIdentifierRequest request) {
 
-        validateCart(cartId);
+        validateCartAccess(cartId, userId);
+
+        getExistingCartItem(cartId, request);
+
+        cartRepository.deleteItem(cartId, request);
+
+        refreshCart(cartId);
+    }
+
+    // DELETE /carts/{cartId}/clear
+    public void clearCart(Long cartId, Long userId) {
+
+        validateCartAccess(cartId, userId);
 
         cartRepository.clearCartItems(cartId);
 
         refreshCart(cartId);
     }
 
-    public void deleteCart(Long cartId) {
+    // DELETE /carts/{cartId}
+    public void deleteCart(Long cartId, Long userId) {
 
-        validateCart(cartId);
+        validateCartAccess(cartId, userId);
 
         cartRepository.deleteCart(cartId);
     }
 
-    public Set<Long> getUserCarts(Long userId) {
+    // POST /carts/assign
+    public CartResponse assignCartToUser(Long userId, AssignCartToUserRequest request) {
 
-        Set<Long> carts = cartRepository.getUserCarts(userId);
+        if (userId == null) {
+            throw new ValidationException("UserId is required");
+        }
 
-        return carts == null ? Set.of() : carts;
+        CartMetadata metadata = cartMetadataMapper.toEntity(
+                userId,
+                new CreateCartRequest(request.cartName())
+        );
+
+        Long cartId = cartRepository.createCart(metadata);
+
+        cartRepository.assignCartToUser(cartId, userId);
+
+        for (CartItemQuantityRequest itemRequest : request.items()) {
+
+            InventoryRecord inventoryRecord =
+                    getInventoryRecord(itemRequest.inventoryRecordId());
+
+            if (itemRequest.quantity() > inventoryRecord.getQuantity()) {
+                throw new BusinessRuleViolationException("Not enough stock");
+            }
+
+            CartItem item = cartItemMapper.toEntity(
+                    inventoryRecord,
+                    itemRequest.quantity()
+            );
+
+            cartRepository.saveItem(cartId, item);
+        }
+
+        cartRepository.expire(cartId, CART_TTL);
+
+        return getCart(cartId, userId);
     }
 
-    private void validateCart(Long cartId) {
-        if (!cartRepository.exists(cartId)) {
-            throw new EntityNotFoundException("Cart not found");
+    // ================= PRIVATE HELPERS =================
+
+    private void refreshCart(Long cartId) {
+
+        cartRepository.expire(cartId, CART_TTL);
+
+        cartRepository.updateCartUpdatedAt(cartId, Instant.now());
+    }
+
+    private void validateCartAccess(Long cartId, Long userId) {
+
+        if (!cartRepository.cartAccessible(cartId, userId)) {
+            throw new AccessDeniedException("You are not allowed to access this cart");
         }
     }
 
-}
-//POST   /carts
-//GET    /carts/{cartId}
-//POST   /carts/{cartId}/items
+    private InventoryRecord getInventoryRecord(Long inventoryRecordId) {
 
-//DELETE /carts/{cartId}/items
-//PATCH  /carts/{cartId}/items/quantity
-//POST   /carts/{cartId}/items/increase
-//POST   /carts/{cartId}/items/decrease
-//DELETE /carts/{cartId}/clear
+        return inventoryRecordRepository.findById(inventoryRecordId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Inventory record not found"));
+    }
+
+    private CartItem getExistingCartItem(Long cartId, CartItemIdentifierRequest request) {
+
+        CartItem item = cartRepository.getItem(cartId, request);
+
+        if (item == null) {
+            throw new EntityNotFoundException("Item not found in cart");
+        }
+
+        return item;
+    }
+
+    private void validateSamePharmacy(Long cartId, InventoryRecord inventoryRecord) {
+
+        CartItem firstItem = cartRepository.getFirstCartItem(cartId);
+
+        if (firstItem == null) {
+            return;
+        }
+
+        InventoryRecord firstRecord =
+                getInventoryRecord(firstItem.getInventoryRecordId());
+
+        Long cartPharmacyId =
+                firstRecord.getInventory().getPharmacy().getPharmacyId();
+
+        Long itemPharmacyId =
+                inventoryRecord.getInventory().getPharmacy().getPharmacyId();
+
+        if (!cartPharmacyId.equals(itemPharmacyId)) {
+            throw new BusinessRuleViolationException(
+                    "Cart cannot contain items from multiple pharmacies"
+            );
+        }
+    }
+}

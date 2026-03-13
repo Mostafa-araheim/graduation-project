@@ -3,6 +3,7 @@ package com.example.pharma.security.jwt;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.repository.Core.UserRepository;
+import com.example.pharma.security.AuthenticatedUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -31,9 +32,9 @@ public class JwtService {
     public String generateToken(Authentication authentication) {
         String secret = environment.getProperty("spring.application.jwt.secret");
         SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        User user = userRepository.findByEmail(((AuthenticatedUser)authentication.getPrincipal()).email()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         return Jwts.builder()
-                .subject(authentication.getName())
+                .subject(((AuthenticatedUser) authentication.getPrincipal()).email())
                 .claim("user_id", user.getUserId())
                 .claim("authorities", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
                 .issuedAt(new Date())
@@ -58,12 +59,18 @@ public class JwtService {
 
 
     public Authentication parseAuthentication(String token) {
+
         Claims claims = extractAllClaims(token);
-        String username = claims.getSubject();
+
+        String email = claims.getSubject();
+        Long userId = claims.get("user_id", Long.class);
         String authorities = claims.get("authorities", String.class);
 
+        AuthenticatedUser principal =
+                new AuthenticatedUser(userId, email);
+
         return new UsernamePasswordAuthenticationToken(
-                username,
+                principal,
                 null,
                 AuthorityUtils.commaSeparatedStringToAuthorityList(authorities)
         );

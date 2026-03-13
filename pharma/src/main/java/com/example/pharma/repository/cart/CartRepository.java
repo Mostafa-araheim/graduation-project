@@ -18,7 +18,7 @@ public interface CartRepository {
     // Assign cart to user
     void assignCartToUser(Long cartId, Long userId);
 
-    // Delete cart بالكامل
+    // Delete cart
     void deleteCart(Long cartId);
 
     // Add or set item
@@ -62,4 +62,10 @@ public interface CartRepository {
     public Long saveCart(Long cartId, CartMetadata metadata);
 
     void updateCartUpdatedAt(Long cartId, Instant updatedAt);
+
+    boolean cartBelongsToUser(Long cartId, Long userId);
+
+    CartItem getFirstCartItem(Long cartId);
+
+    boolean cartAccessible(Long cartId, Long userId);
 }

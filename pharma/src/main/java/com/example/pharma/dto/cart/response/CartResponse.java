@@ -10,4 +10,5 @@ public record CartResponse(
         Long totalItems,
         BigDecimal totalPrice,
         Instant updatedAt
+        ,String cartName
 ) {}

@@ -22,7 +22,7 @@ public class P2PListing {
     @JoinColumn(name = "seller_id", nullable = false)
     private CustomerProfile seller;
 
-    private String medicineName;
+    private String productName;
     private Long quantity;
     private LocalDate expiryDate;
     private Float price;

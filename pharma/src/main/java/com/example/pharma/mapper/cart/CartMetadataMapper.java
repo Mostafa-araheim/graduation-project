@@ -7,10 +7,12 @@ import org.mapstruct.Mapping;
 
 import java.time.Instant;
 
-@Mapper(componentModel = "spring", imports = {Instant.class})
-public interface CartMapper {
+@Mapper(componentModel = "spring", imports = Instant.class)
+public interface CartMetadataMapper {
 
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "name", source = "request.name")
     @Mapping(target = "createdAt", expression = "java(Instant.now())")
     @Mapping(target = "updatedAt", expression = "java(Instant.now())")
-    CartMetadata toEntity(CreateCartRequest request);
+    CartMetadata toEntity(Long userId, CreateCartRequest request);
 }

@@ -11,28 +11,37 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Table(name = "medicine")
-public class Medicine {
+@Table(name = "product")
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long medicineId;
+    private Long productId;
 
+    @Column(nullable = false)
     private String name;
+
     private String description;
+
     private boolean requiresPrescription;
+
     @Enumerated(EnumType.STRING)
     private DosageForm dosageForm;
+
     private String strength;
+
     private String manufacturer;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;
+
     @JsonIgnore
-    @OneToMany(mappedBy = "medicine")
+    @OneToMany(mappedBy = "product")
+
     private List<InventoryRecord> inventoryRecords;
 }

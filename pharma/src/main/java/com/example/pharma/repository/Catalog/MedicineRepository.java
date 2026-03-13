@@ -1,11 +1,11 @@
 package com.example.pharma.repository.Catalog;
 
-import com.example.pharma.model.entity.catalog.Medicine;
+import com.example.pharma.model.entity.catalog.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface MedicineRepository extends JpaRepository<Medicine, Long>, JpaSpecificationExecutor<Medicine> {
+public interface MedicineRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 }
