@@ -11,16 +11,16 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Table(
-        name = "inventory_record",
+        name = "pharmacy_product",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"inventory_id", "product_id"})
         }
 )
-public class InventoryRecord {
+public class PharmacyProduct {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long inventoryRecordId;
+    private Long pharmacyProductId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_id", nullable = false)

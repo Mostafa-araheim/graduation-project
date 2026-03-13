@@ -14,8 +14,8 @@ import com.example.pharma.mapper.cart.CartItemMapper;
 import com.example.pharma.mapper.cart.CartMetadataMapper;
 import com.example.pharma.model.cart.CartItem;
 import com.example.pharma.model.cart.CartMetadata;
-import com.example.pharma.model.entity.inventory.InventoryRecord;
-import com.example.pharma.repository.Inventory.InventoryRecordRepository;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.repository.cart.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartMetadataMapper cartMetadataMapper;
     private final CartItemMapper cartItemMapper;
-    private final InventoryRecordRepository inventoryRecordRepository;
+    private final PharmacyProductRepository pharmacyProductRepository;
 
     private static final Duration CART_TTL = Duration.ofDays(7);
 
@@ -113,26 +113,26 @@ public class CartService {
 
         validateCartAccess(cartId, userId);
 
-        InventoryRecord inventoryRecord =
-                getInventoryRecord(request.inventoryRecordId());
+        PharmacyProduct pharmacyProduct =
+                getPharmacyProduct(request.pharmacyProductId());
 
-        if (inventoryRecord.getQuantity() <= 0) {
+        if (pharmacyProduct.getQuantity() <= 0) {
             throw new BusinessRuleViolationException("Item is out of stock");
         }
 
-        validateSamePharmacy(cartId, inventoryRecord);
+        validateSamePharmacy(cartId, pharmacyProduct);
 
         CartItem existing = cartRepository.getItem(cartId, request);
 
         if (existing == null) {
 
-            CartItem newItem = cartItemMapper.toEntity(inventoryRecord);
+            CartItem newItem = cartItemMapper.toEntity(pharmacyProduct);
 
             cartRepository.saveItem(cartId, newItem);
 
         } else {
 
-            if (existing.getQuantity() >= inventoryRecord.getQuantity()) {
+            if (existing.getQuantity() >= pharmacyProduct.getQuantity()) {
                 throw new BusinessRuleViolationException("Not enough stock");
             }
 
@@ -149,19 +149,19 @@ public class CartService {
 
         getExistingCartItem(
                 cartId,
-                new CartItemIdentifierRequest(request.inventoryRecordId())
+                new CartItemIdentifierRequest(request.pharmacyProductId())
         );
 
-        InventoryRecord inventoryRecord =
-                getInventoryRecord(request.inventoryRecordId());
+        PharmacyProduct pharmacyProduct =
+                getPharmacyProduct(request.pharmacyProductId());
 
-        if (request.quantity() > inventoryRecord.getQuantity()) {
+        if (request.quantity() > pharmacyProduct.getQuantity()) {
             throw new BusinessRuleViolationException("Not enough stock");
         }
 
         cartRepository.updateQuantity(
                 cartId,
-                new CartItemIdentifierRequest(request.inventoryRecordId()),
+                new CartItemIdentifierRequest(request.pharmacyProductId()),
                 request.quantity()
         );
 
@@ -175,10 +175,10 @@ public class CartService {
 
         CartItem existing = getExistingCartItem(cartId, request);
 
-        InventoryRecord inventoryRecord =
-                getInventoryRecord(request.inventoryRecordId());
+        PharmacyProduct pharmacyProduct =
+                getPharmacyProduct(request.pharmacyProductId());
 
-        if (existing.getQuantity() >= inventoryRecord.getQuantity()) {
+        if (existing.getQuantity() >= pharmacyProduct.getQuantity()) {
             throw new BusinessRuleViolationException("Not enough stock");
         }
 
@@ -254,15 +254,15 @@ public class CartService {
 
         for (CartItemQuantityRequest itemRequest : request.items()) {
 
-            InventoryRecord inventoryRecord =
-                    getInventoryRecord(itemRequest.inventoryRecordId());
+            PharmacyProduct pharmacyProduct =
+                    getPharmacyProduct(itemRequest.pharmacyProductId());
 
-            if (itemRequest.quantity() > inventoryRecord.getQuantity()) {
+            if (itemRequest.quantity() > pharmacyProduct.getQuantity()) {
                 throw new BusinessRuleViolationException("Not enough stock");
             }
 
             CartItem item = cartItemMapper.toEntity(
-                    inventoryRecord,
+                    pharmacyProduct,
                     itemRequest.quantity()
             );
 
@@ -290,11 +290,11 @@ public class CartService {
         }
     }
 
-    private InventoryRecord getInventoryRecord(Long inventoryRecordId) {
+    private PharmacyProduct getPharmacyProduct(Long pharmacyProductId) {
 
-        return inventoryRecordRepository.findById(inventoryRecordId)
+        return pharmacyProductRepository.findById(pharmacyProductId)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Inventory record not found"));
+                        new EntityNotFoundException("Pharmacy product not found"));
     }
 
     private CartItem getExistingCartItem(Long cartId, CartItemIdentifierRequest request) {
@@ -308,7 +308,7 @@ public class CartService {
         return item;
     }
 
-    private void validateSamePharmacy(Long cartId, InventoryRecord inventoryRecord) {
+    private void validateSamePharmacy(Long cartId, PharmacyProduct pharmacyProduct) {
 
         CartItem firstItem = cartRepository.getFirstCartItem(cartId);
 
@@ -316,14 +316,14 @@ public class CartService {
             return;
         }
 
-        InventoryRecord firstRecord =
-                getInventoryRecord(firstItem.getInventoryRecordId());
+        PharmacyProduct firstRecord =
+                getPharmacyProduct(firstItem.getPharmacyProductId());
 
         Long cartPharmacyId =
                 firstRecord.getInventory().getPharmacy().getPharmacyId();
 
         Long itemPharmacyId =
-                inventoryRecord.getInventory().getPharmacy().getPharmacyId();
+                pharmacyProduct.getInventory().getPharmacy().getPharmacyId();
 
         if (!cartPharmacyId.equals(itemPharmacyId)) {
             throw new BusinessRuleViolationException(

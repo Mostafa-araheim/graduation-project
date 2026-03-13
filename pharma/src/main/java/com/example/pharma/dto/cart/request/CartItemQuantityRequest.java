@@ -7,7 +7,7 @@ public record CartItemQuantityRequest(
 
         @NotNull(message = "InventoryRecordId is required")
         @Positive(message = "InventoryRecordId must be positive")
-        Long inventoryRecordId,
+        Long pharmacyProductId,
 
         @NotNull(message = "Quantity is required")
         @Positive(message = "Quantity must be greater than 0")

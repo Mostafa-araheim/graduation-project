@@ -54,7 +54,7 @@ public class CartRedisRepository implements CartRepository {
     public void saveItem(Long cartId, CartItem item) {
 
         String field = RedisKeys.cartItemField(
-                item.getInventoryRecordId()
+                item.getPharmacyProductId()
         );
 
         redisTemplate.opsForHash()
@@ -64,7 +64,7 @@ public class CartRedisRepository implements CartRepository {
     @Override
     public CartItem getItem(Long cartId, CartItemIdentifierRequest cartItemId) {
 
-        String field = RedisKeys.cartItemField(cartItemId.inventoryRecordId());
+        String field = RedisKeys.cartItemField(cartItemId.pharmacyProductId());
 
         Object value = redisTemplate.opsForHash()
                 .get(RedisKeys.cartItems(cartId), field);
@@ -137,7 +137,7 @@ public class CartRedisRepository implements CartRepository {
     public void deleteItem(Long cartId,
                            CartItemIdentifierRequest cartItemId) {
 
-        String field = RedisKeys.cartItemField(cartItemId.inventoryRecordId());
+        String field = RedisKeys.cartItemField(cartItemId.pharmacyProductId());
 
         redisTemplate.opsForHash()
                 .delete(RedisKeys.cartItems(cartId), field);

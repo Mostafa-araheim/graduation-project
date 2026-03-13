@@ -1,6 +1,6 @@
 package com.example.pharma.model.entity.catalog;
 
-import com.example.pharma.model.entity.inventory.InventoryRecord;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -43,5 +43,5 @@ public class Product {
     @JsonIgnore
     @OneToMany(mappedBy = "product")
 
-    private List<InventoryRecord> inventoryRecords;
+    private List<PharmacyProduct> pharmacyProducts;
 }

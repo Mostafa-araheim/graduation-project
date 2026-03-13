@@ -13,15 +13,15 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
 
     @Query("""
-        SELECT new com.example.pharma.dto.category.CategoryDto(
-            c.categoryName,
-            c.imageUrl,
-            COUNT(m)
-        )
-        FROM Category c
-        LEFT JOIN Medicine m ON m.category = c
-        GROUP BY c.categoryId, c.categoryName, c.imageUrl
-    """)
+            SELECT new com.example.pharma.dto.category.CategoryDto(
+                c.categoryName,
+                c.imageUrl,
+                COUNT(p)
+            )
+            FROM Category c
+            LEFT JOIN Product p ON p.category = c
+            GROUP BY c.categoryId, c.categoryName, c.imageUrl
+            """)
     List<CategoryDto> findCategoriesWithMedicineCount();
 
 }

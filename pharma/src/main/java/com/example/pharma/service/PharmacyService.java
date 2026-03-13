@@ -11,7 +11,7 @@ import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
 import com.example.pharma.repository.Catalog.CategoryRepository;
-import com.example.pharma.repository.Inventory.InventoryRecordRepository;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyAddressRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import com.example.pharma.repository.Pharmacy.PharmacySpecifications;
@@ -32,7 +32,7 @@ public class PharmacyService {
     private final CategoryRepository categoryRepository;
     private final PharmacyAddressRepository pharmacyAddressRepository;
     private final PharmacyReviewRepository pharmacyReviewRepository;
-    private final InventoryRecordRepository inventoryRecordRepository;
+    private final PharmacyProductRepository pharmacyProductRepository;
     private final LocationService locationService;
     public PageResponse<PharmacyDto> getPharmacies( String name,
                                                     Float minRating,
@@ -67,7 +67,7 @@ public class PharmacyService {
     }
     public PageResponse<Product> getPharmacyMedicinesUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
     {
-       Page<Product> medicines = inventoryRecordRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
+       Page<Product> medicines = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
        return PageResponse.from(medicines);
     }
 

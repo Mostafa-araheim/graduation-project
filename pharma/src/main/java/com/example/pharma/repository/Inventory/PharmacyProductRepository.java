@@ -2,7 +2,7 @@ package com.example.pharma.repository.Inventory;
 
 import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.inventory.Inventory;
-import com.example.pharma.model.entity.inventory.InventoryRecord;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,16 +13,16 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface InventoryRecordRepository
-        extends JpaRepository<InventoryRecord, Long> {
+public interface PharmacyProductRepository
+        extends JpaRepository<PharmacyProduct, Long> {
 
-    List<InventoryRecord> findByInventory(Inventory inventory);
+    List<PharmacyProduct> findByInventory(Inventory inventory);
 
     @Query("""
-        SELECT ir.product
-        FROM InventoryRecord ir
-        WHERE ir.inventory.pharmacy.pharmacyId = :pharmacyId
-        AND ir.product.category.categoryId = :categoryId
+        SELECT pp.product
+        FROM PharmacyProduct pp
+        WHERE pp.inventory.pharmacy.pharmacyId = :pharmacyId
+        AND pp.product.category.categoryId = :categoryId
     """)
     Page<Product> findProductsByPharmacyAndCategory(
             @Param("pharmacyId") Long pharmacyId,

@@ -1,6 +1,6 @@
 package com.example.pharma.model.entity.order;
 
-import com.example.pharma.model.entity.inventory.InventoryRecord;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +22,7 @@ public class OrderItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_record_id", nullable = false)
-    private InventoryRecord inventoryRecord;
+    private PharmacyProduct pharmacyProduct;
 
     private Integer quantity;
 

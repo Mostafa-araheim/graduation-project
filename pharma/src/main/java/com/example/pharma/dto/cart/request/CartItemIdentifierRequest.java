@@ -7,6 +7,6 @@ public record CartItemIdentifierRequest(
 
         @NotNull(message = "InventoryId is required")
         @Positive(message = "InventoryId must be positive")
-        Long inventoryRecordId
+        Long pharmacyProductId
 
 ) {}

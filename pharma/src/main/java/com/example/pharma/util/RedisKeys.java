@@ -30,8 +30,8 @@ public final class RedisKeys {
         return "auth:login:" + loginId;
     }
 
-    public static String cartItemField(Long inventoryRecordId) {
-        return inventoryRecordId.toString();
+    public static String cartItemField(Long pharmacyProductId) {
+        return pharmacyProductId.toString();
     }
 
 
