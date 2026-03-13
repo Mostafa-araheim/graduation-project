@@ -33,11 +33,24 @@ public class PharmacyService {
     private final PharmacyAddressRepository pharmacyAddressRepository;
     private final PharmacyReviewRepository pharmacyReviewRepository;
     private final InventoryRecordRepository inventoryRecordRepository;
-    public PageResponse<PharmacyDto> getPharmacies(String name, Float minRating, Boolean isOpen, Pageable pageable)
+    private final LocationService locationService;
+    public PageResponse<PharmacyDto> getPharmacies( String name,
+                                                    Float minRating,
+                                                    Boolean isOpen,
+                                                    Double latitude,
+                                                    Double longitude,
+                                                    Double maxDistanceKm,
+                                                    Pageable pageable)
     {
         Specification<Pharmacy> spec = Specification.where(PharmacySpecifications.hasName(name))
                 .and(PharmacySpecifications.hasMinRating(minRating))
-                .and(PharmacySpecifications.isOpenNow(isOpen));
+                .and(PharmacySpecifications.isOpenNow(isOpen))
+                .and(PharmacySpecifications.withinDistance(
+                        latitude,
+                        longitude,
+                        maxDistanceKm,
+                        locationService
+                ));
         Page<Pharmacy> pharmacies = pharmacyRepository.findAll(spec, pageable);
         Page<PharmacyDto> pharmacyDtos = pharmacies.map(PharmacyMapper.INSTANCE::toDto);
         return PageResponse.from(pharmacyDtos);

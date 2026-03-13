@@ -57,9 +57,12 @@ public class Pharmacy {
 
     @Column(name = "is_24_hours")
     private Boolean is24Hours;
-   // Sync the Point with Lat/Lon before saving
+    @PrePersist
+    @PreUpdate
     public void updateGeometry() {
-        GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
-        this.location = factory.createPoint(new Coordinate(this.longitude, this.latitude));
+        if (latitude != null && longitude != null) {
+            GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
+            this.location = factory.createPoint(new Coordinate(this.longitude, this.latitude));
+        }
     }
 }

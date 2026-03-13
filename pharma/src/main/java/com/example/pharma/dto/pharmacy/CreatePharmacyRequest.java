@@ -27,6 +27,10 @@ public record CreatePharmacyRequest(
         @JsonProperty("country")
         String country,
         @JsonProperty("apartment_number")
-        String apartmentNumber
+        String apartmentNumber,
+        @JsonProperty("latitude")
+        Double latitude,
+        @JsonProperty("longitude")
+        Double longitude
 ) {
 }

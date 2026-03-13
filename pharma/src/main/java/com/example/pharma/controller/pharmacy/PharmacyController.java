@@ -5,8 +5,10 @@ import com.example.pharma.dto.common.PageResponse;
 import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
+import com.example.pharma.dto.pharmacy.PharmacySearchFilter;
 import com.example.pharma.model.entity.catalog.Medicine;
 import com.example.pharma.service.PharmacyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -20,29 +22,38 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PharmacyController {
     private final PharmacyService pharmacyService;
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<PageResponse<PharmacyDto>> getPharmacies(@RequestParam(required = false) String name ,
-                                                                @RequestParam(required = false) Float minRating,
-                                                                @RequestParam(required = false) Boolean isOpen,
+    public ApiResponse<PageResponse<PharmacyDto>> getPharmacies(@Valid @ModelAttribute PharmacySearchFilter pharmacySearchFilter,
                                                                 @PageableDefault(sort = "pharmacyId") Pageable pageable) {
-        return ApiResponse.success("Pharmacies retrieved successfully", pharmacyService.getPharmacies(name, minRating, isOpen, pageable));
+        return ApiResponse.success("Pharmacies retrieved successfully", pharmacyService
+                .getPharmacies(
+                        pharmacySearchFilter.name(),
+                        pharmacySearchFilter.minRating(),
+                        pharmacySearchFilter.isOpen(),
+                        pharmacySearchFilter.latitude(),
+                        pharmacySearchFilter.longitude(),
+                        pharmacySearchFilter.maxDistanceKm(),
+                        pageable
+                )
+        );
     }
+
     @GetMapping("/{pharmacyId}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<PharmacyInfo> getPharmacyInfo(@PathVariable Integer pharmacyId)
-    {
-        return ApiResponse.success("Pharmacy info fetched successfully",pharmacyService.getPharmacyInfo(pharmacyId));
+    public ApiResponse<PharmacyInfo> getPharmacyInfo(@PathVariable Integer pharmacyId) {
+        return ApiResponse.success("Pharmacy info fetched successfully", pharmacyService.getPharmacyInfo(pharmacyId));
     }
+
     @GetMapping("/{pharmacyId}/{categoryId}")// Not yet finished and not ready for production
-    public ApiResponse<PageResponse<Medicine>> getPharmacyMedicinesUnderACategory(@PathVariable Integer pharmacyId, @PathVariable Integer categoryId, @PageableDefault(sort = "medicineId") Pageable pageable)
-    {
-        return ApiResponse.success("Medicines returned successfully",pharmacyService.getPharmacyMedicinesUnderACategory(pharmacyId, categoryId, pageable));
+    public ApiResponse<PageResponse<Medicine>> getPharmacyMedicinesUnderACategory(@PathVariable Integer pharmacyId, @PathVariable Integer categoryId, @PageableDefault(sort = "medicineId") Pageable pageable) {
+        return ApiResponse.success("Medicines returned successfully", pharmacyService.getPharmacyMedicinesUnderACategory(pharmacyId, categoryId, pageable));
     }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createBulk(@RequestBody List<CreatePharmacyRequest> createPharmacyRequestList)
-    {
+    public void createBulk(@RequestBody List<CreatePharmacyRequest> createPharmacyRequestList) {
         pharmacyService.createPharmacies(createPharmacyRequestList);
     }
 
