@@ -1,8 +1,11 @@
 package com.example.pharma.repository.Pharmacy;
 
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import com.example.pharma.service.LocationService;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.WKTWriter;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalTime;
@@ -57,6 +60,43 @@ public class PharmacySpecifications {
             );
 
             return cb.or(alwaysOpen, normalHours, overnightHours);
+        };
+    }
+    public static Specification<Pharmacy> withinDistance(
+            Double latitude,
+            Double longitude,
+            Double maxDistanceKm,
+            LocationService locationService
+    ) {
+        return (root, query, cb) -> {
+
+            if (latitude == null || longitude == null || maxDistanceKm == null) {
+                return cb.conjunction();
+            }
+
+            Geometry polygon = locationService.getRoadReachPolygon(
+                    latitude,
+                    longitude,
+                    maxDistanceKm * 1000
+            );
+
+            String wkt = new WKTWriter().write(polygon);
+
+            var polygonExpr = cb.function(
+                    "ST_GeomFromText",
+                    Geometry.class,
+                    cb.literal(wkt),
+                    cb.literal(4326)
+            );
+
+            return cb.isTrue(
+                    cb.function(
+                            "ST_Within",
+                            Boolean.class,
+                            root.get("location"),
+                            polygonExpr
+                    )
+            );
         };
     }
 }
