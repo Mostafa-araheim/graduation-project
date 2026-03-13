@@ -206,10 +206,12 @@ public class CartService {
         refreshCart(cartId);
     }
 
-    // DELETE /carts/{cartId}/items
-    public void deleteItem(Long cartId, Long userId, CartItemIdentifierRequest request) {
+    public void deleteItem(Long cartId, Long userId, Long pharmacyProductId) {
 
         validateCartAccess(cartId, userId);
+
+        CartItemIdentifierRequest request =
+                new CartItemIdentifierRequest(pharmacyProductId);
 
         getExistingCartItem(cartId, request);
 

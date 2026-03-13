@@ -115,16 +115,15 @@ public class CartController {
         return ApiResponse.success("Item quantity decreased", null);
     }
 
-    // DELETE /carts/{cartId}/items
-    @DeleteMapping("/{cartId}/items")
+    @DeleteMapping("/{cartId}/items/{pharmacyProductId}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> deleteItem(
             @PathVariable Long cartId,
-            @Valid @RequestBody CartItemIdentifierRequest request,
+            @PathVariable Long pharmacyProductId,
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
 
-        cartService.deleteItem(cartId, userId, request);
+        cartService.deleteItem(cartId, userId, pharmacyProductId);
 
         return ApiResponse.success("Item removed from cart", null);
     }
