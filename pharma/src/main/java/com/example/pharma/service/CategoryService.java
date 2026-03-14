@@ -17,7 +17,7 @@ public class CategoryService {
 
     public List<CategoryDto> getCategories()
     {
-        return categoryRepository.findCategoriesWithMedicineCount();
+        return categoryRepository.findCategoriesWithProductCount();
     }
     @Transactional
     public void createCategories(List<CreateCategoryDto> categoriesDtos)

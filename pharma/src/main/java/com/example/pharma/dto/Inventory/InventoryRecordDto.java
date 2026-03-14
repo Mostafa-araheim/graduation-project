@@ -7,7 +7,7 @@ import lombok.Data;
 public class InventoryRecordDto {
     //from cookie
     private Long inventoryId;
-    private Long medicineId;
+    private Long ProductId;
     private Long quantity;
     private AvailabilityStatus availabilityStatus;
 

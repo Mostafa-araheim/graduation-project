@@ -1,8 +1,8 @@
-package com.example.pharma.dto.Medicine;
+package com.example.pharma.dto.Product;
 
 import jakarta.validation.constraints.DecimalMin;
 
-public record MedicineFilter(
+public record ProductFilter(
      String categoryName,
      Double userLatitude,
      Double userLongitude,

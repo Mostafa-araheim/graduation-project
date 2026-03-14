@@ -1,9 +1,9 @@
-package com.example.pharma.controller.medicine;
+package com.example.pharma.controller.product;
 
-import com.example.pharma.dto.Medicine.MedicineFilter;
+import com.example.pharma.dto.Product.ProductFilter;
+import com.example.pharma.dto.Product.ProductResponse;
 import com.example.pharma.dto.common.ApiResponse;
-import com.example.pharma.model.entity.catalog.Product;
-import com.example.pharma.service.MedicationService;
+import com.example.pharma.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -16,21 +16,21 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/medicines")
+@RequestMapping("/api/Products")
 @RequiredArgsConstructor
-public class MedicineController {
+public class ProductController {
 
-    private final MedicationService medicationService;
+    private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Product>>> getMedicines(
-            @Valid @ModelAttribute MedicineFilter filter,
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts(
+            @Valid @ModelAttribute ProductFilter filter,
             Sort sort
     ) {
-        List<Product> medicines = medicationService.getMedicines(filter, sort);
+        List<ProductResponse> Products = productService.getProducts(filter, sort);
 
         return ResponseEntity.ok(
-                ApiResponse.success("Medicines retrieved successfully", medicines)
+                ApiResponse.success("Products retrieved successfully", Products)
         );
     }
 }

@@ -21,7 +21,7 @@ public class MedicationReminder {
     @JoinColumn(name = "customer_id", nullable = false)
     private CustomerProfile customer;
 
-    private String medicineName;
+    private String ProductName;
     private LocalTime dosageTime;
     private Long notifyBeforeMinutes;
 }
