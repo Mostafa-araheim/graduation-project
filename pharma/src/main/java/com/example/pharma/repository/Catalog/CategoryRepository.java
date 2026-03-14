@@ -22,6 +22,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
             LEFT JOIN Product p ON p.category = c
             GROUP BY c.categoryId, c.categoryName, c.imageUrl
             """)
-    List<CategoryDto> findCategoriesWithMedicineCount();
+    List<CategoryDto> findCategoriesWithProductCount();
 
 }

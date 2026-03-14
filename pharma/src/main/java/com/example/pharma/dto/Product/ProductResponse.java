@@ -1,6 +1,6 @@
-package com.example.pharma.dto.Medicine;
+package com.example.pharma.dto.Product;
 
-public record MedicineResponse(
+public record ProductResponse(
      Long id,
      String name,
      String image,
@@ -9,5 +9,7 @@ public record MedicineResponse(
      Boolean inStock,
      String category,
      String pharmacyName,
+     Double pharmacyLatitude,
+     Double pharmacyLongitude,
      Double pharmacyDistance
 ){}

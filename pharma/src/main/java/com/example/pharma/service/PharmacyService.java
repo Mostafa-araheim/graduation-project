@@ -65,10 +65,10 @@ public class PharmacyService {
         List<ReviewDto> pharmacyReviewDtos = pharmacyReviewRepository.findReviewDtosByPharmacyId(pharmacyId);
         return new PharmacyInfo(categories, pharmacyAddress, pharmacyDto, pharmacyReviewDtos);
     }
-    public PageResponse<Product> getPharmacyMedicinesUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
+    public PageResponse<Product> getPharmacyProductsUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
     {
-       Page<Product> medicines = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
-       return PageResponse.from(medicines);
+       Page<Product> Products = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
+       return PageResponse.from(Products);
     }
 
     @Transactional

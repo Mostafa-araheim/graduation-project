@@ -49,9 +49,9 @@ public class PharmacyController {
         return ApiResponse.success("Pharmacy info fetched successfully",pharmacyService.getPharmacyInfo(pharmacyId));
     }
     @GetMapping("/{pharmacyId}/{categoryId}")
-    public ApiResponse<PageResponse<Product>> getPharmacyMedicinesUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "medicineId") Pageable pageable)
+    public ApiResponse<PageResponse<Product>> getPharmacyProductsUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "ProductId") Pageable pageable)
     {
-        return ApiResponse.success("Medicines returned successfully",pharmacyService.getPharmacyMedicinesUnderACategory(pharmacyId, categoryId, pageable));
+        return ApiResponse.success("Products returned successfully",pharmacyService.getPharmacyProductsUnderACategory(pharmacyId, categoryId, pageable));
 
     }
 
