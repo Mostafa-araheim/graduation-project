@@ -2,7 +2,6 @@ package com.example.pharma.dto.pharmacy;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record PharmacySearchFilter(
@@ -22,8 +21,6 @@ public record PharmacySearchFilter(
 
         @DecimalMin(value = "-180.0", message = "Longitude must be >= -180")
         @DecimalMax(value = "180.0", message = "Longitude must be <= 180")
-        Double longitude,
+        Double longitude
 
-        @Positive(message = "Distance must be greater than 0")
-        Double maxDistanceKm
 ) {}

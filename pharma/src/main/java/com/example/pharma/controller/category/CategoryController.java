@@ -22,6 +22,7 @@ public class CategoryController {
         return ApiResponse.success("Categories returned successfully",categoryService.getCategories());
     }
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public void createCategories(@RequestBody List<CreateCategoryDto> categories)
     {
         categoryService.createCategories(categories);
