@@ -99,4 +99,34 @@ public class PharmacySpecifications {
             );
         };
     }
+    // PharmacySpecifications.java
+
+    public static Specification<Pharmacy> orderByDistance(Double latitude, Double longitude) {
+        return (root, query, cb) -> {
+            if (latitude == null || longitude == null) {
+                return null;
+            }
+
+            Expression<Double> userPoint = cb.function(
+                    "ST_GeographyFromText",
+                    Double.class,
+                    cb.literal("POINT(" + longitude + " " + latitude + ")")
+            );
+
+            Expression<Double> distance = cb.function(
+                    "ST_Distance",
+                    Double.class,
+                    root.get("location"),
+                    userPoint
+            );
+
+
+            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+                query.orderBy(cb.asc(distance));
+            }
+
+            return null;
+        };
+    }
+
 }

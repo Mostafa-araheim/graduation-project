@@ -30,10 +30,6 @@ public class Pharmacy {
     private OwnerProfile owner;
 
     private String name;
-
-    @Column(name = "total_rating")
-    private BigDecimal totalRating;
-
     @Column(name = "image_url")
     private String imageUrl;
     @JsonIgnore
@@ -58,6 +54,16 @@ public class Pharmacy {
 
     @Column(name = "is_24_hours")
     private Boolean is24Hours;
+
+    @Column(name = "average_rating")
+    private BigDecimal averageRating;
+
+    @Column(name = "rating_count")
+    private Long ratingCount;
+
+    @Column(name = "review_count")
+    private Long reviewCount;
+
     @PrePersist
     @PreUpdate
     public void updateGeometry() {
@@ -65,5 +71,29 @@ public class Pharmacy {
             GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
             this.location = factory.createPoint(new Coordinate(this.longitude, this.latitude));
         }
+    }
+
+    public boolean isOpen() {
+
+        if (Boolean.TRUE.equals(is24Hours)) {
+            return true;
+        }
+
+        if (openingTime == null || closingTime == null) {
+            return false;
+        }
+
+        LocalTime now = LocalTime.now();
+
+
+        if (closingTime.isAfter(openingTime)) {
+            return !now.isBefore(openingTime) && !now.isAfter(closingTime);
+        }
+
+        return !now.isBefore(openingTime) || !now.isAfter(closingTime);
+    }
+    public boolean isClosed()
+    {
+        return !isOpen();
     }
 }

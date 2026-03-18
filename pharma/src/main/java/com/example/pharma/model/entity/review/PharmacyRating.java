@@ -10,26 +10,32 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-@Table(name = "pharmacy_review")
 @AllArgsConstructor
 @NoArgsConstructor
-public class PharmacyReview {
+@Table(
+        name = "pharmacy_rating",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"pharmacy_id", "customer_id"})
+        }
+)
+public class PharmacyRating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewId;
+    private Long ratingId;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pharmacy_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pharmacy_id")
     private Pharmacy pharmacy;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id")
     private CustomerProfile customer;
 
-    @Column(length = 1000)
-    private String comment;
+    @Column(nullable = false)
+    private Integer rating;
 
     @Embedded
     private CreatedAtColumn createdAt;
 }
+

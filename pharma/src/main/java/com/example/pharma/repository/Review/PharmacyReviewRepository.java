@@ -14,7 +14,7 @@ public interface PharmacyReviewRepository extends JpaRepository<PharmacyReview, 
     List<PharmacyReview> findByCustomer_UserId(Long userId);
     List<PharmacyReview> findByPharmacy_PharmacyId(Long pharmacyId);
 
-    @Query("SELECT new com.example.pharma.dto.review.ReviewDto(u.name, pr.rating, pr.comment) " +
+    @Query("SELECT new com.example.pharma.dto.review.ReviewDto(u.name, pr.comment) " +
             "FROM PharmacyReview pr " +
             "JOIN pr.customer c " +
             "JOIN c.user u " +
