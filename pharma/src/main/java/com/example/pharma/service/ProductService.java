@@ -38,68 +38,7 @@ public class ProductService {
             return Products;
     }
 
-//    public ProductResponse getProductById(Long id) {
-//        validateProductId(id);
-//
-//        Product product = ProductRepository.findOne(ProductSpecification.byId(id))
-//                .orElseThrow(() -> new ValidationException("Product with id " + id + " does not exist"));
-//
-//        return ProductMapper.toResponse(product);
-//    }
-
-//    private List<ProductResponse> calculateDistance(
-//            double userLat, double userLon,
-//            List<ProductResponse> Products) {
-//
-//        List<CoordinateDto> coords = Products.stream()
-//                .map(m -> new CoordinateDto(m.pharmacyLongitude(), m.pharmacyLatitude()))
-//                .toList();
-//
-//        List<Double> distances = locationService.getRoadDistances(userLat, userLon, coords);
-//
-//        return IntStream.range(0, Products.size())
-//                .mapToObj(i -> {
-//                    ProductResponse m = Products.get(i);
-//                    return new ProductResponse(
-//                            m.id(), m.name(), m.image(), m.price(), m.originalPrice(),
-//                            m.inStock(), m.category(), m.pharmacyName(),
-//                            m.pharmacyLatitude(), m.pharmacyLongitude(),
-//                            distances.get(i)
-//                    );
-//                })
-//                .toList();
-//    }
-
-//    private ProductResponse calculateDistance(
-//            double userLat, double userLon,
-//            ProductResponse Product) {
-//
-//        Double distance = locationService.getRoadDistance(
-//                userLat, userLon,
-//                new CoordinateDto(Product.pharmacyLatitude(), Product.pharmacyLongitude())
-//        );
-//
-//        return new ProductResponse(
-//                Product.id(), Product.name(), Product.image(),
-//                Product.price(), Product.originalPrice(),
-//                Product.inStock(), Product.category(), Product.pharmacyName(),
-//                Product.pharmacyLatitude(), Product.pharmacyLongitude(),
-//                distance
-//        );
-//    }
-
     private void validateFilter(ProductFilter filter) {
-//        if (filter.minPrice() != null && filter.maxPrice() != null
-//                && filter.minPrice() > filter.maxPrice()) {
-//            throw new ValidationException("Minimum price cannot be greater than maximum price");
-//        }
-//        if (filter.maxDistanceKm() != null && filter.maxDistanceKm() < 0) {
-//            throw new ValidationException("Distance cannot be negative");
-//        }
-//        if (filter.maxDistanceKm() != null &&
-//                (filter.userLatitude() == null ||filter.userLongitude() == null )) {
-//            throw new ValidationException("Latitude and longitude are required when filtering by distance");
-//        }
 
         if (filter.productName() != null && filter.productName().trim().isEmpty()) {
             throw new ValidationException("Product name filter cannot be empty");
