@@ -15,9 +15,4 @@ public interface ProductMapper {
     ProductResponse toResponse(Product product);
     List<ProductResponse> toResponseList(List<Product> products);
 
-//    default boolean isInStock(Product product) {
-//        return product.getPharmacyProducts() != null &&
-//                product.getPharmacyProducts().stream()
-//                        .anyMatch(record -> AvailabilityStatus.Available.equals(record.getAvailabilityStatus()));
-//    }
 }
