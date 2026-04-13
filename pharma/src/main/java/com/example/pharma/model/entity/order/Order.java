@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -28,10 +30,23 @@ public class Order {
     @JoinColumn(name = "pharmacy_id")
     private Pharmacy pharmacy;
 
-    private BigDecimal totalAmount;
-    private String deliveryType;
-    private String paymentMethod;
-    private String status;
+    private BigDecimal totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    private DeliveryType deliveryType;
+
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @Column(name = "source_cart_id", nullable = false, unique = true)
+    private Long sourceCartId;
 
     @Embedded
     private CreatedAtColumn createdAt;

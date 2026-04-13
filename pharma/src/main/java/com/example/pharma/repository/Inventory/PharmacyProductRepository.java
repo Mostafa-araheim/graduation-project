@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PharmacyProductRepository
@@ -30,5 +31,9 @@ public interface PharmacyProductRepository
             @Param("pharmacyId") Long pharmacyId,
             @Param("categoryId") Long categoryId,
             Pageable pageable
+    );
+
+    Optional<PharmacyProduct> findByInventory_Pharmacy_PharmacyIdAndProduct_ProductId(
+            Long pharmacyId, Long productId
     );
 }

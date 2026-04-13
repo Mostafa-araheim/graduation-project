@@ -2,11 +2,15 @@ package com.example.pharma.controller.cart;
 
 import com.example.pharma.dto.cart.request.AssignCartToUserRequest;
 import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
-import com.example.pharma.dto.cart.request.CreateCartRequest;
 import com.example.pharma.dto.cart.request.CartItemQuantityRequest;
+import com.example.pharma.dto.cart.request.CreateCartRequest;
 import com.example.pharma.dto.cart.response.CartResponse;
 import com.example.pharma.dto.common.ApiResponse;
+import com.example.pharma.dto.order.request.CheckoutRequest;
+import com.example.pharma.dto.order.respone.CheckoutResponse;
 import com.example.pharma.service.cart.CartService;
+import com.example.pharma.service.cart.CheckoutService;
+import com.stripe.exception.StripeException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +25,7 @@ import java.util.List;
 public class CartController {
 
     private final CartService cartService;
-
+    private final CheckoutService checkoutService;
     // POST   /carts
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -165,5 +169,16 @@ public class CartController {
         CartResponse cart = cartService.assignCartToUser(userId, request);
 
         return ApiResponse.success("Cart assigned successfully", cart);
+    }
+
+    @PostMapping("/{cartId}/checkout")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<CheckoutResponse> checkout(
+            @PathVariable Long cartId,
+            @Valid @RequestBody CheckoutRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) throws StripeException {
+        CheckoutResponse response = checkoutService.checkout(cartId, userId, request);
+        return ApiResponse.success("Checkout completed successfully", response);
     }
 }

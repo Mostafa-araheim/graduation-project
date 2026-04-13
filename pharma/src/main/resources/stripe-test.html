@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Stripe Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; }
+        #payment-element { margin: 20px 0; }
+        button { padding: 10px 16px; margin-right: 10px; }
+        #msg { margin-top: 12px; }
+    </style>
+</head>
+<body>
+<h2>Stripe test payment</h2>
+
+<label>Client Secret</label>
+<input id="clientSecret" style="width:100%" />
+
+<div style="margin-top: 16px;">
+    <button id="loadBtn">Load payment form</button>
+    <button id="payBtn">Pay</button>
+</div>
+
+<div id="payment-element"></div>
+<div id="msg"></div>
+
+<script>
+    const publishableKey = "pk_test_51TLOYZJxRbNzNeVKDMbwE3BEmhgHW03peh1CvffCQDsoeMVHf3ygP3zZzn0X9GMw1D5TWPEiNPDE3ogfb8cghfWB00t23He59h";
+
+    let stripe = Stripe(publishableKey);
+    let elements = null;
+    let paymentElement = null;
+
+    async function loadForm() {
+        const clientSecret = document.getElementById("clientSecret").value.trim();
+
+        if (!clientSecret) {
+            document.getElementById("msg").innerText = "Paste clientSecret first";
+            return;
+        }
+
+        if (paymentElement) {
+            paymentElement.unmount();
+        }
+
+        elements = stripe.elements({ clientSecret });
+        paymentElement = elements.create("payment");
+        paymentElement.mount("#payment-element");
+
+        document.getElementById("msg").innerText = "Payment form loaded";
+    }
+
+    async function pay() {
+        if (!elements) {
+            document.getElementById("msg").innerText = "Load payment form first";
+            return;
+        }
+
+        const { error } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+                return_url: "http://localhost:5500/success.html"
+            },
+            redirect: "if_required"
+        });
+
+        if (error) {
+            document.getElementById("msg").innerText = error.message;
+        } else {
+            document.getElementById("msg").innerText = "Payment submitted successfully";
+        }
+    }
+
+    document.getElementById("loadBtn").addEventListener("click", loadForm);
+    document.getElementById("payBtn").addEventListener("click", pay);
+</script>
+</body>
+</html>

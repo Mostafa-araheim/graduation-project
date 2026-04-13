@@ -8,8 +8,12 @@ import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.access.IllegalStateException;
 import com.example.pharma.exception.resource.EntityAlreadyExistsException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
+import com.example.pharma.model.entity.core.CustomerProfile;
+import com.example.pharma.model.entity.core.OwnerProfile;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.model.entity.core.UserRole;
+import com.example.pharma.repository.Core.CustomerProfileRepository;
+import com.example.pharma.repository.Core.OwnerProfileRepository;
 import com.example.pharma.repository.Core.UserRepository;
 import com.example.pharma.service.EmailService;
 import com.example.pharma.util.RedisKeys;
@@ -31,6 +35,8 @@ public class AuthSignupService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final UserRepository userRepo;
     private final EmailService emailService;
+    private final CustomerProfileRepository customerProfileRepository;
+    private final OwnerProfileRepository ownerProfileRepository;
 
     private static final Duration TTL = Duration.ofMinutes(3);
     private static final int MAX_ATTEMPTS = 3;
@@ -119,9 +125,21 @@ public class AuthSignupService {
 
         user.getRoles().add(role);
 
-        userRepo.save(user);
+        user = userRepo.save(user);
+
+        if (role == UserRole.ROLE_CUSTOMER) {
+            CustomerProfile profile = new CustomerProfile();
+            profile.setUser(user);
+            customerProfileRepository.save(profile);
+        } else if (role == UserRole.ROLE_OWNER) {
+            OwnerProfile profile = new OwnerProfile();
+            profile.setUser(user);
+            ownerProfileRepository.save(profile);
+        }
 
         redisTemplate.delete(key);
+
+
 
         return user;
     }
