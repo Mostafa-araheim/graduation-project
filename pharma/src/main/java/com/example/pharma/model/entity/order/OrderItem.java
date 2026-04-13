@@ -1,6 +1,6 @@
 package com.example.pharma.model.entity.order;
 
-import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.model.entity.catalog.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,10 +21,12 @@ public class OrderItem {
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventory_record_id", nullable = false)
-    private PharmacyProduct pharmacyProduct;
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     private Integer quantity;
 
-    private BigDecimal price;
+    private BigDecimal priceAtPurchase;
+
+    private BigDecimal subtotal;
 }
