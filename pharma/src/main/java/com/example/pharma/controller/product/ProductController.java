@@ -3,7 +3,6 @@ package com.example.pharma.controller.product;
 import com.example.pharma.dto.Product.ProductFilter;
 import com.example.pharma.dto.Product.ProductResponse;
 import com.example.pharma.dto.common.ApiResponse;
-import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/Products")
+@RequestMapping("/api/v1/Products")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -36,9 +35,9 @@ public class ProductController {
         );
     }
 
-//    @GetMapping("/{id}")
-//    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable Long id) {
-//        ProductResponse product = productService.getProductById(id);
-//        return ResponseEntity.ok(ApiResponse.success("Product retrieved successfully", product));
-//    }
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable Long id) {
+        ProductResponse product = productService.getProductById(id);
+        return ResponseEntity.ok(ApiResponse.success("Product retrieved successfully", product));
+    }
 }

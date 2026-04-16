@@ -37,11 +37,16 @@ public class PharmacyProductSpecification {
             pharmacyFetch.fetch("address", JoinType.LEFT);
             var pharmacyJoin = (Join<Object, Object>) pharmacyFetch;
 
-            if (filter.categoryName() != null && !filter.categoryName().isBlank()) {
+            boolean hasProductId = filter.productId() != null;
+            if (hasProductId) {
+                predicates.add(buildProductIdFilter(productJoin, cb, filter));
+            }
+
+            if (!hasProductId && filter.categoryName() != null && !filter.categoryName().isBlank()) {
                 predicates.add(buildCategoryFilter(categoryJoin, cb, filter));
             }
 
-            if (filter.productName() != null && !filter.productName().isBlank()) {
+            if (!hasProductId && filter.productName() != null && !filter.productName().isBlank()) {
                 predicates.add(buildProductNameFilter(productJoin, cb, filter));
             }
 
@@ -74,6 +79,12 @@ public class PharmacyProductSpecification {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    private static Predicate buildProductIdFilter(Join<?, ?> productJoin,
+                                                  CriteriaBuilder cb,
+                                                  PharmacyProductFilter filter) {
+        return cb.equal(productJoin.get("productId"), filter.productId());
     }
 
     private static Predicate buildCategoryFilter(Join<?, ?> categoryJoin,

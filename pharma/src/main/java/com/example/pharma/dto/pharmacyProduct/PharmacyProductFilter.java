@@ -6,6 +6,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.DecimalMin;
 
 public record PharmacyProductFilter(
+    Long productId,
     String productName,
     String categoryName,
     @Enumerated(EnumType.STRING)
