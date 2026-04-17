@@ -1,4 +1,4 @@
-package com.example.pharma.dto.order.respone;
+package com.example.pharma.dto.order.response;
 
 import com.example.pharma.model.entity.order.DeliveryType;
 import com.example.pharma.model.entity.order.OrderStatus;

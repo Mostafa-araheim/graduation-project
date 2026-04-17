@@ -2,8 +2,10 @@ package com.example.pharma.service.cart;
 
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.model.entity.order.Order;
+import com.example.pharma.model.entity.order.OrderStatus;
 import com.example.pharma.model.entity.order.Payment;
 import com.example.pharma.model.entity.order.PaymentStatus;
+import com.example.pharma.repository.Order.OrderRepository;
 import com.example.pharma.repository.Order.PaymentRepository;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
@@ -21,6 +23,8 @@ public class StripeWebhookService {
 
     private final PaymentRepository paymentRepository;
     private final CheckoutService checkoutService;
+    private final OrderRepository orderRepository;
+
 
     @Transactional
     public void handleEvent(Event event) {
@@ -47,7 +51,12 @@ public class StripeWebhookService {
                         "Payment not found for Stripe PaymentIntent: " + paymentIntent.getId()
                 ));
 
-        if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
+        if (payment.getOrder().getStatus() == OrderStatus.CANCELED ||
+                payment.getOrder().getStatus() == OrderStatus.FAILED) {
+            log.warn("Ignoring success event for terminal order state. orderId={}", payment.getOrder().getOrderId());
+            return;
+        }
+        else if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
             log.info("Stripe event already processed for paymentIntent={}", paymentIntent.getId());
             return;
         }
@@ -74,14 +83,17 @@ public class StripeWebhookService {
                         "Payment not found for Stripe PaymentIntent: " + paymentIntent.getId()
                 ));
 
-        payment.setStatus(PaymentStatus.FAILED);
-        payment.setFailureReason(
+        String failureReason =
                 paymentIntent.getLastPaymentError() != null
                         ? paymentIntent.getLastPaymentError().getMessage()
-                        : "Stripe payment failed"
-        );
+                        : "Stripe payment failed";
 
-        paymentRepository.save(payment);
+        updateOrderAndPaymentStatus(
+                payment,
+                PaymentStatus.FAILED,
+                OrderStatus.FAILED,
+                failureReason
+        );
 
         log.warn("Payment failed. orderId={}, paymentIntent={}, reason={}",
                 payment.getOrder().getOrderId(), paymentIntent.getId(), payment.getFailureReason());
@@ -96,9 +108,12 @@ public class StripeWebhookService {
                         "Payment not found for Stripe PaymentIntent: " + paymentIntent.getId()
                 ));
 
-        payment.setStatus(PaymentStatus.CANCELED);
-        payment.setFailureReason("Payment was canceled on Stripe");
-        paymentRepository.save(payment);
+        updateOrderAndPaymentStatus(
+                payment,
+                PaymentStatus.CANCELED,
+                OrderStatus.CANCELED,
+                "Payment was canceled on Stripe"
+        );
 
         log.warn("Payment canceled. orderId={}, paymentIntent={}",
                 payment.getOrder().getOrderId(), paymentIntent.getId());
@@ -127,5 +142,16 @@ public class StripeWebhookService {
                 .orElseThrow(() -> new IllegalStateException(
                         "Unable to deserialize Stripe event data for event: " + event.getId()
                 ));
+    }
+
+    private void updateOrderAndPaymentStatus(Payment payment, PaymentStatus paymentStatus, OrderStatus orderStatus, String failureReason) {
+        payment.setStatus(paymentStatus);
+        payment.setFailureReason(failureReason);
+
+        Order order = payment.getOrder();
+        order.setStatus(orderStatus);
+
+        orderRepository.save(order);
+        paymentRepository.save(payment);
     }
 }

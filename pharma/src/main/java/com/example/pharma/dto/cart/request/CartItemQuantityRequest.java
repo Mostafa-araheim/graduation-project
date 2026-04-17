@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Positive;
 
 public record CartItemQuantityRequest(
 
-        @NotNull(message = "InventoryRecordId is required")
-        @Positive(message = "InventoryRecordId must be positive")
+        @NotNull(message = "pharmacyProductId is required")
+        @Positive(message = "pharmacyProductId must be positive")
         Long pharmacyProductId,
 
         @NotNull(message = "Quantity is required")
