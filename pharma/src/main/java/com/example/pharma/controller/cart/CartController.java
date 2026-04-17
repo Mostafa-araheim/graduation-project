@@ -7,7 +7,7 @@ import com.example.pharma.dto.cart.request.CreateCartRequest;
 import com.example.pharma.dto.cart.response.CartResponse;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.order.request.CheckoutRequest;
-import com.example.pharma.dto.order.respone.CheckoutResponse;
+import com.example.pharma.dto.order.response.CheckoutResponse;
 import com.example.pharma.service.cart.CartService;
 import com.example.pharma.service.cart.CheckoutService;
 import com.stripe.exception.StripeException;

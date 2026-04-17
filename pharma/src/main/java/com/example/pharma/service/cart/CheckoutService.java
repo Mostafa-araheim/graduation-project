@@ -1,8 +1,8 @@
 package com.example.pharma.service.cart;
 
 import com.example.pharma.dto.order.request.CheckoutRequest;
-import com.example.pharma.dto.order.respone.CheckoutItemResponse;
-import com.example.pharma.dto.order.respone.CheckoutResponse;
+import com.example.pharma.dto.order.response.CheckoutItemResponse;
+import com.example.pharma.dto.order.response.CheckoutResponse;
 import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.exception.validation.BusinessRuleViolationException;
@@ -10,7 +10,6 @@ import com.example.pharma.model.cart.CartItem;
 import com.example.pharma.model.cart.CartMetadata;
 import com.example.pharma.model.entity.core.CustomerProfile;
 import com.example.pharma.model.entity.core.UserAddress;
-import com.example.pharma.model.entity.inventory.AvailabilityStatus;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import com.example.pharma.model.entity.order.*;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
@@ -24,6 +23,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -43,8 +43,73 @@ public class CheckoutService {
     private final PaymentRepository paymentRepository;
     private final StripePaymentService stripePaymentService;
 
-    @Transactional
+
+    private record CheckoutDraft(
+            Long orderId,
+            Long paymentId,
+            Long cartId,
+            Long pharmacyId,
+            DeliveryType deliveryType,
+            PaymentMethod paymentMethod,
+            OrderStatus orderStatus,
+            BigDecimal totalPrice,
+            String currency,
+            List<CheckoutItemResponse> items
+    ) {}
     public CheckoutResponse checkout(Long cartId, Long userId, CheckoutRequest request) throws StripeException {
+        CheckoutDraft draft = createCheckoutDraft(cartId, userId, request);
+
+        if (request.paymentMethod() == PaymentMethod.CARD) {
+            PaymentIntent intent = stripePaymentService.createPaymentIntent(
+                    draft.totalPrice(),
+                    draft.currency(),
+                    draft.orderId()
+            );
+
+            Payment savedPayment = attachStripePaymentIntent(
+                    draft.paymentId(),
+                    intent.getId(),
+                    intent.getClientSecret()
+            );
+
+            return new CheckoutResponse(
+                    draft.orderId(),
+                    draft.cartId(),
+                    draft.pharmacyId(),
+                    draft.deliveryType(),
+                    draft.paymentMethod(),
+                    draft.orderStatus(),
+                    draft.totalPrice(),
+                    savedPayment.getCurrency(),
+                    true,
+                    savedPayment.getStatus(),
+                    savedPayment.getClientSecret(),
+                    draft.items()
+            );
+        }
+
+        finalizePaidOrder(draft.orderId());
+
+        Payment cashPayment = markCashPaymentPending(draft.paymentId());
+
+        return new CheckoutResponse(
+                draft.orderId(),
+                draft.cartId(),
+                draft.pharmacyId(),
+                draft.deliveryType(),
+                draft.paymentMethod(),
+                OrderStatus.PLACED,
+                draft.totalPrice(),
+                cashPayment.getCurrency(),
+                false,
+                cashPayment.getStatus(),
+                null,
+                draft.items()
+        );
+    }
+
+    @Transactional
+    public CheckoutDraft createCheckoutDraft(Long cartId, Long userId, CheckoutRequest request) {
         validateCartAccess(cartId, userId);
 
         CartMetadata cartMetadata = cartRepository.getCartMetadata(cartId);
@@ -134,9 +199,14 @@ public class CheckoutService {
         order.setPharmacy(pharmacy);
         order.setItems(orderItems);
         order.setTotalPrice(totalPrice);
-        order.setStatus(resolveInitialOrderStatus(request.paymentMethod()));
+        order.setStatus(resolveInitialOrderStatus());
 
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder;
+        try {
+            savedOrder = orderRepository.save(order);
+        } catch (DataIntegrityViolationException ex) {
+            throw new BusinessRuleViolationException("This cart was already checked out");
+        }
 
         Payment payment = new Payment();
         payment.setOrder(savedOrder);
@@ -144,58 +214,53 @@ public class CheckoutService {
         payment.setCurrency("egp");
         payment.setIdempotencyKey(UUID.randomUUID().toString());
 
-        if (request.paymentMethod() == PaymentMethod.CARD) {
-            PaymentIntent intent = stripePaymentService.createPaymentIntent(
-                    totalPrice,
-                    "egp",
-                    savedOrder.getOrderId()
-            );
-
-            payment.setProviderPaymentIntentId(intent.getId());
-            payment.setClientSecret(intent.getClientSecret());
+        if (request.paymentMethod() == PaymentMethod.CASH) {
+            payment.setProviderPaymentIntentId("CASH_" + UUID.randomUUID());
+            payment.setStatus(PaymentStatus.PENDING_CASH);
+            payment.setClientSecret(null);
+        } else {
             payment.setStatus(PaymentStatus.INITIATED);
-
-            Payment savedPayment = paymentRepository.save(payment);
-
-            return new CheckoutResponse(
-                    savedOrder.getOrderId(),
-                    cartId,
-                    pharmacy.getPharmacyId(),
-                    savedOrder.getDeliveryType(),
-                    savedOrder.getPaymentMethod(),
-                    savedOrder.getStatus(),
-                    savedOrder.getTotalPrice(),
-                    savedPayment.getCurrency(),
-                    true,
-                    savedPayment.getStatus(),
-                    savedPayment.getClientSecret(),
-                    responseItems
-            );
+            payment.setClientSecret(null);
+            payment.setProviderPaymentIntentId(null);
         }
-
-        payment.setProviderPaymentIntentId("CASH_" + UUID.randomUUID());
-        payment.setClientSecret(null);
-        payment.setStatus(PaymentStatus.PENDING_CASH);
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        finalizePaidOrder(savedOrder.getOrderId());
-
-        return new CheckoutResponse(
+        return new CheckoutDraft(
                 savedOrder.getOrderId(),
+                savedPayment.getPaymentId(),
                 cartId,
                 pharmacy.getPharmacyId(),
                 savedOrder.getDeliveryType(),
                 savedOrder.getPaymentMethod(),
-                OrderStatus.PLACED,
+                savedOrder.getStatus(),
                 savedOrder.getTotalPrice(),
                 savedPayment.getCurrency(),
-                false,
-                savedPayment.getStatus(),
-                null,
                 responseItems
         );
     }
+
+    @Transactional
+    public Payment attachStripePaymentIntent(Long paymentId, String providerPaymentIntentId, String clientSecret) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+
+        payment.setProviderPaymentIntentId(providerPaymentIntentId);
+        payment.setClientSecret(clientSecret);
+        payment.setStatus(PaymentStatus.INITIATED);
+
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public Payment markCashPaymentPending(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+
+        payment.setStatus(PaymentStatus.PENDING_CASH);
+        return paymentRepository.save(payment);
+    }
+
 
     @Transactional
     public void finalizePaidOrder(Long orderId) {
@@ -207,30 +272,22 @@ public class CheckoutService {
         }
 
         for (OrderItem item : order.getItems()) {
-            PharmacyProduct pharmacyProduct = pharmacyProductRepository
-                    .findByInventory_Pharmacy_PharmacyIdAndProduct_ProductId(
-                            order.getPharmacy().getPharmacyId(),
-                            item.getProduct().getProductId()
-                    )
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Pharmacy product not found for product id " + item.getProduct().getProductId()
-                    ));
+            int updatedRows = pharmacyProductRepository.decrementStockIfEnough(
+                    order.getPharmacy().getPharmacyId(),
+                    item.getProduct().getProductId(),
+                    item.getQuantity()
+            );
 
-            if (pharmacyProduct.getQuantity() == null || pharmacyProduct.getQuantity() < item.getQuantity()) {
+            if (updatedRows == 0) {
                 throw new BusinessRuleViolationException(
                         "Insufficient stock while finalizing order for product id " + item.getProduct().getProductId()
                 );
             }
-
-            int remaining = pharmacyProduct.getQuantity() - item.getQuantity();
-            pharmacyProduct.setQuantity(remaining);
-            pharmacyProduct.setAvailabilityStatus(
-                    remaining > 0 ? AvailabilityStatus.Available : AvailabilityStatus.OutOfStock
-            );
         }
 
-        cartRepository.clearCartItems(order.getSourceCartId());
-        cartRepository.deleteCart(order.getSourceCartId());
+        if (cartRepository.exists(order.getSourceCartId())) {
+            cartRepository.deleteCart(order.getSourceCartId());
+        }
 
         order.setStatus(OrderStatus.PLACED);
         orderRepository.save(order);
@@ -257,9 +314,7 @@ public class CheckoutService {
         }
     }
 
-    private OrderStatus resolveInitialOrderStatus(PaymentMethod paymentMethod) {
-        return paymentMethod == PaymentMethod.CARD
-                ? OrderStatus.PENDING_PAYMENT
-                : OrderStatus.PLACED;
+    private OrderStatus resolveInitialOrderStatus() {
+        return  OrderStatus.PENDING_PAYMENT ;
     }
 }

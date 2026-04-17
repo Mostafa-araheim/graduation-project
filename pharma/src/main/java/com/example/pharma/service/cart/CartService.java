@@ -23,7 +23,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -238,11 +240,52 @@ public class CartService {
         cartRepository.deleteCart(cartId);
     }
 
-    // POST /carts/assign
     public CartResponse assignCartToUser(Long userId, AssignCartToUserRequest request) {
 
         if (userId == null) {
             throw new ValidationException("UserId is required");
+        }
+
+        if (request.items() == null || request.items().isEmpty()) {
+            throw new ValidationException("Cart items are required");
+        }
+
+        Map<Long, Long> mergedItems = new HashMap<>();
+
+        for (CartItemQuantityRequest itemRequest : request.items()) {
+            mergedItems.merge(
+                    itemRequest.pharmacyProductId(),
+                    itemRequest.quantity(),
+                    Long::sum
+            );
+        }
+
+        Map<Long, PharmacyProduct> validatedProducts = new HashMap<>();
+        Long pharmacyId = null;
+
+        for (Map.Entry<Long, Long> entry : mergedItems.entrySet()) {
+            Long pharmacyProductId = entry.getKey();
+            Long mergedQuantity = entry.getValue();
+
+            PharmacyProduct pharmacyProduct = getPharmacyProduct(pharmacyProductId);
+            validatedProducts.put(pharmacyProductId, pharmacyProduct);
+
+            Long currentPharmacyId =
+                    pharmacyProduct.getInventory().getPharmacy().getPharmacyId();
+
+            if (pharmacyId == null) {
+                pharmacyId = currentPharmacyId;
+            } else if (!pharmacyId.equals(currentPharmacyId)) {
+                throw new BusinessRuleViolationException(
+                        "Cart cannot contain items from multiple pharmacies"
+                );
+            }
+
+            if (mergedQuantity > pharmacyProduct.getQuantity()) {
+                throw new BusinessRuleViolationException(
+                        "Not enough stock for pharmacy product id " + pharmacyProductId
+                );
+            }
         }
 
         CartMetadata metadata = cartMetadataMapper.toEntity(
@@ -251,23 +294,15 @@ public class CartService {
         );
 
         Long cartId = cartRepository.createCart(metadata);
-
         cartRepository.assignCartToUser(cartId, userId);
 
-        for (CartItemQuantityRequest itemRequest : request.items()) {
+        for (Map.Entry<Long, Long> entry : mergedItems.entrySet()) {
+            Long pharmacyProductId = entry.getKey();
+            Long mergedQuantity = entry.getValue();
 
-            PharmacyProduct pharmacyProduct =
-                    getPharmacyProduct(itemRequest.pharmacyProductId());
+            PharmacyProduct pharmacyProduct = validatedProducts.get(pharmacyProductId);
 
-            if (itemRequest.quantity() > pharmacyProduct.getQuantity()) {
-                throw new BusinessRuleViolationException("Not enough stock");
-            }
-
-            CartItem item = cartItemMapper.toEntity(
-                    pharmacyProduct,
-                    itemRequest.quantity()
-            );
-
+            CartItem item = cartItemMapper.toEntity(pharmacyProduct, mergedQuantity);
             cartRepository.saveItem(cartId, item);
         }
 

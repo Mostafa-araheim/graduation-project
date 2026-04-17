@@ -23,7 +23,7 @@ public class Payment {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(nullable = false, unique = true)
+    @Column( unique = true)
     private String providerPaymentIntentId;
 
     @Column(unique = true)

@@ -30,9 +30,9 @@ public class CartRedisRepository implements CartRepository {
         redisTemplate.opsForHash().putAll(RedisKeys.cart(cartId), Map.of(
                 "userId", metadata.getUserId()
                 , "name", metadata.getName()
-                , "createdAt", metadata.getCreatedAt()
-                , "updatedAt", metadata.getUpdatedAt()));
-
+                , "createdAt", metadata.getCreatedAt().toString(),
+                "updatedAt", metadata.getUpdatedAt().toString()
+        ));
         return cartId;
     }
 
@@ -211,20 +211,21 @@ public class CartRedisRepository implements CartRepository {
                 Map.of(
                         "userId", metadata.getUserId(),
                         "name", metadata.getName(),
-                        "createdAt", metadata.getCreatedAt(),
-                        "updatedAt", metadata.getUpdatedAt()
+                        "createdAt", metadata.getCreatedAt().toString(),
+                        "updatedAt", metadata.getUpdatedAt().toString()
                 )
         );
 
         return cartId;
     }
+
     @Override
     public void updateCartUpdatedAt(Long cartId, Instant updatedAt) {
 
         redisTemplate.opsForHash().put(
                 RedisKeys.cart(cartId),
                 "updatedAt",
-                updatedAt
+                updatedAt.toString()
         );
     }
 
