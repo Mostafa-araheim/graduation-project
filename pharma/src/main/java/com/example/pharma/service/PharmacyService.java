@@ -5,14 +5,16 @@ import com.example.pharma.dto.common.PageResponse;
 import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.review.CreateRatingDto;
 import com.example.pharma.dto.review.CreateReviewDto;
 import com.example.pharma.dto.review.ReviewDto;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.mapper.PharmacyMapper;
+import com.example.pharma.mapper.PharmacyProductMapper;
 import com.example.pharma.model.entity.catalog.Category;
-import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.core.CustomerProfile;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
 import com.example.pharma.model.entity.review.PharmacyRating;
@@ -49,6 +51,7 @@ public class PharmacyService {
     private final PharmacyProductRepository pharmacyProductRepository;
     private final PharmacyRatingRepository pharmacyRatingRepository;
     private final PharmacyMapper pharmacyMapper;
+    private final PharmacyProductMapper pharmacyProductMapper;
     private final LocationService locationService;
     public PageResponse<PharmacyDto> getPharmacies( String name,
                                                     Float minRating,
@@ -72,7 +75,7 @@ public class PharmacyService {
         List<Double> distances = null;
         if (latitude != null && longitude != null && !pharmacies.isEmpty()) {
             List<CoordinateDto> coordinates = pharmacies.getContent().stream()
-                    .map(p -> new CoordinateDto(p.getLatitude(), p.getLongitude()))
+                    .map(p -> new CoordinateDto(p.getLongitude(), p.getLatitude()))
                     .toList();
             distances = locationService.getRoadDistances(latitude, longitude, coordinates);
         }
@@ -90,10 +93,13 @@ public class PharmacyService {
         List<ReviewDto> pharmacyReviewDtos = pharmacyReviewRepository.findReviewDtosByPharmacyId(pharmacyId);
         return new PharmacyInfo(categories, pharmacyAddress, pharmacyDto, pharmacyReviewDtos);
     }
-    public PageResponse<Product> getPharmacyProductsUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
+    public PageResponse<PharmacyProductDto> getPharmacyProductsUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
     {
-       Page<Product> Products = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
-       return PageResponse.from(Products);
+       Page<PharmacyProduct> pharmacyProducts = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
+        Page<PharmacyProductDto> responsePage = pharmacyProducts
+                .map(pharmacyProductMapper::toPharmacyProductDto);
+
+       return PageResponse.from(responsePage);
     }
 
     @Transactional

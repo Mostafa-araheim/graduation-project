@@ -6,10 +6,10 @@ import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
 import com.example.pharma.dto.pharmacy.PharmacySearchFilter;
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.review.CreateRatingDto;
 import com.example.pharma.dto.review.CreateReviewDto;
 import com.example.pharma.dto.review.ReviewDto;
-import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.core.CustomerProfile;
 import com.example.pharma.model.entity.review.PharmacyRating;
 import com.example.pharma.service.PharmacyService;
@@ -57,7 +57,7 @@ public class PharmacyController {
         return ApiResponse.success("Pharmacy info fetched successfully",pharmacyService.getPharmacyInfo(pharmacyId));
     }
     @GetMapping("/{pharmacyId}/{categoryId}")
-    public ApiResponse<PageResponse<Product>> getPharmacyProductsUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "ProductId") Pageable pageable)
+    public ApiResponse<PageResponse<PharmacyProductDto>> getPharmacyProductsUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "pharmacyProductId") Pageable pageable)
     {
         return ApiResponse.success("Products returned successfully",pharmacyService.getPharmacyProductsUnderACategory(pharmacyId, categoryId, pageable));
 
