@@ -1,6 +1,5 @@
 package com.example.pharma.repository.Inventory;
 
-import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.inventory.Inventory;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import org.springframework.data.domain.Page;
@@ -22,12 +21,12 @@ public interface PharmacyProductRepository
     List<PharmacyProduct> findByInventory(Inventory inventory);
 
     @Query("""
-        SELECT pp.product
+        SELECT pp
         FROM PharmacyProduct pp
         WHERE pp.inventory.pharmacy.pharmacyId = :pharmacyId
         AND pp.product.category.categoryId = :categoryId
     """)
-    Page<Product> findProductsByPharmacyAndCategory(
+    Page<PharmacyProduct> findProductsByPharmacyAndCategory(
             @Param("pharmacyId") Long pharmacyId,
             @Param("categoryId") Long categoryId,
             Pageable pageable
