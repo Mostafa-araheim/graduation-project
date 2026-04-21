@@ -5,6 +5,7 @@ import com.example.pharma.dto.pharmacyProduct.pharmacyProductResponse;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
