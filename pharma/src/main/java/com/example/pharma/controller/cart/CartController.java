@@ -1,9 +1,7 @@
 package com.example.pharma.controller.cart;
 
-import com.example.pharma.dto.cart.request.AssignCartToUserRequest;
 import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
 import com.example.pharma.dto.cart.request.CartItemQuantityRequest;
-import com.example.pharma.dto.cart.request.CreateCartRequest;
 import com.example.pharma.dto.cart.response.CartResponse;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.order.request.CheckoutRequest;
@@ -26,17 +24,6 @@ public class CartController {
 
     private final CartService cartService;
     private final CheckoutService checkoutService;
-    // POST   /carts
-    @PostMapping
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<CartResponse> createCart(
-            @Valid @RequestBody CreateCartRequest request,
-            @AuthenticationPrincipal(expression = "userId") Long userId) {
-
-        CartResponse cartResponse = cartService.createCart(request, userId);
-
-        return ApiResponse.success("Cart created successfully", cartResponse);
-    }
 
     // GET    /carts/{cartId}
     @GetMapping("/{cartId}")
@@ -64,15 +51,14 @@ public class CartController {
     }
 
     // POST   /carts/{cartId}/items
-    @PostMapping("/{cartId}/items")
+    @PostMapping("/items")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> addItem(
-            @PathVariable Long cartId,
             @Valid @RequestBody CartItemIdentifierRequest request,
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
 
-        cartService.addItem(cartId, userId, request);
+        cartService.addItem( userId, request);
 
         return ApiResponse.success("Item added to cart", null);
     }
@@ -158,18 +144,18 @@ public class CartController {
         return ApiResponse.success("Cart deleted successfully", null);
     }
 
-    // POST   /carts/assign
-    @PostMapping("/assign")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<CartResponse> assignCartToUser(
-            @Valid @RequestBody AssignCartToUserRequest request,
-            @AuthenticationPrincipal(expression = "userId") Long userId
-    ) {
-
-        CartResponse cart = cartService.assignCartToUser(userId, request);
-
-        return ApiResponse.success("Cart assigned successfully", cart);
-    }
+//    // POST   /carts/assign
+//    @PostMapping("/assign")
+//    @PreAuthorize("hasRole('CUSTOMER')")
+//    public ApiResponse<CartResponse> assignCartToUser(
+//            @Valid @RequestBody AssignCartToUserRequest request,
+//            @AuthenticationPrincipal(expression = "userId") Long userId
+//    ) {
+//
+//        CartResponse cart = cartService.assignCartToUser(userId, request);
+//
+//        return ApiResponse.success("Cart assigned successfully", cart);
+//    }
 
     @PostMapping("/{cartId}/checkout")
     @PreAuthorize("hasRole('CUSTOMER')")

@@ -17,4 +17,5 @@ public class CartMetadata {
     private String name;
     private Instant createdAt;
     private Instant updatedAt;
+    private Long pharmacyId;
 }
