@@ -1,0 +1,2000 @@
+================================================================================
+                    CART AND ORDER RELATED CODE
+                     Complete Extraction
+================================================================================
+
+================================================================================
+SECTION 1: CART CONTROLLER
+================================================================================
+
+File: src/main/java/com/example/pharma/controller/cart/CartController.java
+Package: com.example.pharma.controller.cart
+
+package com.example.pharma.controller.cart;
+
+import com.example.pharma.dto.cart.request.AssignCartToUserRequest;
+import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
+import com.example.pharma.dto.cart.request.CartItemQuantityRequest;
+import com.example.pharma.dto.cart.request.CreateCartRequest;
+import com.example.pharma.dto.cart.response.CartResponse;
+import com.example.pharma.dto.common.ApiResponse;
+import com.example.pharma.dto.order.request.CheckoutRequest;
+import com.example.pharma.dto.order.respone.CheckoutResponse;
+import com.example.pharma.service.cart.CartService;
+import com.example.pharma.service.cart.CheckoutService;
+import com.stripe.exception.StripeException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("api/v1/carts")
+@RequiredArgsConstructor
+public class CartController {
+
+    private final CartService cartService;
+    private final CheckoutService checkoutService;
+
+    // POST /carts - Create a new cart
+    @PostMapping
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<CartResponse> createCart(
+            @Valid @RequestBody CreateCartRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        CartResponse cartResponse = cartService.createCart(request, userId);
+        return ApiResponse.success("Cart created successfully", cartResponse);
+    }
+
+    // GET /carts/{cartId} - Retrieve a specific cart
+    @GetMapping("/{cartId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<CartResponse> getCart(
+            @PathVariable Long cartId,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        CartResponse cart = cartService.getCart(cartId, userId);
+        return ApiResponse.success("Cart retrieved successfully", cart);
+    }
+
+    // GET /carts/user - Get all carts for the logged-in user
+    @GetMapping("/user")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<List<CartResponse>> getUserCarts(
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        List<CartResponse> carts = cartService.getUserCarts(userId);
+        return ApiResponse.success("User carts retrieved successfully", carts);
+    }
+
+    // POST /carts/{cartId}/items - Add an item to the cart
+    @PostMapping("/{cartId}/items")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<Void> addItem(
+            @PathVariable Long cartId,
+            @Valid @RequestBody CartItemIdentifierRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        cartService.addItem(cartId, userId, request);
+        return ApiResponse.success("Item added to cart", null);
+    }
+
+    // PATCH /carts/{cartId}/items/quantity - Update item quantity
+    @PatchMapping("/{cartId}/items/quantity")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<Void> updateQuantity(
+            @PathVariable Long cartId,
+            @Valid @RequestBody CartItemQuantityRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        cartService.updateItemQuantity(cartId, userId, request);
+        return ApiResponse.success("Item quantity updated", null);
+    }
+
+    // POST /carts/{cartId}/items/increase - Increase item quantity by 1
+    @PostMapping("/{cartId}/items/increase")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<Void> increaseItemQuantity(
+            @PathVariable Long cartId,
+            @Valid @RequestBody CartItemIdentifierRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        cartService.increaseQuantity(cartId, userId, request);
+        return ApiResponse.success("Item quantity increased", null);
+    }
+
+    // POST /carts/{cartId}/items/decrease - Decrease item quantity by 1
+    @PostMapping("/{cartId}/items/decrease")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<Void> decreaseItemQuantity(
+            @PathVariable Long cartId,
+            @Valid @RequestBody CartItemIdentifierRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        cartService.decreaseQuantity(cartId, userId, request);
+        return ApiResponse.success("Item quantity decreased", null);
+    }
+
+    // DELETE /carts/{cartId}/items/{pharmacyProductId} - Remove an item from cart
+    @DeleteMapping("/{cartId}/items/{pharmacyProductId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<Void> deleteItem(
+            @PathVariable Long cartId,
+            @PathVariable Long pharmacyProductId,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        cartService.deleteItem(cartId, userId, pharmacyProductId);
+        return ApiResponse.success("Item removed from cart", null);
+    }
+
+    // DELETE /carts/{cartId}/clear - Clear all items from cart
+    @DeleteMapping("/{cartId}/clear")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<Void> clearCart(
+            @PathVariable Long cartId,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        cartService.clearCart(cartId, userId);
+        return ApiResponse.success("Cart cleared successfully", null);
+    }
+
+    // DELETE /carts/{cartId} - Delete the entire cart
+    @DeleteMapping("/{cartId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<Void> deleteCart(
+            @PathVariable Long cartId,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        cartService.deleteCart(cartId, userId);
+        return ApiResponse.success("Cart deleted successfully", null);
+    }
+
+    // POST /carts/assign - Assign cart with items to user
+    @PostMapping("/assign")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<CartResponse> assignCartToUser(
+            @Valid @RequestBody AssignCartToUserRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+
+        CartResponse cart = cartService.assignCartToUser(userId, request);
+        return ApiResponse.success("Cart assigned successfully", cart);
+    }
+
+    // POST /carts/{cartId}/checkout - Checkout the cart and create an order
+    @PostMapping("/{cartId}/checkout")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<CheckoutResponse> checkout(
+            @PathVariable Long cartId,
+            @Valid @RequestBody CheckoutRequest request,
+            @AuthenticationPrincipal(expression = "userId") Long userId) throws StripeException {
+
+        CheckoutResponse response = checkoutService.checkout(cartId, userId, request);
+        return ApiResponse.success("Checkout completed successfully", response);
+    }
+}
+
+================================================================================
+SECTION 2: CART SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/cart/CartService.java
+Package: com.example.pharma.service.cart
+
+package com.example.pharma.service.cart;
+
+import com.example.pharma.dto.cart.request.AssignCartToUserRequest;
+import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
+import com.example.pharma.dto.cart.request.CartItemQuantityRequest;
+import com.example.pharma.dto.cart.request.CreateCartRequest;
+import com.example.pharma.dto.cart.response.CartItemResponse;
+import com.example.pharma.dto.cart.response.CartResponse;
+import com.example.pharma.exception.access.AccessDeniedException;
+import com.example.pharma.exception.resource.EntityNotFoundException;
+import com.example.pharma.exception.validation.BusinessRuleViolationException;
+import com.example.pharma.exception.validation.ValidationException;
+import com.example.pharma.mapper.cart.CartItemMapper;
+import com.example.pharma.mapper.cart.CartMetadataMapper;
+import com.example.pharma.model.cart.CartItem;
+import com.example.pharma.model.cart.CartMetadata;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.repository.cart.CartRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+
+@Service
+@RequiredArgsConstructor
+public class CartService {
+
+    private final CartRepository cartRepository;
+    private final CartMetadataMapper cartMetadataMapper;
+    private final CartItemMapper cartItemMapper;
+    private final PharmacyProductRepository pharmacyProductRepository;
+
+    private static final Duration CART_TTL = Duration.ofDays(7);
+
+    /**
+     * Creates a new cart for a user with a given name
+     * POST /carts
+     */
+    public CartResponse createCart(CreateCartRequest request, Long userId) {
+        CartMetadata cartMetadata = cartMetadataMapper.toEntity(userId, request);
+        Long cartId = cartRepository.createCart(cartMetadata);
+        cartRepository.assignCartToUser(cartId, userId);
+        cartRepository.expire(cartId, CART_TTL);
+
+        return new CartResponse(
+                cartId,
+                List.of(),
+                0L,
+                BigDecimal.ZERO,
+                cartMetadata.getCreatedAt(),
+                request.name()
+        );
+    }
+
+    /**
+     * Retrieves a specific cart with all its items
+     * GET /carts/{cartId}
+     */
+    public CartResponse getCart(Long cartId, Long userId) {
+        validateCartAccess(cartId, userId);
+
+        CartMetadata metadata = cartRepository.getCartMetadata(cartId);
+        List<CartItem> items = cartRepository.getAllCartItemsList(cartId);
+
+        List<CartItemResponse> itemResponses =
+                items.stream()
+                        .map(cartItemMapper::toDto)
+                        .toList();
+
+        Long totalItems = items.stream()
+                .mapToLong(CartItem::getQuantity)
+                .sum();
+
+        BigDecimal totalPrice = itemResponses.stream()
+                .map(CartItemResponse::totalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new CartResponse(
+                cartId,
+                itemResponses,
+                totalItems,
+                totalPrice,
+                metadata.getUpdatedAt(),
+                metadata.getName()
+        );
+    }
+
+    /**
+     * Retrieves all carts belonging to a user
+     * GET /carts/user
+     */
+    public List<CartResponse> getUserCarts(Long userId) {
+        if (userId == null) {
+            throw new ValidationException("UserId is required");
+        }
+
+        Set<Long> cartIds = cartRepository.getUserCarts(userId);
+
+        if (cartIds == null || cartIds.isEmpty()) {
+            return List.of();
+        }
+
+        return cartIds.stream()
+                .map(id -> getCart(id, userId))
+                .toList();
+    }
+
+    /**
+     * Adds an item to the cart (or increments quantity if already exists)
+     * POST /carts/{cartId}/items
+     *
+     * Validations:
+     * - Cart must belong to user
+     * - Pharmacy product must exist and be in stock
+     * - All items in cart must be from the same pharmacy
+     */
+    public void addItem(Long cartId, Long userId, CartItemIdentifierRequest request) {
+        validateCartAccess(cartId, userId);
+
+        PharmacyProduct pharmacyProduct = getPharmacyProduct(request.pharmacyProductId());
+
+        if (pharmacyProduct.getQuantity() <= 0) {
+            throw new BusinessRuleViolationException("Item is out of stock");
+        }
+
+        validateSamePharmacy(cartId, pharmacyProduct);
+
+        CartItem existing = cartRepository.getItem(cartId, request);
+
+        if (existing == null) {
+            CartItem newItem = cartItemMapper.toEntity(pharmacyProduct);
+            cartRepository.saveItem(cartId, newItem);
+        } else {
+            if (existing.getQuantity() >= pharmacyProduct.getQuantity()) {
+                throw new BusinessRuleViolationException("Not enough stock");
+            }
+            cartRepository.incrementQuantity(cartId, request);
+        }
+
+        refreshCart(cartId);
+    }
+
+    /**
+     * Updates item quantity to a specific value
+     * PATCH /carts/{cartId}/items/quantity
+     */
+    public void updateItemQuantity(Long cartId, Long userId, CartItemQuantityRequest request) {
+        validateCartAccess(cartId, userId);
+
+        getExistingCartItem(cartId, new CartItemIdentifierRequest(request.pharmacyProductId()));
+
+        PharmacyProduct pharmacyProduct = getPharmacyProduct(request.pharmacyProductId());
+
+        if (request.quantity() > pharmacyProduct.getQuantity()) {
+            throw new BusinessRuleViolationException("Not enough stock");
+        }
+
+        cartRepository.updateQuantity(
+                cartId,
+                new CartItemIdentifierRequest(request.pharmacyProductId()),
+                request.quantity()
+        );
+
+        refreshCart(cartId);
+    }
+
+    /**
+     * Increases item quantity by 1
+     * POST /carts/{cartId}/items/increase
+     */
+    public void increaseQuantity(Long cartId, Long userId, CartItemIdentifierRequest request) {
+        validateCartAccess(cartId, userId);
+
+        CartItem existing = getExistingCartItem(cartId, request);
+        PharmacyProduct pharmacyProduct = getPharmacyProduct(request.pharmacyProductId());
+
+        if (existing.getQuantity() >= pharmacyProduct.getQuantity()) {
+            throw new BusinessRuleViolationException("Not enough stock");
+        }
+
+        cartRepository.incrementQuantity(cartId, request);
+        refreshCart(cartId);
+    }
+
+    /**
+     * Decreases item quantity by 1 or removes if quantity is 1
+     * POST /carts/{cartId}/items/decrease
+     */
+    public void decreaseQuantity(Long cartId, Long userId, CartItemIdentifierRequest request) {
+        validateCartAccess(cartId, userId);
+
+        CartItem existing = getExistingCartItem(cartId, request);
+
+        if (existing.getQuantity() <= 1) {
+            cartRepository.deleteItem(cartId, request);
+        } else {
+            cartRepository.decrementQuantity(cartId, request);
+        }
+
+        refreshCart(cartId);
+    }
+
+    /**
+     * Removes an item from the cart
+     * DELETE /carts/{cartId}/items/{pharmacyProductId}
+     */
+    public void deleteItem(Long cartId, Long userId, Long pharmacyProductId) {
+        validateCartAccess(cartId, userId);
+
+        CartItemIdentifierRequest request = new CartItemIdentifierRequest(pharmacyProductId);
+        getExistingCartItem(cartId, request);
+        cartRepository.deleteItem(cartId, request);
+        refreshCart(cartId);
+    }
+
+    /**
+     * Removes all items from the cart
+     * DELETE /carts/{cartId}/clear
+     */
+    public void clearCart(Long cartId, Long userId) {
+        validateCartAccess(cartId, userId);
+        cartRepository.clearCartItems(cartId);
+        refreshCart(cartId);
+    }
+
+    /**
+     * Deletes the entire cart
+     * DELETE /carts/{cartId}
+     */
+    public void deleteCart(Long cartId, Long userId) {
+        validateCartAccess(cartId, userId);
+        cartRepository.deleteCart(cartId);
+    }
+
+    /**
+     * Creates a new cart with pre-populated items and assigns to user
+     * POST /carts/assign
+     */
+    public CartResponse assignCartToUser(Long userId, AssignCartToUserRequest request) {
+        if (userId == null) {
+            throw new ValidationException("UserId is required");
+        }
+
+        CartMetadata metadata = cartMetadataMapper.toEntity(
+                userId,
+                new CreateCartRequest(request.cartName())
+        );
+
+        Long cartId = cartRepository.createCart(metadata);
+        cartRepository.assignCartToUser(cartId, userId);
+
+        for (CartItemQuantityRequest itemRequest : request.items()) {
+            PharmacyProduct pharmacyProduct = getPharmacyProduct(itemRequest.pharmacyProductId());
+
+            if (itemRequest.quantity() > pharmacyProduct.getQuantity()) {
+                throw new BusinessRuleViolationException("Not enough stock");
+            }
+
+            CartItem item = cartItemMapper.toEntity(pharmacyProduct, itemRequest.quantity());
+            cartRepository.saveItem(cartId, item);
+        }
+
+        cartRepository.expire(cartId, CART_TTL);
+        return getCart(cartId, userId);
+    }
+
+    // ================= PRIVATE HELPERS =================
+
+    /**
+     * Refreshes cart TTL and updates the updatedAt timestamp
+     */
+    private void refreshCart(Long cartId) {
+        cartRepository.expire(cartId, CART_TTL);
+        cartRepository.updateCartUpdatedAt(cartId, Instant.now());
+    }
+
+    /**
+     * Validates that the cart belongs to the user
+     */
+    private void validateCartAccess(Long cartId, Long userId) {
+        if (!cartRepository.cartAccessible(cartId, userId)) {
+            throw new AccessDeniedException("You are not allowed to access this cart");
+        }
+    }
+
+    /**
+     * Retrieves a pharmacy product by ID
+     */
+    private PharmacyProduct getPharmacyProduct(Long pharmacyProductId) {
+        return pharmacyProductRepository.findById(pharmacyProductId)
+                .orElseThrow(() -> new EntityNotFoundException("Pharmacy product not found"));
+    }
+
+    /**
+     * Retrieves an existing cart item or throws exception if not found
+     */
+    private CartItem getExistingCartItem(Long cartId, CartItemIdentifierRequest request) {
+        CartItem item = cartRepository.getItem(cartId, request);
+
+        if (item == null) {
+            throw new EntityNotFoundException("Item not found in cart");
+        }
+
+        return item;
+    }
+
+    /**
+     * Validates that all items in cart are from the same pharmacy
+     */
+    private void validateSamePharmacy(Long cartId, PharmacyProduct pharmacyProduct) {
+        CartItem firstItem = cartRepository.getFirstCartItem(cartId);
+
+        if (firstItem == null) {
+            return; // First item in cart
+        }
+
+        PharmacyProduct firstRecord = getPharmacyProduct(firstItem.getPharmacyProductId());
+        Long cartPharmacyId = firstRecord.getInventory().getPharmacy().getPharmacyId();
+        Long itemPharmacyId = pharmacyProduct.getInventory().getPharmacy().getPharmacyId();
+
+        if (!cartPharmacyId.equals(itemPharmacyId)) {
+            throw new BusinessRuleViolationException(
+                    "Cart cannot contain items from multiple pharmacies"
+            );
+        }
+    }
+}
+
+================================================================================
+SECTION 3: CHECKOUT SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/cart/CheckoutService.java
+Package: com.example.pharma.service.cart
+
+package com.example.pharma.service.cart;
+
+import com.example.pharma.dto.order.request.CheckoutRequest;
+import com.example.pharma.dto.order.respone.CheckoutItemResponse;
+import com.example.pharma.dto.order.respone.CheckoutResponse;
+import com.example.pharma.exception.access.AccessDeniedException;
+import com.example.pharma.exception.resource.EntityNotFoundException;
+import com.example.pharma.exception.validation.BusinessRuleViolationException;
+import com.example.pharma.model.cart.CartItem;
+import com.example.pharma.model.cart.CartMetadata;
+import com.example.pharma.model.entity.core.CustomerProfile;
+import com.example.pharma.model.entity.core.UserAddress;
+import com.example.pharma.model.entity.inventory.AvailabilityStatus;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.model.entity.order.*;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import com.example.pharma.repository.Core.CustomerProfileRepository;
+import com.example.pharma.repository.Core.UserAddressRepository;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.repository.Order.OrderRepository;
+import com.example.pharma.repository.Order.PaymentRepository;
+import com.example.pharma.repository.cart.CartRepository;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class CheckoutService {
+
+    private final CartRepository cartRepository;
+    private final PharmacyProductRepository pharmacyProductRepository;
+    private final CustomerProfileRepository customerProfileRepository;
+    private final UserAddressRepository userAddressRepository;
+    private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
+    private final StripePaymentService stripePaymentService;
+
+    /**
+     * Checks out a cart and creates an order with payment
+     * POST /carts/{cartId}/checkout
+     *
+     * Process:
+     * 1. Validate cart access and ownership
+     * 2. Validate cart has not been checked out before
+     * 3. Validate delivery requirements (address if delivery type)
+     * 4. Validate cart is not empty
+     * 5. Create Order entity from cart items
+     * 6. Create Payment entity
+     * 7. If payment method is CARD:
+     *    - Create Stripe PaymentIntent
+     *    - Return checkout response with clientSecret for frontend payment
+     * 8. If payment method is CASH:
+     *    - Finalize order immediately (deduct inventory)
+     *    - Return checkout response with paymentRequired=false
+     */
+    @Transactional
+    public CheckoutResponse checkout(Long cartId, Long userId, CheckoutRequest request) throws StripeException {
+        validateCartAccess(cartId, userId);
+
+        CartMetadata cartMetadata = cartRepository.getCartMetadata(cartId);
+        if (cartMetadata == null) {
+            throw new EntityNotFoundException("Cart not found");
+        }
+
+        if (orderRepository.existsBySourceCartId(cartId)) {
+            throw new BusinessRuleViolationException("This cart was already checked out");
+        }
+
+        validateDeliveryRequirements(request, userId);
+
+        List<CartItem> cartItems = cartRepository.getAllCartItemsList(cartId);
+        if (cartItems == null || cartItems.isEmpty()) {
+            throw new BusinessRuleViolationException("Cannot checkout an empty cart");
+        }
+
+        CustomerProfile customer = customerProfileRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
+
+        // Create Order entity
+        Order order = new Order();
+        order.setCustomer(customer);
+        order.setSourceCartId(cartId);
+        order.setDeliveryType(request.deliveryType());
+        order.setPaymentMethod(request.paymentMethod());
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        List<CheckoutItemResponse> responseItems = new ArrayList<>();
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        Pharmacy pharmacy = null;
+
+        // Convert cart items to order items
+        for (CartItem cartItem : cartItems) {
+            PharmacyProduct pharmacyProduct = pharmacyProductRepository
+                    .findById(cartItem.getPharmacyProductId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Pharmacy product not found: " + cartItem.getPharmacyProductId()
+                    ));
+
+            if (pharmacyProduct.getQuantity() == null || pharmacyProduct.getQuantity() <= 0) {
+                throw new BusinessRuleViolationException(
+                        "Item is out of stock: " + pharmacyProduct.getPharmacyProductId()
+                );
+            }
+
+            if (cartItem.getQuantity() == null || cartItem.getQuantity() <= 0) {
+                throw new BusinessRuleViolationException("Invalid cart item quantity");
+            }
+
+            if (pharmacyProduct.getQuantity() < cartItem.getQuantity()) {
+                throw new BusinessRuleViolationException(
+                        "Not enough stock for pharmacy product id " + pharmacyProduct.getPharmacyProductId()
+                );
+            }
+
+            // Validate all items are from same pharmacy
+            Pharmacy currentPharmacy = pharmacyProduct.getInventory().getPharmacy();
+            if (pharmacy == null) {
+                pharmacy = currentPharmacy;
+            } else if (!pharmacy.getPharmacyId().equals(currentPharmacy.getPharmacyId())) {
+                throw new BusinessRuleViolationException("Cart cannot contain items from multiple pharmacies");
+            }
+
+            BigDecimal unitPrice = pharmacyProduct.getPrice();
+            BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProduct(pharmacyProduct.getProduct());
+            orderItem.setQuantity(Math.toIntExact(cartItem.getQuantity()));
+            orderItem.setPriceAtPurchase(unitPrice);
+            orderItem.setSubtotal(subtotal);
+
+            orderItems.add(orderItem);
+
+            responseItems.add(new CheckoutItemResponse(
+                    pharmacyProduct.getProduct().getProductId(),
+                    pharmacyProduct.getProduct().getName(),
+                    pharmacyProduct.getPharmacyProductId(),
+                    cartItem.getQuantity(),
+                    unitPrice,
+                    subtotal
+            ));
+
+            totalPrice = totalPrice.add(subtotal);
+        }
+
+        order.setPharmacy(pharmacy);
+        order.setItems(orderItems);
+        order.setTotalPrice(totalPrice);
+        order.setStatus(resolveInitialOrderStatus(request.paymentMethod()));
+
+        Order savedOrder = orderRepository.save(order);
+
+        // Create Payment entity
+        Payment payment = new Payment();
+        payment.setOrder(savedOrder);
+        payment.setAmount(totalPrice);
+        payment.setCurrency("egp");
+        payment.setIdempotencyKey(UUID.randomUUID().toString());
+
+        if (request.paymentMethod() == PaymentMethod.CARD) {
+            // Create Stripe PaymentIntent for card payments
+            PaymentIntent intent = stripePaymentService.createPaymentIntent(
+                    totalPrice,
+                    "egp",
+                    savedOrder.getOrderId()
+            );
+
+            payment.setProviderPaymentIntentId(intent.getId());
+            payment.setClientSecret(intent.getClientSecret());
+            payment.setStatus(PaymentStatus.INITIATED);
+
+            Payment savedPayment = paymentRepository.save(payment);
+
+            return new CheckoutResponse(
+                    savedOrder.getOrderId(),
+                    cartId,
+                    pharmacy.getPharmacyId(),
+                    savedOrder.getDeliveryType(),
+                    savedOrder.getPaymentMethod(),
+                    savedOrder.getStatus(),
+                    savedOrder.getTotalPrice(),
+                    savedPayment.getCurrency(),
+                    true,
+                    savedPayment.getStatus(),
+                    savedPayment.getClientSecret(),
+                    responseItems
+            );
+        }
+
+        // Cash payment - no Stripe involved
+        payment.setProviderPaymentIntentId("CASH_" + UUID.randomUUID());
+        payment.setClientSecret(null);
+        payment.setStatus(PaymentStatus.PENDING_CASH);
+
+        Payment savedPayment = paymentRepository.save(payment);
+
+        // For cash payments, immediately finalize the order
+        finalizePaidOrder(savedOrder.getOrderId());
+
+        return new CheckoutResponse(
+                savedOrder.getOrderId(),
+                cartId,
+                pharmacy.getPharmacyId(),
+                savedOrder.getDeliveryType(),
+                savedOrder.getPaymentMethod(),
+                OrderStatus.PLACED,
+                savedOrder.getTotalPrice(),
+                savedPayment.getCurrency(),
+                false,
+                savedPayment.getStatus(),
+                null,
+                responseItems
+        );
+    }
+
+    /**
+     * Finalizes a paid order by:
+     * 1. Deducting inventory from pharmacy products
+     * 2. Clearing and deleting the source cart
+     * 3. Setting order status to PLACED
+     */
+    @Transactional
+    public void finalizePaidOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        // If already placed, skip finalization
+        if (order.getStatus() == OrderStatus.PLACED) {
+            return;
+        }
+
+        // Deduct inventory for each order item
+        for (OrderItem item : order.getItems()) {
+            PharmacyProduct pharmacyProduct = pharmacyProductRepository
+                    .findByInventory_Pharmacy_PharmacyIdAndProduct_ProductId(
+                            order.getPharmacy().getPharmacyId(),
+                            item.getProduct().getProductId()
+                    )
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Pharmacy product not found for product id " + item.getProduct().getProductId()
+                    ));
+
+            if (pharmacyProduct.getQuantity() == null || pharmacyProduct.getQuantity() < item.getQuantity()) {
+                throw new BusinessRuleViolationException(
+                        "Insufficient stock while finalizing order for product id " + item.getProduct().getProductId()
+                );
+            }
+
+            int remaining = pharmacyProduct.getQuantity() - item.getQuantity();
+            pharmacyProduct.setQuantity(remaining);
+            pharmacyProduct.setAvailabilityStatus(
+                    remaining > 0 ? AvailabilityStatus.Available : AvailabilityStatus.OutOfStock
+            );
+        }
+
+        // Clear and delete source cart
+        cartRepository.clearCartItems(order.getSourceCartId());
+        cartRepository.deleteCart(order.getSourceCartId());
+
+        // Update order status
+        order.setStatus(OrderStatus.PLACED);
+        orderRepository.save(order);
+    }
+
+    // ================= PRIVATE HELPERS =================
+
+    /**
+     * Validates that cart belongs to user
+     */
+    private void validateCartAccess(Long cartId, Long userId) {
+        if (!cartRepository.cartAccessible(cartId, userId)) {
+            throw new AccessDeniedException("You are not allowed to access this cart");
+        }
+    }
+
+    /**
+     * Validates delivery requirements:
+     * - If delivery type is DELIVERY, address is required and must belong to user
+     */
+    private void validateDeliveryRequirements(CheckoutRequest request, Long userId) {
+        if (request.deliveryType() == DeliveryType.DELIVERY) {
+            if (request.deliveryAddressId() == null) {
+                throw new BusinessRuleViolationException("Delivery address is required for delivery orders");
+            }
+
+            UserAddress address = userAddressRepository.findById(request.deliveryAddressId())
+                    .orElseThrow(() -> new EntityNotFoundException("Delivery address not found"));
+
+            if (address.getUser() == null || !address.getUser().getUserId().equals(userId)) {
+                throw new AccessDeniedException("You are not allowed to use this delivery address");
+            }
+        }
+    }
+
+    /**
+     * Resolves initial order status based on payment method
+     * - CARD: PENDING_PAYMENT (awaiting Stripe confirmation)
+     * - CASH: PLACED (order placed immediately)
+     */
+    private OrderStatus resolveInitialOrderStatus(PaymentMethod paymentMethod) {
+        return paymentMethod == PaymentMethod.CARD
+                ? OrderStatus.PENDING_PAYMENT
+                : OrderStatus.PLACED;
+    }
+}
+
+================================================================================
+SECTION 4: STRIPE PAYMENT SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/cart/StripePaymentService.java
+Package: com.example.pharma.service.cart
+
+package com.example.pharma.service.cart;
+
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.param.PaymentIntentCreateParams;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+@Service
+@RequiredArgsConstructor
+public class StripePaymentService {
+
+    /**
+     * Creates a Stripe PaymentIntent for a given amount
+     *
+     * @param amount The amount in the currency's main unit (e.g., EGP)
+     * @param currency The currency code (e.g., "egp")
+     * @param orderId The order ID for metadata tracking
+     * @return The created PaymentIntent with clientSecret for frontend
+     * @throws StripeException If Stripe API call fails
+     */
+    public PaymentIntent createPaymentIntent(BigDecimal amount, String currency, Long orderId) throws StripeException {
+        // Convert amount to smallest currency unit (e.g., cents for USD, fils for EGP)
+        long amountInSmallestUnit = amount
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValueExact();
+
+        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                .setAmount(amountInSmallestUnit)
+                .setCurrency(currency.toLowerCase())
+                .putMetadata("orderId", String.valueOf(orderId))
+                .setAutomaticPaymentMethods(
+                        PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                .setEnabled(true)
+                                .build()
+                )
+                .build();
+
+        return PaymentIntent.create(params);
+    }
+}
+
+================================================================================
+SECTION 5: STRIPE WEBHOOK SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/cart/StripeWebhookService.java
+Package: com.example.pharma.service.cart
+
+package com.example.pharma.service.cart;
+
+import com.example.pharma.exception.resource.EntityNotFoundException;
+import com.example.pharma.model.entity.order.Order;
+import com.example.pharma.model.entity.order.Payment;
+import com.example.pharma.model.entity.order.PaymentStatus;
+import com.example.pharma.repository.Order.PaymentRepository;
+import com.stripe.model.Event;
+import com.stripe.model.PaymentIntent;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class StripeWebhookService {
+
+    private final PaymentRepository paymentRepository;
+    private final CheckoutService checkoutService;
+
+    /**
+     * Handles Stripe webhook events
+     * Supported events:
+     * - payment_intent.succeeded: Payment successful, finalize order
+     * - payment_intent.payment_failed: Payment failed
+     * - payment_intent.canceled: Payment canceled
+     * - payment_intent.requires_action: Payment requires additional action (3D Secure, etc.)
+     */
+    @Transactional
+    public void handleEvent(Event event) {
+        if (event == null || event.getType() == null) {
+            log.warn("Received null/invalid Stripe event");
+            return;
+        }
+
+        switch (event.getType()) {
+            case "payment_intent.succeeded" -> handlePaymentIntentSucceeded(event);
+            case "payment_intent.payment_failed" -> handlePaymentIntentFailed(event);
+            case "payment_intent.canceled" -> handlePaymentIntentCanceled(event);
+            case "payment_intent.requires_action" -> handlePaymentIntentRequiresAction(event);
+            default -> log.info("Unhandled Stripe event type: {}", event.getType());
+        }
+    }
+
+    /**
+     * Handles successful payment
+     * - Updates payment status to SUCCEEDED
+     * - Records payment timestamp
+     * - Finalizes the order (deducts inventory, deletes cart)
+     */
+    private void handlePaymentIntentSucceeded(Event event) {
+        PaymentIntent paymentIntent = extractPaymentIntent(event);
+
+        Payment payment = paymentRepository
+                .findByProviderPaymentIntentId(paymentIntent.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Payment not found for Stripe PaymentIntent: " + paymentIntent.getId()
+                ));
+
+        if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
+            log.info("Stripe event already processed for paymentIntent={}", paymentIntent.getId());
+            return;
+        }
+
+        payment.setStatus(PaymentStatus.SUCCEEDED);
+        payment.setPaidAt(Instant.now());
+        payment.setFailureReason(null);
+        payment.setClientSecret(paymentIntent.getClientSecret());
+        paymentRepository.save(payment);
+
+        Order order = payment.getOrder();
+        checkoutService.finalizePaidOrder(order.getOrderId());
+
+        log.info("Payment succeeded and order finalized. orderId={}, paymentIntent={}",
+                order.getOrderId(), paymentIntent.getId());
+    }
+
+    /**
+     * Handles failed payment
+     * - Updates payment status to FAILED
+     * - Records failure reason
+     */
+    private void handlePaymentIntentFailed(Event event) {
+        PaymentIntent paymentIntent = extractPaymentIntent(event);
+
+        Payment payment = paymentRepository
+                .findByProviderPaymentIntentId(paymentIntent.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Payment not found for Stripe PaymentIntent: " + paymentIntent.getId()
+                ));
+
+        payment.setStatus(PaymentStatus.FAILED);
+        payment.setFailureReason(
+                paymentIntent.getLastPaymentError() != null
+                        ? paymentIntent.getLastPaymentError().getMessage()
+                        : "Stripe payment failed"
+        );
+
+        paymentRepository.save(payment);
+
+        log.warn("Payment failed. orderId={}, paymentIntent={}, reason={}",
+                payment.getOrder().getOrderId(), paymentIntent.getId(), payment.getFailureReason());
+    }
+
+    /**
+     * Handles canceled payment
+     * - Updates payment status to CANCELED
+     */
+    private void handlePaymentIntentCanceled(Event event) {
+        PaymentIntent paymentIntent = extractPaymentIntent(event);
+
+        Payment payment = paymentRepository
+                .findByProviderPaymentIntentId(paymentIntent.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Payment not found for Stripe PaymentIntent: " + paymentIntent.getId()
+                ));
+
+        payment.setStatus(PaymentStatus.CANCELED);
+        payment.setFailureReason("Payment was canceled on Stripe");
+        paymentRepository.save(payment);
+
+        log.warn("Payment canceled. orderId={}, paymentIntent={}",
+                payment.getOrder().getOrderId(), paymentIntent.getId());
+    }
+
+    /**
+     * Handles payment requiring additional action (3D Secure, etc.)
+     * - Updates payment status to REQUIRES_ACTION
+     */
+    private void handlePaymentIntentRequiresAction(Event event) {
+        PaymentIntent paymentIntent = extractPaymentIntent(event);
+
+        Payment payment = paymentRepository
+                .findByProviderPaymentIntentId(paymentIntent.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Payment not found for Stripe PaymentIntent: " + paymentIntent.getId()
+                ));
+
+        payment.setStatus(PaymentStatus.REQUIRES_ACTION);
+        payment.setClientSecret(paymentIntent.getClientSecret());
+        paymentRepository.save(payment);
+
+        log.info("Payment requires action. orderId={}, paymentIntent={}",
+                payment.getOrder().getOrderId(), paymentIntent.getId());
+    }
+
+    /**
+     * Extracts PaymentIntent from Stripe Event
+     */
+    private PaymentIntent extractPaymentIntent(Event event) {
+        return (PaymentIntent) event.getDataObjectDeserializer()
+                .getObject()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unable to deserialize Stripe event data for event: " + event.getId()
+                ));
+    }
+}
+
+================================================================================
+SECTION 6: CART MODELS
+================================================================================
+
+6.1 CartItem Model
+File: src/main/java/com/example/pharma/model/cart/CartItem.java
+Package: com.example.pharma.model.cart
+
+package com.example.pharma.model.cart;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class CartItem {
+
+    private Long pharmacyProductId;   // Reference to PharmacyProduct
+    private Long quantity;             // Number of units
+    private BigDecimal pricePerUnit;   // Unit price at time of adding to cart
+}
+
+6.2 CartMetadata Model
+File: src/main/java/com/example/pharma/model/cart/CartMetadata.java
+Package: com.example.pharma.model.cart
+
+package com.example.pharma.model.cart;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class CartMetadata {
+    private Long cartId;           // Unique cart identifier
+    private Long userId;           // Owner of the cart
+    private String name;           // Cart name/label
+    private Instant createdAt;     // Creation timestamp
+    private Instant updatedAt;     // Last update timestamp
+}
+
+================================================================================
+SECTION 7: ORDER MODELS AND ENTITIES
+================================================================================
+
+7.1 Order Entity
+File: src/main/java/com/example/pharma/model/entity/order/Order.java
+Package: com.example.pharma.model.entity.order
+
+package com.example.pharma.model.entity.order;
+
+import com.example.pharma.model.entity.core.CreatedAtColumn;
+import com.example.pharma.model.entity.core.CustomerProfile;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "orders")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
+    private Long orderId;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private CustomerProfile customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pharmacy_id")
+    private Pharmacy pharmacy;
+
+    private BigDecimal totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    private DeliveryType deliveryType;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @Column(name = "source_cart_id", nullable = false, unique = true)
+    private Long sourceCartId;
+
+    @Embedded
+    private CreatedAtColumn createdAt;
+}
+
+7.2 OrderItem Entity
+File: src/main/java/com/example/pharma/model/entity/order/OrderItem.java
+Package: com.example.pharma.model.entity.order
+
+package com.example.pharma.model.entity.order;
+
+import com.example.pharma.model.entity.catalog.Product;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "order_item")
+public class OrderItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long orderItemId;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    private Integer quantity;
+
+    private BigDecimal priceAtPurchase;
+
+    private BigDecimal subtotal;
+}
+
+7.3 Payment Entity
+File: src/main/java/com/example/pharma/model/entity/order/Payment.java
+Package: com.example.pharma.model.entity.order
+
+package com.example.pharma.model.entity.order;
+
+import com.example.pharma.model.entity.core.CreatedAtColumn;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "payments")
+public class Payment {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long paymentId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @Column(nullable = false, unique = true)
+    private String providerPaymentIntentId;
+
+    @Column(unique = true)
+    private String idempotencyKey;
+
+    private String clientSecret;
+
+    @Column(nullable = false)
+    private BigDecimal amount;
+
+    private String currency;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus status;
+
+    private String failureReason;
+
+    @Embedded
+    private CreatedAtColumn createdAt;
+
+    private Instant paidAt;
+}
+
+7.4 OrderStatus Enum
+File: src/main/java/com/example/pharma/model/entity/order/OrderStatus.java
+Package: com.example.pharma.model.entity.order
+
+package com.example.pharma.model.entity.order;
+
+public enum OrderStatus {
+    PENDING_PAYMENT,  // Awaiting payment confirmation (for card payments)
+    PLACED,           // Order placed (payment confirmed or cash order)
+    CONFIRMED,        // Order confirmed by pharmacy
+    FAILED,           // Order failed
+    CANCELED          // Order canceled
+}
+
+7.5 DeliveryType Enum
+File: src/main/java/com/example/pharma/model/entity/order/DeliveryType.java
+Package: com.example.pharma.model.entity.order
+
+package com.example.pharma.model.entity.order;
+
+public enum DeliveryType {
+    PICKUP,   // Customer picks up from pharmacy
+    DELIVERY  // Delivery to customer address
+}
+
+7.6 PaymentMethod Enum
+File: src/main/java/com/example/pharma/model/entity/order/PaymentMethod.java
+Package: com.example.pharma.model.entity.order
+
+package com.example.pharma.model.entity.order;
+
+public enum PaymentMethod {
+    CARD,  // Credit/Debit card payment (via Stripe)
+    CASH   // Cash payment on pickup/delivery
+}
+
+7.7 PaymentStatus Enum
+File: src/main/java/com/example/pharma/model/entity/order/PaymentStatus.java
+Package: com.example.pharma.model.entity.order
+
+public enum PaymentStatus {
+    INITIATED,       // Payment process started
+    REQUIRES_ACTION, // Additional action needed (3D Secure)
+    PENDING_CASH,    // Awaiting cash payment
+    SUCCEEDED,       // Payment successful
+    FAILED,          // Payment failed
+    CANCELED         // Payment canceled
+}
+
+================================================================================
+SECTION 8: CART AND ORDER DTOs
+================================================================================
+
+8.1 Cart Request DTOs
+
+8.1.1 CreateCartRequest
+File: src/main/java/com/example/pharma/dto/cart/request/CreateCartRequest.java
+
+package com.example.pharma.dto.cart.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record CreateCartRequest(
+    @NotBlank(message = "Cart name cannot be blank")
+    @Size(max = 100, message = "Cart name cannot exceed 100 characters")
+    String name
+) {}
+
+8.1.2 CartItemIdentifierRequest
+File: src/main/java/com/example/pharma/dto/cart/request/CartItemIdentifierRequest.java
+
+package com.example.pharma.dto.cart.request;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+public record CartItemIdentifierRequest(
+    @NotNull(message = "PharmacyProductId is required")
+    @Positive(message = "PharmacyProductId must be positive")
+    Long pharmacyProductId
+) {}
+
+8.1.3 CartItemQuantityRequest
+File: src/main/java/com/example/pharma/dto/cart/request/CartItemQuantityRequest.java
+
+package com.example.pharma.dto.cart.request;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+public record CartItemQuantityRequest(
+    @NotNull(message = "PharmacyProductId is required")
+    @Positive(message = "PharmacyProductId must be positive")
+    Long pharmacyProductId,
+
+    @NotNull(message = "Quantity is required")
+    @Positive(message = "Quantity must be greater than 0")
+    Long quantity
+) {}
+
+8.1.4 AssignCartToUserRequest
+File: src/main/java/com/example/pharma/dto/cart/request/AssignCartToUserRequest.java
+
+package com.example.pharma.dto.cart.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
+
+public record AssignCartToUserRequest(
+    @NotNull
+    List<CartItemQuantityRequest> items,
+
+    @NotBlank
+    String cartName
+) {}
+
+8.2 Cart Response DTOs
+
+8.2.1 CartItemResponse
+File: src/main/java/com/example/pharma/dto/cart/response/CartItemResponse.java
+
+package com.example.pharma.dto.cart.response;
+
+import java.math.BigDecimal;
+
+public record CartItemResponse(
+    Long productId,           // Product ID from PharmacyProduct
+    Long quantity,            // Quantity in cart
+    BigDecimal pricePerUnit,  // Unit price
+    BigDecimal totalPrice     // quantity * pricePerUnit
+) {}
+
+8.2.2 CartResponse
+File: src/main/java/com/example/pharma/dto/cart/response/CartResponse.java
+
+package com.example.pharma.dto.cart.response;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+
+public record CartResponse(
+    Long cartId,               // Unique cart identifier
+    List<CartItemResponse> items,  // Items in cart
+    Long totalItems,           // Total quantity of items
+    BigDecimal totalPrice,     // Sum of all items' total prices
+    Instant updatedAt,         // Last update timestamp
+    String cartName            // Cart name
+) {}
+
+8.3 Order Request DTOs
+
+8.3.1 CheckoutRequest
+File: src/main/java/com/example/pharma/dto/order/request/CheckoutRequest.java
+
+package com.example.pharma.dto.order.request;
+
+import com.example.pharma.model.entity.order.DeliveryType;
+import com.example.pharma.model.entity.order.PaymentMethod;
+import jakarta.validation.constraints.NotNull;
+
+public record CheckoutRequest(
+    @NotNull(message = "Delivery type is required")
+    DeliveryType deliveryType,
+
+    @NotNull(message = "Payment method is required")
+    PaymentMethod paymentMethod,
+
+    Long deliveryAddressId  // Required if deliveryType is DELIVERY
+) {}
+
+8.4 Order Response DTOs
+
+8.4.1 CheckoutItemResponse
+File: src/main/java/com/example/pharma/dto/order/respone/CheckoutItemResponse.java
+
+package com.example.pharma.dto.order.respone;
+
+import java.math.BigDecimal;
+
+public record CheckoutItemResponse(
+    Long productId,          // Product ID
+    String productName,      // Product name
+    Long pharmacyProductId,  // PharmacyProduct ID
+    Long quantity,           // Order quantity
+    BigDecimal unitPrice,    // Unit price at checkout
+    BigDecimal subtotal      // quantity * unitPrice
+) {}
+
+8.4.2 CheckoutResponse
+File: src/main/java/com/example/pharma/dto/order/respone/CheckoutResponse.java
+
+package com.example.pharma.dto.order.respone;
+
+import com.example.pharma.model.entity.order.DeliveryType;
+import com.example.pharma.model.entity.order.OrderStatus;
+import com.example.pharma.model.entity.order.PaymentMethod;
+import com.example.pharma.model.entity.order.PaymentStatus;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+public record CheckoutResponse(
+    Long orderId,                    // Order ID
+    Long cartId,                     // Source cart ID
+    Long pharmacyId,                 // Pharmacy ID
+    DeliveryType deliveryType,       // Delivery type
+    PaymentMethod paymentMethod,     // Payment method
+    OrderStatus orderStatus,         // Order status
+    BigDecimal totalPrice,           // Total order price
+    String currency,                 // Currency code
+    boolean paymentRequired,         // True if card payment, false if cash
+    PaymentStatus paymentStatus,     // Payment status
+    String clientSecret,             // Stripe clientSecret (for card payments only)
+    List<CheckoutItemResponse> items // Order items
+) {}
+
+================================================================================
+SECTION 9: CART AND ORDER REPOSITORIES
+================================================================================
+
+9.1 Cart Repository Interface
+File: src/main/java/com/example/pharma/repository/cart/CartRepository.java
+
+package com.example.pharma.repository.cart;
+
+import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
+import com.example.pharma.model.cart.CartItem;
+import com.example.pharma.model.cart.CartMetadata;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public interface CartRepository {
+
+    // Create cart
+    Long createCart(CartMetadata metadata);
+
+    // Assign cart to user
+    void assignCartToUser(Long cartId, Long userId);
+
+    // Delete cart
+    void deleteCart(Long cartId);
+
+    // Add or set item
+    void saveItem(Long cartId, CartItem item);
+
+    // Update quantity explicitly
+    void updateQuantity(Long cartId, CartItemIdentifierRequest cartItemId, Long quantity);
+
+    // Increment quantity
+    void incrementQuantity(Long cartId, CartItemIdentifierRequest cartItemId);
+
+    // Decrement quantity
+    void decrementQuantity(Long cartId, CartItemIdentifierRequest cartItemId);
+
+    // Delete item
+    void deleteItem(Long cartId, CartItemIdentifierRequest cartItemId);
+
+    // Get specific item
+    CartItem getItem(Long cartId, CartItemIdentifierRequest cartItemId);
+
+    // List all items
+    Map<String, CartItem> getAllCartItems(Long cartId);
+
+    // Get cart metadata field
+    Object getMetadataField(Long cartId, String field);
+
+    // List all user carts
+    Set<Long> getUserCarts(Long userId);
+
+    // Exists
+    boolean exists(Long cartId);
+
+    // Expire (set TTL)
+    void expire(Long cartId, Duration ttl);
+
+    // Get all items as list
+    List<CartItem> getAllCartItemsList(Long cartId);
+
+    // Clear all items from cart
+    void clearCartItems(Long cartId);
+
+    // Get cart metadata
+    CartMetadata getCartMetadata(Long cartId);
+
+    // Save cart
+    Long saveCart(Long cartId, CartMetadata metadata);
+
+    // Update updatedAt timestamp
+    void updateCartUpdatedAt(Long cartId, Instant updatedAt);
+
+    // Check if cart belongs to user
+    boolean cartBelongsToUser(Long cartId, Long userId);
+
+    // Get first item in cart
+    CartItem getFirstCartItem(Long cartId);
+
+    // Check if cart is accessible by user
+    boolean cartAccessible(Long cartId, Long userId);
+}
+
+9.2 Cart Redis Repository Implementation
+File: src/main/java/com/example/pharma/repository/cart/CartRedisRepository.java
+[See attached full implementation in existing file - uses Redis for persistence]
+
+9.3 Order Repository
+File: src/main/java/com/example/pharma/repository/Order/OrderRepository.java
+
+package com.example.pharma.repository.Order;
+
+import com.example.pharma.model.entity.order.Order;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    boolean existsBySourceCartId(Long sourceCartId);
+}
+
+9.4 OrderItem Repository
+File: src/main/java/com/example/pharma/repository/Order/OrderItemRepository.java
+
+package com.example.pharma.repository.Order;
+
+import com.example.pharma.model.entity.order.OrderItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
+    List<OrderItem> findByOrder_OrderId(Long orderId);
+}
+
+9.5 Payment Repository
+File: src/main/java/com/example/pharma/repository/Order/PaymentRepository.java
+
+package com.example.pharma.repository.Order;
+
+import com.example.pharma.model.entity.order.Payment;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+    Optional<Payment> findByProviderPaymentIntentId(String providerPaymentIntentId);
+}
+
+================================================================================
+SECTION 10: CART MAPPERS
+================================================================================
+
+10.1 CartItemMapper
+File: src/main/java/com/example/pharma/mapper/cart/CartItemMapper.java
+
+package com.example.pharma.mapper.cart;
+
+import com.example.pharma.dto.cart.response.CartItemResponse;
+import com.example.pharma.model.cart.CartItem;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.math.BigDecimal;
+
+@Mapper(componentModel = "spring")
+public interface CartItemMapper {
+
+    @Mapping(target = "totalPrice", expression = "java(calculateTotal(cartItem))")
+    CartItemResponse toDto(CartItem cartItem);
+
+    default BigDecimal calculateTotal(CartItem cartItem) {
+        if (cartItem == null || cartItem.getPricePerUnit() == null || cartItem.getQuantity() == null) {
+            return BigDecimal.ZERO;
+        }
+        return cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+    }
+
+    @Mapping(target = "pharmacyProductId", source = "pharmacyProduct.pharmacyProductId")
+    @Mapping(target = "quantity", expression = "java(1L)")
+    @Mapping(target = "pricePerUnit", source = "pharmacyProduct.price")
+    CartItem toEntity(PharmacyProduct pharmacyProduct);
+
+    @Mapping(target = "pharmacyProductId", source = "pharmacyProduct.pharmacyProductId")
+    @Mapping(target = "quantity", source = "quantity")
+    @Mapping(target = "pricePerUnit", source = "pharmacyProduct.price")
+    CartItem toEntity(PharmacyProduct pharmacyProduct, Long quantity);
+}
+
+10.2 CartMetadataMapper
+File: src/main/java/com/example/pharma/mapper/cart/CartMetadataMapper.java
+
+package com.example.pharma.mapper.cart;
+
+import com.example.pharma.dto.cart.request.CreateCartRequest;
+import com.example.pharma.model.cart.CartMetadata;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.time.Instant;
+
+@Mapper(componentModel = "spring", imports = Instant.class)
+public interface CartMetadataMapper {
+
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "name", source = "request.name")
+    @Mapping(target = "createdAt", expression = "java(Instant.now())")
+    @Mapping(target = "updatedAt", expression = "java(Instant.now())")
+    CartMetadata toEntity(Long userId, CreateCartRequest request);
+}
+
+================================================================================
+SECTION 11: API ENDPOINTS SUMMARY
+================================================================================
+
+CART ENDPOINTS (Base URL: /api/v1/carts)
+
+1. POST /api/v1/carts
+   - Create a new cart
+   - Request: CreateCartRequest { name }
+   - Response: CartResponse
+   - Auth: CUSTOMER role required
+
+2. GET /api/v1/carts/{cartId}
+   - Get specific cart details
+   - Response: CartResponse
+   - Auth: CUSTOMER role required
+
+3. GET /api/v1/carts/user
+   - Get all carts for logged-in user
+   - Response: List<CartResponse>
+   - Auth: CUSTOMER role required
+
+4. POST /api/v1/carts/{cartId}/items
+   - Add item to cart
+   - Request: CartItemIdentifierRequest { pharmacyProductId }
+   - Response: ApiResponse<Void>
+   - Auth: CUSTOMER role required
+
+5. PATCH /api/v1/carts/{cartId}/items/quantity
+   - Update item quantity to specific value
+   - Request: CartItemQuantityRequest { pharmacyProductId, quantity }
+   - Response: ApiResponse<Void>
+   - Auth: CUSTOMER role required
+
+6. POST /api/v1/carts/{cartId}/items/increase
+   - Increase item quantity by 1
+   - Request: CartItemIdentifierRequest { pharmacyProductId }
+   - Response: ApiResponse<Void>
+   - Auth: CUSTOMER role required
+
+7. POST /api/v1/carts/{cartId}/items/decrease
+   - Decrease item quantity by 1 (or remove if quantity is 1)
+   - Request: CartItemIdentifierRequest { pharmacyProductId }
+   - Response: ApiResponse<Void>
+   - Auth: CUSTOMER role required
+
+8. DELETE /api/v1/carts/{cartId}/items/{pharmacyProductId}
+   - Remove item from cart
+   - Response: ApiResponse<Void>
+   - Auth: CUSTOMER role required
+
+9. DELETE /api/v1/carts/{cartId}/clear
+   - Clear all items from cart
+   - Response: ApiResponse<Void>
+   - Auth: CUSTOMER role required
+
+10. DELETE /api/v1/carts/{cartId}
+    - Delete entire cart
+    - Response: ApiResponse<Void>
+    - Auth: CUSTOMER role required
+
+11. POST /api/v1/carts/assign
+    - Create cart with pre-populated items
+    - Request: AssignCartToUserRequest { cartName, items }
+    - Response: CartResponse
+    - Auth: CUSTOMER role required
+
+12. POST /api/v1/carts/{cartId}/checkout
+    - Checkout cart and create order
+    - Request: CheckoutRequest { deliveryType, paymentMethod, deliveryAddressId }
+    - Response: CheckoutResponse
+    - Auth: CUSTOMER role required
+
+================================================================================
+SECTION 12: KEY BUSINESS RULES AND VALIDATIONS
+================================================================================
+
+CART OPERATIONS:
+
+1. Cart Ownership:
+   - Only the owner can access/modify their cart
+   - AccessDeniedException thrown if user tries to access cart they don't own
+
+2. Cart Items - Same Pharmacy Rule:
+   - All items in a cart must be from the same pharmacy
+   - BusinessRuleViolationException thrown if trying to add item from different pharmacy
+
+3. Inventory Management:
+   - Item must exist in inventory (PharmacyProduct)
+   - Item must have quantity > 0
+   - Requested quantity must not exceed available inventory
+   - Not enough stock validation before adding/updating quantity
+
+4. Cart TTL (Time To Live):
+   - Carts expire after 7 days of inactivity
+   - TTL is refreshed on every cart modification
+   - Expired carts are automatically cleaned up by Redis
+
+CHECKOUT OPERATIONS:
+
+1. Pre-Checkout Validations:
+   - Cart must belong to user
+   - Cart must not already be checked out (sourceCartId uniqueness)
+   - Cart must not be empty
+   - All items must still be in stock
+   - Customer profile must exist
+
+2. Delivery Type Validation:
+   - If deliveryType is DELIVERY:
+     * deliveryAddressId must be provided
+     * Address must exist
+     * Address must belong to the user
+
+3. Order Creation:
+   - Order created with:
+     * Customer reference
+     * Pharmacy reference (from items)
+     * DeliveryType and PaymentMethod
+     * List of OrderItems with snapshot prices
+     * Initial status based on payment method
+
+4. Payment Processing:
+   - CARD Payment:
+     * Stripe PaymentIntent created
+     * Order status set to PENDING_PAYMENT
+     * clientSecret returned to frontend for payment collection
+     * Inventory NOT deducted until payment confirmed
+   - CASH Payment:
+     * No Stripe involved
+     * Order status set to PLACED
+     * finalizePaidOrder() called immediately
+     * Inventory deducted, cart deleted
+
+5. Order Finalization:
+   - Inventory is deducted for each order item
+   - Availability status updated based on remaining quantity
+   - Source cart is cleared and deleted
+   - Order status set to PLACED
+
+STRIPE WEBHOOK HANDLING:
+
+1. Payment Success (payment_intent.succeeded):
+   - Payment status set to SUCCEEDED
+   - Paid timestamp recorded
+   - finalizePaidOrder() triggered to deduct inventory
+
+2. Payment Failed (payment_intent.payment_failed):
+   - Payment status set to FAILED
+   - Failure reason recorded
+   - Order remains in PENDING_PAYMENT status (can be retried)
+
+3. Payment Canceled (payment_intent.canceled):
+   - Payment status set to CANCELED
+   - Failure reason recorded
+
+4. Requires Action (payment_intent.requires_action):
+   - Payment status set to REQUIRES_ACTION
+   - clientSecret updated for frontend to handle additional authentication
+
+================================================================================
+SECTION 13: REDIS DATA STRUCTURE (CART STORAGE)
+================================================================================
+
+Cart data is stored in Redis with the following structure:
+
+Cart Metadata Hash:
+  Key: cart:{cartId}
+  Fields:
+    - userId: Long (cart owner)
+    - name: String (cart name)
+    - createdAt: Instant (creation time)
+    - updatedAt: Instant (last update time)
+
+Cart Items Hash:
+  Key: cart:{cartId}:items
+  Fields:
+    - {pharmacyProductId}: CartItem object (serialized)
+      - pharmacyProductId: Long
+      - quantity: Long
+      - pricePerUnit: BigDecimal
+
+User Carts Set:
+  Key: user:{userId}:carts
+  Members: Collection of cartIds (Long)
+
+TTL: 7 days on all keys
+
+================================================================================
+SECTION 14: DATABASE SCHEMA (JPA ENTITIES)
+================================================================================
+
+ORDER TABLES:
+
+orders:
+  - order_id (PK, BIGINT)
+  - customer_id (FK to customers, BIGINT)
+  - pharmacy_id (FK to pharmacies, BIGINT)
+  - total_price (DECIMAL)
+  - delivery_type (VARCHAR) - PICKUP, DELIVERY
+  - payment_method (VARCHAR) - CARD, CASH
+  - status (VARCHAR) - PENDING_PAYMENT, PLACED, CONFIRMED, FAILED, CANCELED
+  - source_cart_id (BIGINT, UNIQUE) - Reference to source cart
+  - created_at (TIMESTAMP)
+  - updated_at (TIMESTAMP)
+
+order_items:
+  - order_item_id (PK, BIGINT)
+  - order_id (FK to orders, BIGINT)
+  - product_id (FK to products, BIGINT)
+  - quantity (INT)
+  - price_at_purchase (DECIMAL)
+  - subtotal (DECIMAL)
+
+payments:
+  - payment_id (PK, BIGINT)
+  - order_id (FK to orders, BIGINT, UNIQUE)
+  - provider_payment_intent_id (VARCHAR, UNIQUE) - Stripe PaymentIntent ID or "CASH_*"
+  - idempotency_key (VARCHAR, UNIQUE)
+  - client_secret (VARCHAR) - Stripe clientSecret
+  - amount (DECIMAL)
+  - currency (VARCHAR)
+  - status (VARCHAR) - INITIATED, REQUIRES_ACTION, PENDING_CASH, SUCCEEDED, FAILED, CANCELED
+  - failure_reason (VARCHAR)
+  - created_at (TIMESTAMP)
+  - paid_at (TIMESTAMP)
+
+================================================================================
+SECTION 15: TRANSACTION FLOW DIAGRAMS
+================================================================================
+
+HAPPY PATH - CARD PAYMENT:
+
+1. Customer creates/uses cart
+   → POST /carts/{cartId}/items
+   → Items added to Redis cart
+
+2. Customer proceeds to checkout
+   → POST /carts/{cartId}/checkout
+   → CheckoutService.checkout() called [@Transactional]
+
+3. Checkout creates Order:
+   - Order entity saved to DB (status=PENDING_PAYMENT)
+   - OrderItems created from cart items
+   - Payment entity created (status=INITIATED)
+
+4. Stripe PaymentIntent created:
+   - StripePaymentService.createPaymentIntent()
+   - Returns clientSecret to frontend
+   - Inventory NOT deducted yet
+
+5. Frontend collects payment via Stripe
+   - User enters card details
+   - Stripe processes payment
+
+6. Stripe sends webhook: payment_intent.succeeded
+   - StripeWebhookService.handleEvent()
+   - Payment status set to SUCCEEDED
+   - CheckoutService.finalizePaidOrder() called
+
+7. finalizePaidOrder():
+   - Deducts inventory from pharmacy products
+   - Updates availability status
+   - Clears and deletes source cart from Redis
+   - Sets order status to PLACED
+
+8. Order complete
+   - Customer can track order
+   - Pharmacy receives order notification
+
+
+HAPPY PATH - CASH PAYMENT:
+
+1. Customer creates/uses cart
+   → POST /carts/{cartId}/items
+   → Items added to Redis cart
+
+2. Customer proceeds to checkout
+   → POST /carts/{cartId}/checkout
+   → CheckoutService.checkout() called [@Transactional]
+
+3. Checkout creates Order:
+   - Order entity saved to DB
+   - OrderItems created from cart items
+   - Payment entity created (status=PENDING_CASH)
+
+4. finalizePaidOrder() called immediately:
+   - Deducts inventory from pharmacy products
+   - Updates availability status
+   - Clears and deletes source cart from Redis
+   - Sets order status to PLACED
+
+5. Response sent to frontend:
+   - paymentRequired=false
+   - clientSecret=null
+
+6. Order complete
+   - Customer can track order
+   - Pharmacy receives order notification
+
+
+ERROR HANDLING:
+
+- AccessDeniedException: User tries to access cart they don't own
+- EntityNotFoundException: Cart/item/product not found
+- BusinessRuleViolationException: Invalid operation (out of stock, multiple pharmacies, etc.)
+- ValidationException: Invalid input data
+- StripeException: Stripe API errors
+
+================================================================================
+END OF EXTRACTION
+================================================================================
+
+This file contains all cart and order related code extracted from the pharma project.
+For additional context or to understand how this integrates with other modules,
+refer to the main project structure.
+
+Last Updated: April 21, 2026
+

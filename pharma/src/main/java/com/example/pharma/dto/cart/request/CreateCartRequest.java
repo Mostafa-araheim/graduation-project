@@ -8,5 +8,7 @@ public record CreateCartRequest(
 
         @NotBlank(message = "Cart name cannot be blank")
         @Size(max = 100, message = "Cart name cannot exceed 100 characters")
-        String name
+        String name,
+
+        Long PharmacyId
 ) {}

@@ -1,6 +1,5 @@
 package com.example.pharma.service.cart;
 
-import com.example.pharma.dto.cart.request.AssignCartToUserRequest;
 import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
 import com.example.pharma.dto.cart.request.CartItemQuantityRequest;
 import com.example.pharma.dto.cart.request.CreateCartRequest;
@@ -15,7 +14,9 @@ import com.example.pharma.mapper.cart.CartMetadataMapper;
 import com.example.pharma.model.cart.CartItem;
 import com.example.pharma.model.cart.CartMetadata;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import com.example.pharma.repository.cart.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -36,6 +36,8 @@ public class CartService {
     private final CartMetadataMapper cartMetadataMapper;
     private final CartItemMapper cartItemMapper;
     private final PharmacyProductRepository pharmacyProductRepository;
+    private final PharmacyRepository pharmacyRepository;
+
 
     private static final Duration CART_TTL = Duration.ofDays(7);
 
@@ -111,29 +113,23 @@ public class CartService {
     }
 
     // POST /carts/{cartId}/items
-    public void addItem(Long cartId, Long userId, CartItemIdentifierRequest request) {
-
-        validateCartAccess(cartId, userId);
-
-        PharmacyProduct pharmacyProduct =
-                getPharmacyProduct(request.pharmacyProductId());
+    public void addItem(Long userId, CartItemIdentifierRequest request) {
+        PharmacyProduct pharmacyProduct = getPharmacyProduct(request.pharmacyProductId());
 
         if (pharmacyProduct.getQuantity() <= 0) {
             throw new BusinessRuleViolationException("Item is out of stock");
         }
 
-        validateSamePharmacy(cartId, pharmacyProduct);
+        Long pharmacyId = pharmacyProduct.getInventory().getPharmacy().getPharmacyId();
+
+        Long cartId = findOrCreateCartForUserAndPharmacy(userId, pharmacyId);
 
         CartItem existing = cartRepository.getItem(cartId, request);
 
         if (existing == null) {
-
             CartItem newItem = cartItemMapper.toEntity(pharmacyProduct);
-
             cartRepository.saveItem(cartId, newItem);
-
         } else {
-
             if (existing.getQuantity() >= pharmacyProduct.getQuantity()) {
                 throw new BusinessRuleViolationException("Not enough stock");
             }
@@ -142,6 +138,24 @@ public class CartService {
         }
 
         refreshCart(cartId);
+    }
+
+    private Long findOrCreateCartForUserAndPharmacy(Long userId, Long pharmacyId) {
+        List<Long> userCartIds = new ArrayList<>(cartRepository.getUserCarts(userId)) ;
+
+        for (Long cartId : userCartIds) {
+            CartMetadata cart = cartRepository.getCartMetadata(cartId);
+
+            if (cart != null && pharmacyId.equals(cart.getPharmacyId())) {
+                return cartId;
+            }
+        }
+        Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).orElseThrow(() -> new EntityNotFoundException("Pharmacy not found"));
+        CartResponse newCart = createCart(
+                new CreateCartRequest(pharmacy.getName(),pharmacyId)
+                , userId);
+
+        return newCart.cartId();
     }
 
     // PATCH /carts/{cartId}/items/quantity
@@ -240,76 +254,44 @@ public class CartService {
         cartRepository.deleteCart(cartId);
     }
 
-    public CartResponse assignCartToUser(Long userId, AssignCartToUserRequest request) {
 
-        if (userId == null) {
-            throw new ValidationException("UserId is required");
-        }
-
-        if (request.items() == null || request.items().isEmpty()) {
-            throw new ValidationException("Cart items are required");
-        }
-
-        Map<Long, Long> mergedItems = new HashMap<>();
-
-        for (CartItemQuantityRequest itemRequest : request.items()) {
-            mergedItems.merge(
-                    itemRequest.pharmacyProductId(),
-                    itemRequest.quantity(),
-                    Long::sum
-            );
-        }
-
-        Map<Long, PharmacyProduct> validatedProducts = new HashMap<>();
-        Long pharmacyId = null;
-
-        for (Map.Entry<Long, Long> entry : mergedItems.entrySet()) {
-            Long pharmacyProductId = entry.getKey();
-            Long mergedQuantity = entry.getValue();
-
-            PharmacyProduct pharmacyProduct = getPharmacyProduct(pharmacyProductId);
-            validatedProducts.put(pharmacyProductId, pharmacyProduct);
-
-            Long currentPharmacyId =
-                    pharmacyProduct.getInventory().getPharmacy().getPharmacyId();
-
-            if (pharmacyId == null) {
-                pharmacyId = currentPharmacyId;
-            } else if (!pharmacyId.equals(currentPharmacyId)) {
-                throw new BusinessRuleViolationException(
-                        "Cart cannot contain items from multiple pharmacies"
-                );
-            }
-
-            if (mergedQuantity > pharmacyProduct.getQuantity()) {
-                throw new BusinessRuleViolationException(
-                        "Not enough stock for pharmacy product id " + pharmacyProductId
-                );
-            }
-        }
-
-        CartMetadata metadata = cartMetadataMapper.toEntity(
-                userId,
-                new CreateCartRequest(request.cartName())
-        );
-
-        Long cartId = cartRepository.createCart(metadata);
-        cartRepository.assignCartToUser(cartId, userId);
-
-        for (Map.Entry<Long, Long> entry : mergedItems.entrySet()) {
-            Long pharmacyProductId = entry.getKey();
-            Long mergedQuantity = entry.getValue();
-
-            PharmacyProduct pharmacyProduct = validatedProducts.get(pharmacyProductId);
-
-            CartItem item = cartItemMapper.toEntity(pharmacyProduct, mergedQuantity);
-            cartRepository.saveItem(cartId, item);
-        }
-
-        cartRepository.expire(cartId, CART_TTL);
-
-        return getCart(cartId, userId);
-    }
+//    // POST /carts/assign
+//    public CartResponse assignCartToUser(Long userId, AssignCartToUserRequest request) {
+//
+//        if (userId == null) {
+//            throw new ValidationException("UserId is required");
+//        }
+//
+//        CartMetadata metadata = cartMetadataMapper.toEntity(
+//                userId,
+//                new CreateCartRequest(request.cartName())
+//        );
+//
+//        Long cartId = cartRepository.createCart(metadata);
+//
+//        cartRepository.assignCartToUser(cartId, userId);
+//
+//        for (CartItemQuantityRequest itemRequest : request.items()) {
+//
+//            PharmacyProduct pharmacyProduct =
+//                    getPharmacyProduct(itemRequest.pharmacyProductId());
+//
+//            if (itemRequest.quantity() > pharmacyProduct.getQuantity()) {
+//                throw new BusinessRuleViolationException("Not enough stock");
+//            }
+//
+//            CartItem item = cartItemMapper.toEntity(
+//                    pharmacyProduct,
+//                    itemRequest.quantity()
+//            );
+//
+//            cartRepository.saveItem(cartId, item);
+//        }
+//
+//        cartRepository.expire(cartId, CART_TTL);
+//
+//        return getCart(cartId, userId);
+//    }
 
     // ================= PRIVATE HELPERS =================
 
