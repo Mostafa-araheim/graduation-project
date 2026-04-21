@@ -11,10 +11,11 @@ import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.example.pharma.service.interfaces.ILocationService;
 
 @Service
 @RequiredArgsConstructor
-public class LocationService {
+public class LocationService implements ILocationService {
 
     @Value("${ors.apiKey}")
     private String apiKey;

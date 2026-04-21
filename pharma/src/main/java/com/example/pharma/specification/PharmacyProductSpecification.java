@@ -2,8 +2,9 @@ package com.example.pharma.specification;
 
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductFilter;
 import com.example.pharma.model.entity.inventory.AvailabilityStatus;
+import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
-import com.example.pharma.service.LocationService;
+import com.example.pharma.service.interfaces.ILocationService;
 import jakarta.persistence.criteria.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKTWriter;
@@ -14,10 +15,7 @@ import java.util.List;
 
 public class PharmacyProductSpecification {
 
-    private PharmacyProductSpecification() {
-    }
-
-    public static Specification<PharmacyProduct> buildFromFilter(PharmacyProductFilter filter, LocationService locationService) {
+    public static Specification<PharmacyProduct> buildFromFilter(PharmacyProductFilter filter, ILocationService locationService) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 

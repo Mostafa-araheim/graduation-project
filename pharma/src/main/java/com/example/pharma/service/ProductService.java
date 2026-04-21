@@ -16,10 +16,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import com.example.pharma.service.interfaces.IProductService;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+public class ProductService implements IProductService {
 
     private final ProductRepository ProductRepository;
     private final ProductMapper ProductMapper;

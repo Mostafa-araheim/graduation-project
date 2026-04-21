@@ -3,7 +3,7 @@ package com.example.pharma.controller.product;
 import com.example.pharma.dto.Product.ProductFilter;
 import com.example.pharma.dto.Product.ProductResponse;
 import com.example.pharma.dto.common.ApiResponse;
-import com.example.pharma.service.ProductService;
+import com.example.pharma.service.interfaces.IProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
+    private final IProductService productService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts(
