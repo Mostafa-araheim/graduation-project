@@ -11,7 +11,12 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Table(name = "product")
+@Table(name = "product", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_medicine_identity",
+                columnNames = {"name", "strength", "dosageForm"}
+        )
+})
 public class Product {
 
     @Id
