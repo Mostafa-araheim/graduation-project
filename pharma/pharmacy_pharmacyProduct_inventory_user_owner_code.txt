@@ -1,0 +1,2199 @@
+================================================================================
+          PHARMACY, PHARMACYPRODUCT, INVENTORY, USER & OWNER CODE
+                      Complete Code Extraction
+                         April 24, 2026
+================================================================================
+
+This document contains all code related to:
+  - Pharmacy Management
+  - Pharmacy Products (PharmacyProduct)
+  - Inventory Management
+  - User Accounts and Profiles
+  - Owner Profile
+
+================================================================================
+SECTION 1: DATA MODELS / ENTITIES
+================================================================================
+
+================================================================================
+1.1 USER ENTITY AND ROLES
+================================================================================
+
+File: src/main/java/com/example/pharma/model/entity/core/User.java
+Package: com.example.pharma.model.entity.core
+
+package com.example.pharma.model.entity.core;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    private String name;
+    private String phone;
+
+    @Embedded
+    private CreatedAtColumn createdAt;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Set<UserRole> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<UserAddress> addresses;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/core/UserRole.java
+Package: com.example.pharma.model.entity.core
+
+package com.example.pharma.model.entity.core;
+
+public enum UserRole {
+    ROLE_CUSTOMER, ROLE_OWNER, ROLE_PHARMACIST, ROLE_ADMIN
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/core/CreatedAtColumn.java
+Package: com.example.pharma.model.entity.core
+
+package com.example.pharma.model.entity.core;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Embeddable
+@Getter
+public class CreatedAtColumn {
+
+    @Column(
+            name = "created_at",
+            nullable = false,
+            updatable = false,
+            insertable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    )
+    private LocalDateTime value;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/core/UserAddress.java
+Package: com.example.pharma.model.entity.core
+
+package com.example.pharma.model.entity.core;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "user_address")
+public class UserAddress {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userAddressId;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    private String street;
+    private String city;
+    private String postalCode;
+    private String country;
+    private String apartmentNumber;
+}
+
+================================================================================
+1.2 USER PROFILE ENTITIES
+================================================================================
+
+File: src/main/java/com/example/pharma/model/entity/core/OwnerProfile.java
+Package: com.example.pharma.model.entity.core
+
+package com.example.pharma.model.entity.core;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "owner_profile")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OwnerProfile {
+
+    @Id
+    @Column(name = "user_id")
+    private Long userId;
+
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @Embedded
+    private CreatedAtColumn createdAt;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/core/CustomerProfile.java
+Package: com.example.pharma.model.entity.core
+
+package com.example.pharma.model.entity.core;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "customer_profile")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CustomerProfile {
+
+    @Id
+    @Column(name = "user_id")
+    private Long userId;
+
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @Embedded
+    private CreatedAtColumn createdAt;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/core/PharmacistProfile.java
+Package: com.example.pharma.model.entity.core
+
+package com.example.pharma.model.entity.core;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "pharmacist_profile")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PharmacistProfile {
+
+    @Id
+    @Column(name = "user_id")
+    private Long userId;
+
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @Embedded
+    private CreatedAtColumn createdAt;
+}
+
+================================================================================
+1.3 PHARMACY ENTITY AND RELATED
+================================================================================
+
+File: src/main/java/com/example/pharma/model/entity/pharmacy/Pharmacy.java
+Package: com.example.pharma.model.entity.pharmacy
+
+package com.example.pharma.model.entity.pharmacy;
+
+import com.example.pharma.model.entity.core.CreatedAtColumn;
+import com.example.pharma.model.entity.core.OwnerProfile;
+import com.example.pharma.model.entity.inventory.Inventory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
+
+import java.math.BigDecimal;
+import java.time.LocalTime;
+import java.util.List;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "pharmacy")
+public class Pharmacy {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "pharmacy_id")
+    private Long pharmacyId;
+
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_user_id", nullable = true)
+    private OwnerProfile owner;
+
+    private String name;
+    @Column(name = "image_url")
+    private String imageUrl;
+    @JsonIgnore
+    @Column(columnDefinition = "geometry(Point, 4326)")
+    private Point location;
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+    @Embedded
+    private CreatedAtColumn createdAt;
+
+    @OneToOne(mappedBy = "pharmacy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PharmacyAddress address;
+
+    @OneToOne(mappedBy = "pharmacy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Inventory inventory;
+
+    @Column(name = "opening_time")
+    private LocalTime openingTime;
+
+    @Column(name = "closing_time")
+    private LocalTime closingTime;
+
+    @Column(name = "is_24_hours")
+    private Boolean is24Hours;
+
+    @Column(name = "average_rating")
+    private BigDecimal averageRating;
+
+    @Column(name = "rating_count")
+    private Long ratingCount;
+
+    @Column(name = "review_count")
+    private Long reviewCount;
+
+    @OneToMany(mappedBy = "pharmacy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PharmacyStaff> staff;
+
+    @PrePersist
+    @PreUpdate
+    public void updateGeometry() {
+        if (latitude != null && longitude != null) {
+            GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
+            this.location = factory.createPoint(new Coordinate(this.longitude, this.latitude));
+        }
+    }
+
+    public boolean isOpen() {
+
+        if (Boolean.TRUE.equals(is24Hours)) {
+            return true;
+        }
+
+        if (openingTime == null || closingTime == null) {
+            return false;
+        }
+
+        LocalTime now = LocalTime.now();
+
+
+        if (closingTime.isAfter(openingTime)) {
+            return !now.isBefore(openingTime) && !now.isAfter(closingTime);
+        }
+
+        return !now.isBefore(openingTime) || !now.isAfter(closingTime);
+    }
+    public boolean isClosed()
+    {
+        return !isOpen();
+    }
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/pharmacy/PharmacyAddress.java
+Package: com.example.pharma.model.entity.pharmacy
+
+package com.example.pharma.model.entity.pharmacy;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "pharmacy_address")
+public class PharmacyAddress {
+
+    @Id
+    @Column(name = "pharmacy_id")
+    private Long pharmacyId;
+
+    @JsonIgnore
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "pharmacy_id")
+    private Pharmacy pharmacy;
+
+    @Column(name = "street")
+    private String street;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "postal_code")
+    private String postalCode;
+
+    @Column(name = "country")
+    private String country;
+
+    @Column(name = "apartment_number")
+    private String apartmentNumber;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/pharmacy/PharmacyStaff.java
+Package: com.example.pharma.model.entity.pharmacy
+
+package com.example.pharma.model.entity.pharmacy;
+
+import com.example.pharma.model.entity.core.PharmacistProfile;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "pharmacy_staff")
+public class PharmacyStaff {
+
+    @EmbeddedId
+    private PharmacyStaffId id;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @MapsId("pharmacyId")
+    @JoinColumn(name = "pharmacy_id")
+    private Pharmacy pharmacy;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @MapsId("pharmacistUserId")
+    @JoinColumn(name = "user_id")
+    private PharmacistProfile pharmacist;
+
+    @Enumerated(EnumType.STRING)
+    private StaffRole staffRole;
+
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
+    @Column(name = "joined_at", insertable = false, updatable = false)
+    private LocalDateTime joinedAt;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/pharmacy/PharmacyStaffId.java
+Package: com.example.pharma.model.entity.pharmacy
+
+package com.example.pharma.model.entity.pharmacy;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@Embeddable
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class PharmacyStaffId implements Serializable {
+
+    @Column(name = "pharmacy_id")
+    private Long pharmacyId;
+
+    @Column(name = "pharmacist_user_id")
+    private Long pharmacistUserId;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/pharmacy/StaffRole.java
+Package: com.example.pharma.model.entity.pharmacy
+
+package com.example.pharma.model.entity.pharmacy;
+
+public enum StaffRole {
+    STAFF,
+    INVENTORY_MANAGER,
+    MANAGER
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/pharmacy/PharmacyHiringRequest.java
+Package: com.example.pharma.model.entity.pharmacy
+
+package com.example.pharma.model.entity.pharmacy;
+
+import com.example.pharma.model.entity.core.OwnerProfile;
+import com.example.pharma.model.entity.core.PharmacistProfile;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "pharmacy_hiring_request")
+public class PharmacyHiringRequest {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long requestId;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pharmacy_id", nullable = false)
+    private Pharmacy pharmacy;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_user_id", nullable = false)
+    private OwnerProfile owner;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pharmacist_user_id", nullable = false)
+    private PharmacistProfile pharmacist;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private HiringRequestStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StaffRole requestedRole;
+
+    private String message;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/pharmacy/HiringRequestStatus.java
+Package: com.example.pharma.model.entity.pharmacy
+
+package com.example.pharma.model.entity.pharmacy;
+
+public enum HiringRequestStatus {
+    PENDING,
+    ACCEPTED,
+    REJECTED,
+    CANCELLED
+}
+
+================================================================================
+1.4 INVENTORY AND PHARMACY PRODUCT ENTITIES
+================================================================================
+
+File: src/main/java/com/example/pharma/model/entity/inventory/Inventory.java
+Package: com.example.pharma.model.entity.inventory
+
+package com.example.pharma.model.entity.inventory;
+
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "inventory")
+public class Inventory {
+
+    @Id
+    @Column(name = "pharmacy_id")
+    private Long pharmacyId;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId
+    @JoinColumn(name = "pharmacy_id")
+    private Pharmacy pharmacy;
+
+    @OneToMany(
+            mappedBy = "inventory",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<PharmacyProduct> pharmacyProducts = new ArrayList<>();
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/inventory/PharmacyProduct.java
+Package: com.example.pharma.model.entity.inventory
+
+package com.example.pharma.model.entity.inventory;
+
+import com.example.pharma.model.entity.catalog.Product;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Entity
+@Getter
+@Setter
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"inventory_pharmacy_id", "product_id"})})
+public class PharmacyProduct {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long pharmacyProductId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pharmacy_id", nullable = false)
+    private Pharmacy pharmacy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_pharmacy_id", referencedColumnName = "pharmacy_id", nullable = false)
+    private Inventory inventory;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    private BigDecimal price;
+
+    private Integer quantity;
+
+    @Enumerated(EnumType.STRING)
+    private AvailabilityStatus availabilityStatus;
+}
+
+---
+
+File: src/main/java/com/example/pharma/model/entity/inventory/AvailabilityStatus.java
+Package: com.example.pharma.model.entity.inventory
+
+package com.example.pharma.model.entity.inventory;
+
+public enum AvailabilityStatus {
+    Available,
+    OutOfStock,
+    LimitedSupply
+}
+
+================================================================================
+SECTION 2: DATA TRANSFER OBJECTS (DTOs)
+================================================================================
+
+================================================================================
+2.1 USER & PROFILE DTOs
+================================================================================
+
+Note: No specific user profile DTOs found in the current structure.
+User authentication uses separate DTOs in dto/auth package.
+
+================================================================================
+2.2 PHARMACY DTOs
+================================================================================
+
+File: src/main/java/com/example/pharma/dto/pharmacy/PharmacyDto.java
+Package: com.example.pharma.dto.pharmacy
+
+package com.example.pharma.dto.pharmacy;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.math.BigDecimal;
+import java.time.LocalTime;
+
+public record PharmacyDto(
+        @JsonProperty("pharmacy_id") Long pharmacyId,
+        @JsonProperty("name") String name,
+        @JsonProperty("image_url") String imageUrl,
+        @JsonProperty("rating") BigDecimal averageRating,
+        @JsonProperty("distance_in_kilometers") Float distanceInKms,
+        @JsonProperty("opening_time") LocalTime openingTime,
+        @JsonProperty("closing_time") LocalTime closingTime,
+        @JsonProperty("latitude") Double latitude,
+        @JsonProperty("longitude") Double longitude,
+        @JsonProperty("review_count") Long reviewCount,
+        @JsonProperty("is_closed") Boolean isClosed,
+        @JsonProperty("address") String address
+        ) {
+}
+
+---
+
+File: src/main/java/com/example/pharma/dto/pharmacy/CreatePharmacyRequest.java
+Package: com.example.pharma.dto.pharmacy
+
+package com.example.pharma.dto.pharmacy;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalTime;
+
+public record CreatePharmacyRequest(
+        @JsonProperty("owner_user_id")
+        Integer ownerUserId,
+        @JsonProperty("name")
+        String name,
+        @JsonProperty("image_url")
+        String imageUrl,
+        @JsonFormat(pattern = "HH:mm:ss")
+        LocalTime openingTime,
+        @JsonFormat(pattern = "HH:mm:ss")
+        LocalTime closingTime,
+        @JsonProperty("is_24_hours")
+        Boolean is24Hours,
+        @JsonProperty("street")
+        String street,
+        @JsonProperty("city")
+        String city,
+        @JsonProperty("postal_code")
+        String postalCode,
+        @JsonProperty("country")
+        String country,
+        @JsonProperty("apartment_number")
+        String apartmentNumber,
+        @JsonProperty("latitude")
+        Double latitude,
+        @JsonProperty("longitude")
+        Double longitude
+) {
+}
+
+---
+
+File: src/main/java/com/example/pharma/dto/pharmacy/UpdatePharmacyRequest.java
+Package: com.example.pharma.dto.pharmacy
+
+package com.example.pharma.dto.pharmacy;
+
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalTime;
+
+public record UpdatePharmacyRequest(
+        @JsonProperty("name")
+        String name,
+
+        @JsonProperty("image_url")
+        String imageUrl,
+
+        @JsonFormat(pattern = "HH:mm:ss")
+        LocalTime openingTime,
+
+        @JsonFormat(pattern = "HH:mm:ss")
+        LocalTime closingTime,
+
+        @JsonProperty("is_24_hours")
+        Boolean is24Hours,
+
+        @JsonProperty("street")
+        String street,
+
+        @JsonProperty("city")
+        String city,
+
+        @JsonProperty("postal_code")
+        String postalCode,
+
+        @JsonProperty("country")
+        String country,
+
+        @JsonProperty("apartment_number")
+        String apartmentNumber,
+
+        @JsonProperty("latitude")
+        Double latitude,
+
+        @JsonProperty("longitude")
+        Double longitude
+) {
+}
+
+---
+
+File: src/main/java/com/example/pharma/dto/pharmacy/PharmacyInfo.java
+Package: com.example.pharma.dto.pharmacy
+
+package com.example.pharma.dto.pharmacy;
+
+import com.example.pharma.dto.review.ReviewDto;
+import com.example.pharma.model.entity.catalog.Category;
+import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
+
+public record PharmacyInfo(@JsonProperty("categories") List<Category> categories,
+                           @JsonProperty("pharmacy_address") PharmacyAddress pharmacyAddress,
+                           @JsonProperty("pharmacy_dto") PharmacyDto pharmacyDto,
+                           @JsonProperty("reviews")List<ReviewDto> reviews) {
+}
+
+---
+
+File: src/main/java/com/example/pharma/dto/pharmacy/PharmacySearchFilter.java
+Package: com.example.pharma.dto.pharmacy
+
+package com.example.pharma.dto.pharmacy;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Size;
+
+public record PharmacySearchFilter(
+
+        @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+        String name,
+
+        @DecimalMin(value = "0.0", message = "Minimum rating cannot be negative")
+        @DecimalMax(value = "5.0", message = "Rating cannot be greater than 5")
+        Float minRating,
+
+        Boolean isOpen,
+
+        @DecimalMin(value = "-90.0", message = "Latitude must be >= -90")
+        @DecimalMax(value = "90.0", message = "Latitude must be <= 90")
+        Double latitude,
+
+        @DecimalMin(value = "-180.0", message = "Longitude must be >= -180")
+        @DecimalMax(value = "180.0", message = "Longitude must be <= 180")
+        Double longitude
+
+) {}
+
+---
+
+File: src/main/java/com/example/pharma/dto/pharmacy/AddPharmacyProductRequest.java
+Package: com.example.pharma.dto.pharmacy
+
+package com.example.pharma.dto.pharmacy;
+
+public record AddPharmacyProductRequest(
+        Long productId,
+        Integer quantity,
+        java.math.BigDecimal price
+) {}
+
+================================================================================
+2.3 PHARMACY PRODUCT DTOs
+================================================================================
+
+File: src/main/java/com/example/pharma/dto/pharmacyProduct/PharmacyProductDto.java
+Package: com.example.pharma.dto.pharmacyProduct
+
+package com.example.pharma.dto.pharmacyProduct;
+
+import com.example.pharma.model.entity.catalog.DosageForm;
+import com.example.pharma.model.entity.inventory.AvailabilityStatus;
+
+import java.math.BigDecimal;
+
+public record PharmacyProductDto(
+                                 Long pharmacyProductId,
+                                 String pharmacyName,
+                                 BigDecimal price,
+                                 Integer quantity,
+                                 AvailabilityStatus availabilityStatus,
+                                 Long productId,
+                                 String productName,
+                                 String description,
+                                 boolean requiresPrescription,
+                                 DosageForm dosageForm,
+                                 String strength,
+                                 String manufacturer,
+                                 Long categoryId,
+                                 String categoryName,
+                                 Long brandId,
+                                 String brandName) {
+}
+
+---
+
+File: src/main/java/com/example/pharma/dto/pharmacyProduct/pharmacyProductResponse.java
+Package: com.example.pharma.dto.pharmacyProduct
+
+package com.example.pharma.dto.pharmacyProduct;
+
+public record pharmacyProductResponse(
+        Long id,
+        Long pharmacyId,
+        Long productId,
+        String productName,
+        String productImage,
+        Double price,
+        Double originalPrice,
+        Boolean inStock,
+        String category,
+        String pharmacyName,
+        Double pharmacyLatitude,
+        Double pharmacyLongitude,
+        Double pharmacyDistance
+) {}
+
+---
+
+File: src/main/java/com/example/pharma/dto/pharmacyProduct/PharmacyProductFilter.java
+Package: com.example.pharma.dto.pharmacyProduct
+
+package com.example.pharma.dto.pharmacyProduct;
+
+import com.example.pharma.model.entity.catalog.DosageForm;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.DecimalMin;
+
+public record PharmacyProductFilter(
+    Long productId,
+    String productName,
+    String categoryName,
+    @Enumerated(EnumType.STRING)
+    DosageForm dosageForm,
+    Double userLatitude,
+    Double userLongitude,
+
+    @DecimalMin(value = "1.0", message = "Distance cannot be negative or zero")
+    Double maxDistanceKm,
+
+    @DecimalMin(value = "0.0", message = "Minimum price cannot be negative")
+    Double minPrice,
+
+    @DecimalMin(value = "0.0", message = "Maximum price cannot be negative")
+    Double maxPrice,
+    Boolean inStock
+) {}
+
+================================================================================
+2.4 INVENTORY DTOs
+================================================================================
+
+File: src/main/java/com/example/pharma/dto/Inventory/InventoryRecordDto.java
+Package: com.example.pharma.dto.Inventory
+
+package com.example.pharma.dto.Inventory;
+
+import com.example.pharma.model.entity.inventory.AvailabilityStatus;
+import lombok.Data;
+
+@Data
+public class InventoryRecordDto {
+    //from cookie
+    private Long inventoryId;
+    private Long ProductId;
+    private Long quantity;
+    private AvailabilityStatus availabilityStatus;
+
+}
+
+================================================================================
+SECTION 3: REPOSITORIES
+================================================================================
+
+================================================================================
+3.1 USER REPOSITORIES
+================================================================================
+
+File: src/main/java/com/example/pharma/repository/Core/UserRepository.java
+Package: com.example.pharma.repository.Core
+
+package com.example.pharma.repository.Core;
+
+import com.example.pharma.model.entity.core.User;
+import com.example.pharma.model.entity.core.UserRole;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    boolean existsByEmail(String email);
+    Optional<User> findByEmail(String email);
+    Optional<User> findByEmailAndRolesContaining(String email, UserRole role);
+}
+
+---
+
+File: src/main/java/com/example/pharma/repository/Core/OwnerProfileRepository.java
+Package: com.example.pharma.repository.Core
+
+package com.example.pharma.repository.Core;
+
+import com.example.pharma.model.entity.core.OwnerProfile;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface OwnerProfileRepository extends JpaRepository<OwnerProfile, Long> {}
+
+---
+
+File: src/main/java/com/example/pharma/repository/Core/CustomerProfileRepository.java
+Package: com.example.pharma.repository.Core
+
+package com.example.pharma.repository.Core;
+
+import com.example.pharma.model.entity.core.CustomerProfile;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CustomerProfileRepository extends JpaRepository<CustomerProfile, Long> {}
+
+---
+
+File: src/main/java/com/example/pharma/repository/Core/PharmacistProfileRepository.java
+Package: com.example.pharma.repository.Core
+
+package com.example.pharma.repository.Core;
+
+import com.example.pharma.model.entity.core.PharmacistProfile;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface PharmacistProfileRepository extends JpaRepository<PharmacistProfile, Long> {
+    @EntityGraph(attributePaths = {"user"})
+    Optional<PharmacistProfile> findByUserEmail(String email);
+}
+
+================================================================================
+3.2 PHARMACY REPOSITORIES
+================================================================================
+
+File: src/main/java/com/example/pharma/repository/Pharmacy/PharmacyRepository.java
+Package: com.example.pharma.repository.Pharmacy
+
+package com.example.pharma.repository.Pharmacy;
+
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface PharmacyRepository extends JpaRepository<Pharmacy, Long>, JpaSpecificationExecutor<Pharmacy> {
+    List<Pharmacy> findByOwner_UserId(Long ownerUserId);
+
+}
+
+---
+
+File: src/main/java/com/example/pharma/repository/Pharmacy/PharmacyAddressRepository.java
+Package: com.example.pharma.repository.Pharmacy
+
+package com.example.pharma.repository.Pharmacy;
+
+import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PharmacyAddressRepository extends JpaRepository<PharmacyAddress, Long> {}
+
+================================================================================
+3.3 INVENTORY AND PHARMACY PRODUCT REPOSITORIES
+================================================================================
+
+File: src/main/java/com/example/pharma/repository/Inventory/InventoryRepository.java
+Package: com.example.pharma.repository.Inventory
+
+package com.example.pharma.repository.Inventory;
+
+import com.example.pharma.model.entity.inventory.Inventory;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+    Optional<Inventory> findByPharmacy_PharmacyId(Long id);
+}
+
+---
+
+File: src/main/java/com/example/pharma/repository/Inventory/PharmacyProductRepository.java
+Package: com.example.pharma.repository.Inventory
+
+package com.example.pharma.repository.Inventory;
+
+import com.example.pharma.model.entity.inventory.Inventory;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface PharmacyProductRepository
+        extends JpaRepository<PharmacyProduct, Long>, JpaSpecificationExecutor<PharmacyProduct> {
+
+    List<PharmacyProduct> findByInventory(Inventory inventory);
+
+
+    Optional<PharmacyProduct> findByInventory_PharmacyIdAndProduct_ProductId(
+            Long pharmacyId, Long productId
+    );
+
+    @Query("""
+        SELECT pp
+        FROM PharmacyProduct pp
+        WHERE pp.inventory.pharmacyId = :pharmacyId
+        AND pp.product.category.categoryId = :categoryId
+    """)
+    Page<PharmacyProduct> findProductsByPharmacyAndCategory(
+            @Param("pharmacyId") Long pharmacyId,
+            @Param("categoryId") Long categoryId,
+            Pageable pageable
+    );
+
+    @Modifying
+    @Query("""
+        update PharmacyProduct pp
+        set pp.quantity = pp.quantity - :requestedQty,
+            pp.availabilityStatus = case
+                when (pp.quantity - :requestedQty) > 0
+                then com.example.pharma.model.entity.inventory.AvailabilityStatus.Available
+                else com.example.pharma.model.entity.inventory.AvailabilityStatus.OutOfStock
+            end
+        where pp.inventory.pharmacyId = :pharmacyId
+          and pp.product.productId = :productId
+          and pp.quantity >= :requestedQty
+    """)
+    int decrementStockIfEnough(
+            @Param("pharmacyId") Long pharmacyId,
+            @Param("productId") Long productId,
+            @Param("requestedQty") Integer requestedQty
+    );
+}
+
+================================================================================
+SECTION 4: SERVICES
+================================================================================
+
+================================================================================
+4.1 PHARMACY SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/pharmacy/PharmacyService.java
+Package: com.example.pharma.service.pharmacy
+
+package com.example.pharma.service.pharmacy;
+
+import com.example.pharma.dto.Location.CoordinateDto;
+import com.example.pharma.dto.common.PageResponse;
+import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.PharmacyDto;
+import com.example.pharma.dto.pharmacy.PharmacyInfo;
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
+import com.example.pharma.dto.review.CreateRatingDto;
+import com.example.pharma.dto.review.CreateReviewDto;
+import com.example.pharma.dto.review.ReviewDto;
+import com.example.pharma.exception.resource.EntityNotFoundException;
+import com.example.pharma.mapper.pharmacy.PharmacyMapper;
+import com.example.pharma.mapper.PharmacyProductMapper;
+import com.example.pharma.model.entity.catalog.Category;
+import com.example.pharma.model.entity.core.CustomerProfile;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
+import com.example.pharma.model.entity.review.PharmacyRating;
+import com.example.pharma.model.entity.review.PharmacyReview;
+import com.example.pharma.repository.Catalog.CategoryRepository;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.repository.Pharmacy.PharmacyAddressRepository;
+import com.example.pharma.repository.Pharmacy.PharmacyRepository;
+import com.example.pharma.repository.Pharmacy.PharmacySpecifications;
+import com.example.pharma.repository.Review.PharmacyRatingRepository;
+import com.example.pharma.repository.Review.PharmacyReviewRepository;
+import com.example.pharma.service.LocationService;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class PharmacyService {
+    private final PharmacyRepository pharmacyRepository;
+    private final CategoryRepository categoryRepository;
+    private final PharmacyReviewRepository pharmacyReviewRepository;
+    private final PharmacyAddressRepository pharmacyAddressRepository;
+    private final PharmacyProductRepository pharmacyProductRepository;
+    private final PharmacyRatingRepository pharmacyRatingRepository;
+    private final PharmacyMapper pharmacyMapper;
+    private final PharmacyProductMapper pharmacyProductMapper;
+    private final LocationService locationService;
+
+    public PageResponse<PharmacyDto> getPharmacies( String name,
+                                                    Float minRating,
+                                                    Boolean isOpen,
+                                                    Double latitude,
+                                                    Double longitude,
+                                                    Pageable pageable)
+    {
+        Specification<Pharmacy> spec = Specification.where(PharmacySpecifications.hasName(name))
+                .and(PharmacySpecifications.hasMinRating(minRating))
+                .and(PharmacySpecifications.isOpenNow(isOpen))
+                .and(PharmacySpecifications.orderByDistance(latitude,longitude));
+//        .and(PharmacySpecifications.withinDistance(
+//            latitude,
+//            longitude,
+//            maxDistanceKm,
+//            locationService
+//    ))
+        Page<Pharmacy> pharmacies = pharmacyRepository.findAll(spec, pageable);
+
+        List<Double> distances = null;
+        if (latitude != null && longitude != null && !pharmacies.isEmpty()) {
+            List<CoordinateDto> coordinates = pharmacies.getContent().stream()
+                    .map(p -> new CoordinateDto(p.getLongitude(), p.getLatitude()))
+                    .toList();
+            distances = locationService.getRoadDistances(latitude, longitude, coordinates);
+        }
+
+        List<PharmacyDto> dtoList = mapToDtos(pharmacies.getContent(), distances);
+        return PageResponse.from(new PageImpl<>(dtoList, pageable, pharmacies.getTotalElements()));
+    }
+
+    public PharmacyInfo getPharmacyInfo(Long pharmacyId)
+    {
+        List<Category> categories = categoryRepository.findAll();
+        PharmacyAddress pharmacyAddress = pharmacyAddressRepository.findById(pharmacyId).orElseThrow();
+        Pharmacy pharmacy = pharmacyAddress.getPharmacy();
+        PharmacyDto pharmacyDto = pharmacyMapper.toDto(pharmacy);
+        List<ReviewDto> pharmacyReviewDtos = pharmacyReviewRepository.findReviewDtosByPharmacyId(pharmacyId);
+        return new PharmacyInfo(categories, pharmacyAddress, pharmacyDto, pharmacyReviewDtos);
+    }
+
+    public PageResponse<PharmacyProductDto> getPharmacyProductsUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
+    {
+       Page<PharmacyProduct> pharmacyProducts = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
+        Page<PharmacyProductDto> responsePage = pharmacyProducts
+                .map(pharmacyProductMapper::toPharmacyProductDto);
+
+       return PageResponse.from(responsePage);
+    }
+
+    @Transactional
+    public void createPharmacies(List<CreatePharmacyRequest> requests)
+    {
+        List<Pharmacy> pharmacies = requests.stream().map(request -> {
+
+            Pharmacy pharmacy = pharmacyMapper.toPharmacy(request);
+            PharmacyAddress address = pharmacyMapper.toPharmacyAddress(request);
+            address.setPharmacy(pharmacy);
+            pharmacy.setAddress(address);
+            return pharmacy;
+
+        }).toList();
+
+        pharmacyRepository.saveAll(pharmacies);
+    }
+
+    @Transactional
+    public PharmacyRating createRating(CreateRatingDto createRatingDto, CustomerProfile customerProfile)
+    {
+        Pharmacy pharmacy = pharmacyRepository.findById(createRatingDto.pharmacyId())
+                .orElseThrow(() -> new EntityNotFoundException("Pharmacy not found"));
+        PharmacyRating pharmacyRating = PharmacyRating.builder()
+                .pharmacy(pharmacy)
+                .customer(customerProfile)
+                .rating(createRatingDto.rating())
+                .build();
+        PharmacyRating saved = pharmacyRatingRepository.save(pharmacyRating);
+        updatePharmacyRating(pharmacy, createRatingDto.rating());
+        return saved;
+    }
+
+    @Transactional
+    public ReviewDto createPharmacyReview(CreateReviewDto createReviewDto, CustomerProfile customerProfile)
+    {
+        Pharmacy pharmacy = pharmacyRepository.findById(createReviewDto.pharmacyId())
+                .orElseThrow(() -> new EntityNotFoundException("Pharmacy not found"));
+        PharmacyReview pharmacyReview = PharmacyReview.builder()
+                .pharmacy(pharmacy)
+                .customer(customerProfile)
+                .comment(createReviewDto.comment())
+                .build();
+        pharmacyReviewRepository.save(pharmacyReview);
+
+        long currentReviewCount = pharmacy.getReviewCount() == null ? 0 : pharmacy.getReviewCount();
+        pharmacy.setReviewCount(currentReviewCount + 1);
+        return new ReviewDto(customerProfile.getUser().getName(), pharmacyReview.getComment());
+
+    }
+
+    public List<PharmacyDto> getAllPharmacies()
+    {
+        return pharmacyMapper.toDtoList(pharmacyRepository.findAll());
+    }
+
+    private void updatePharmacyRating(Pharmacy pharmacy, int newRating) {
+
+        long count = pharmacy.getRatingCount() == null ? 0 : pharmacy.getRatingCount();
+        BigDecimal avg = pharmacy.getAverageRating() == null ? BigDecimal.ZERO : pharmacy.getAverageRating();
+
+        BigDecimal newAverage = avg.multiply(BigDecimal.valueOf(count))
+                .add(BigDecimal.valueOf(newRating))
+                .divide(BigDecimal.valueOf(count + 1), 2, RoundingMode.HALF_UP);
+
+        pharmacy.setAverageRating(newAverage);
+        pharmacy.setRatingCount(count + 1);
+    }
+
+    private List<PharmacyDto> mapToDtos(List<Pharmacy> pharmacies, List<Double> distances) {
+        List<PharmacyDto> result = new ArrayList<>();
+        for (int i = 0; i < pharmacies.size(); i++) {
+            PharmacyDto dto = pharmacyMapper.toDto(pharmacies.get(i));
+            Float distance = (distances != null) ? distances.get(i).floatValue() : null;
+            result.add(new PharmacyDto(
+                    dto.pharmacyId(),
+                    dto.name(),
+                    dto.imageUrl(),
+                    dto.averageRating(),
+                    distance,
+                    dto.openingTime(),
+                    dto.closingTime(),
+                    dto.latitude(),
+                    dto.longitude(),
+                    dto.reviewCount(),
+                    dto.isClosed(),
+                    dto.address()
+            ));
+        }
+        return result;
+    }
+
+}
+
+================================================================================
+4.2 PHARMACY OWNER SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/pharmacy/PharmacyOwnerService.java
+Package: com.example.pharma.service.pharmacy
+
+package com.example.pharma.service.pharmacy;
+
+import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.PharmacyDto;
+import com.example.pharma.dto.pharmacy.UpdatePharmacyRequest;
+import com.example.pharma.exception.access.AccessDeniedException;
+import com.example.pharma.exception.resource.EntityNotFoundException;
+import com.example.pharma.mapper.pharmacy.PharmacyMapper;
+import com.example.pharma.model.entity.core.OwnerProfile;
+import com.example.pharma.model.entity.inventory.Inventory;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import com.example.pharma.repository.Catalog.ProductRepository;
+import com.example.pharma.repository.Core.OwnerProfileRepository;
+import com.example.pharma.repository.Core.PharmacistProfileRepository;
+import com.example.pharma.repository.Core.UserRepository;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.repository.Pharmacy.PharmacyHiringRequestRepository;
+import com.example.pharma.repository.Pharmacy.PharmacyRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class PharmacyOwnerService {
+
+    private final PharmacyRepository pharmacyRepository;
+    private final OwnerProfileRepository ownerProfileRepository;
+    private final PharmacyHiringRequestRepository pharmacyHiringRequestRepository;
+    private final PharmacistProfileRepository pharmacistProfileRepository;
+    private final UserRepository userRepository;
+    private final PharmacyMapper pharmacyMapper;
+    private final ProductRepository productRepository;
+    private final PharmacyProductRepository pharmacyProductRepository;
+
+
+    @Transactional
+    public PharmacyDto createPharmacy(CreatePharmacyRequest request, Long ownerUserId) {
+        OwnerProfile owner = ownerProfileRepository.findById(ownerUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Owner profile not found"));
+
+        Pharmacy pharmacy = pharmacyMapper.toEntity(request);
+        pharmacy.setOwner(owner);
+
+        if (pharmacy.getAddress() != null) {
+            pharmacy.getAddress().setPharmacy(pharmacy);
+        }
+
+        Inventory inventory = new Inventory();
+        inventory.setPharmacy(pharmacy);
+        pharmacy.setInventory(inventory);
+
+        return pharmacyMapper.toDto(pharmacyRepository.save(pharmacy));
+    }
+
+    @Transactional
+    public void deletePharmacy(Long pharmacyId, Long ownerUserId) {
+        Pharmacy pharmacy = validateOwnerPharmacyAccess(pharmacyId, ownerUserId);
+
+        pharmacyRepository.delete(pharmacy);
+    }
+
+    private Pharmacy validateOwnerPharmacyAccess(Long pharmacyId, Long ownerUserId) {
+        Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId)
+                .orElseThrow(() -> new EntityNotFoundException("Pharmacy not found"));
+
+        if (pharmacy.getOwner() == null || !pharmacy.getOwner().getUserId().equals(ownerUserId)) {
+            throw new AccessDeniedException("You are not allowed to manage this pharmacy");
+        }
+
+        return pharmacy;
+    }
+
+
+    @Transactional
+    public PharmacyDto updatePharmacy(Long pharmacyId, UpdatePharmacyRequest request, Long ownerUserId) {
+        Pharmacy pharmacy = validateOwnerPharmacyAccess(pharmacyId, ownerUserId);
+
+        if (request.name() != null) {
+            pharmacy.setName(request.name());
+        }
+        if (request.imageUrl() != null) {
+            pharmacy.setImageUrl(request.imageUrl());
+        }
+        if (request.openingTime() != null) {
+            pharmacy.setOpeningTime(request.openingTime());
+        }
+        if (request.closingTime() != null) {
+            pharmacy.setClosingTime(request.closingTime());
+        }
+        if (request.is24Hours() != null) {
+            pharmacy.setIs24Hours(request.is24Hours());
+        }
+        if (request.latitude() != null) {
+            pharmacy.setLatitude(request.latitude());
+        }
+        if (request.longitude() != null) {
+            pharmacy.setLongitude(request.longitude());
+        }
+
+        if (pharmacy.getAddress() != null) {
+            if (request.street() != null) {
+                pharmacy.getAddress().setStreet(request.street());
+            }
+            if (request.city() != null) {
+                pharmacy.getAddress().setCity(request.city());
+            }
+            if (request.postalCode() != null) {
+                pharmacy.getAddress().setPostalCode(request.postalCode());
+            }
+            if (request.country() != null) {
+                pharmacy.getAddress().setCountry(request.country());
+            }
+            if (request.apartmentNumber() != null) {
+                pharmacy.getAddress().setApartmentNumber(request.apartmentNumber());
+            }
+        }
+
+        return pharmacyMapper.toDto(pharmacyRepository.save(pharmacy));
+    }
+
+    @Transactional
+    public List<PharmacyDto> getOwnerPharmacies(Long ownerUserId) {
+        return pharmacyRepository.findByOwner_UserId(ownerUserId).stream()
+                .map(pharmacyMapper::toDto)
+                .toList();
+    }
+
+    @Transactional
+    public PharmacyDto getOwnerPharmacyById(Long pharmacyId, Long ownerUserId) {
+        return pharmacyMapper.toDto(validateOwnerPharmacyAccess(pharmacyId, ownerUserId));
+    }
+
+}
+
+================================================================================
+4.3 PHARMACY PRODUCT SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/PharmacyProductService.java
+Package: com.example.pharma.service
+
+package com.example.pharma.service;
+
+import com.example.pharma.dto.common.PageResponse;
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductFilter;
+import com.example.pharma.dto.pharmacyProduct.pharmacyProductResponse;
+import com.example.pharma.mapper.PharmacyProductMapper;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.specification.PharmacyProductSpecification;
+import com.example.pharma.validators.PharmacyProductValidator;
+import com.example.pharma.validators.SortValidator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
+import com.example.pharma.dto.Location.CoordinateDto;
+import com.example.pharma.service.interfaces.IPharmacyProductService;
+import com.example.pharma.service.interfaces.ILocationService;
+
+@Service
+@RequiredArgsConstructor
+public class PharmacyProductService implements IPharmacyProductService {
+
+    private final PharmacyProductRepository pharmacyProductRepository;
+    private final ILocationService locationService;
+    private final PharmacyProductMapper mapper;
+    private final PharmacyProductValidator validator;
+
+    // Fields to allow sorting on
+    private static final Map<String, String> SORT_FIELD_MAPPING = Map.of(
+            "price", "price",
+            "quantity", "quantity",
+            "availabilityStatus", "availabilityStatus",
+            "name", "product.name"
+    );
+
+    public PageResponse<pharmacyProductResponse> getPharmacyProducts(PharmacyProductFilter filter, Pageable pageable) {
+        validator.validateFilter(filter);
+        Sort mappedSort = SortValidator.validateAndMap(pageable.getSort(), SORT_FIELD_MAPPING);
+        Pageable validatedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                mappedSort
+        );
+        Specification<PharmacyProduct> spec = PharmacyProductSpecification.buildFromFilter(filter, locationService);
+
+        Page<PharmacyProduct> results = pharmacyProductRepository.findAll(spec, validatedPageable);
+        List<pharmacyProductResponse> content = mapper.toResponseList(results.getContent());
+
+        if (filter.userLatitude() != null && filter.userLongitude() != null) {
+            content = calculateDistances(filter.userLatitude(), filter.userLongitude(), content);
+        }
+        var resultsPage= new PageImpl<>(
+                content,
+                validatedPageable,
+                results.getTotalElements()
+        );
+        return PageResponse.from(resultsPage);
+    }
+
+    private List<pharmacyProductResponse> calculateDistances(
+            double userLat, double userLon,
+            List<pharmacyProductResponse> responses) {
+
+        List<CoordinateDto> coords = responses.stream()
+                .map(m -> new CoordinateDto(m.pharmacyLongitude(), m.pharmacyLatitude()))
+                .toList();
+
+        List<Double> distances = locationService.getRoadDistances(userLat, userLon, coords);
+
+        return IntStream.range(0, responses.size())
+                .mapToObj(i -> {
+                    pharmacyProductResponse m = responses.get(i);
+                    return new pharmacyProductResponse(
+                            m.id(), m.pharmacyId(), m.productId(), m.productName(),
+                            m.productImage(), m.price(), m.originalPrice(),
+                            m.inStock(), m.category(), m.pharmacyName(),
+                            m.pharmacyLatitude(), m.pharmacyLongitude(),
+                            distances.get(i)
+                    );
+                })
+                .toList();
+    }
+}
+
+================================================================================
+4.4 INVENTORY SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/InventoryService.java
+Package: com.example.pharma.service
+
+package com.example.pharma.service;
+
+import com.example.pharma.model.entity.inventory.Inventory;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.repository.Inventory.InventoryRepository;
+import com.example.pharma.repository.Pharmacy.PharmacyRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+// let the pharmacist to add his inventory manually
+@Service
+@RequiredArgsConstructor
+public class InventoryService {
+    private final InventoryRepository inventoryRepository;
+    private final PharmacyProductRepository pharmacyProductRepository;
+    private final PharmacyRepository pharmacyRepository;
+
+    // add invenbtory to the pharmacy
+    public Long AddInventory(Long pharmacyId)
+    {
+        Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).orElseThrow(() ->
+                new EntityNotFoundException("Pharmacy is not found for"));
+
+        Inventory existedInventory = inventoryRepository.findByPharmacy_PharmacyId(pharmacyId).orElseThrow( ()-> new EntityNotFoundException("the pharmacy already has inventory"));
+        Inventory inventory = new Inventory();
+        inventory.setPharmacy(pharmacy);
+        var x = inventoryRepository.save(inventory);
+        return x.getPharmacyId();
+    }
+}
+
+================================================================================
+4.5 USER SERVICE
+================================================================================
+
+File: src/main/java/com/example/pharma/service/UserService.java
+Package: com.example.pharma.service
+
+package com.example.pharma.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class UserService {
+/*
+
+Create/update users
+
+Fetch user profile
+
+Role-based logic
+ */
+
+}
+
+NOTE: UserService is mostly empty. User-related operations are handled in
+the authentication services (AuthSignupService, AuthLoginService).
+
+================================================================================
+SECTION 5: CONTROLLERS
+================================================================================
+
+================================================================================
+5.1 PHARMACY CONTROLLER
+================================================================================
+
+File: src/main/java/com/example/pharma/controller/pharmacy/PharmacyController.java
+Package: com.example.pharma.controller.pharmacy
+
+package com.example.pharma.controller.pharmacy;
+
+import com.example.pharma.dto.common.ApiResponse;
+import com.example.pharma.dto.common.PageResponse;
+import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.PharmacyDto;
+import com.example.pharma.dto.pharmacy.PharmacyInfo;
+import com.example.pharma.dto.pharmacy.PharmacySearchFilter;
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
+import com.example.pharma.dto.review.CreateRatingDto;
+import com.example.pharma.dto.review.CreateReviewDto;
+import com.example.pharma.dto.review.ReviewDto;
+import com.example.pharma.model.entity.core.CustomerProfile;
+import com.example.pharma.model.entity.review.PharmacyRating;
+import com.example.pharma.service.pharmacy.PharmacyOwnerService;
+import com.example.pharma.service.pharmacy.PharmacyService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/pharmacies")
+@RequiredArgsConstructor
+public class PharmacyController {
+    private final PharmacyService pharmacyService;
+    private final PharmacyOwnerService pharmacyOwnerService;
+
+    @GetMapping("/locations")
+    public ApiResponse<List<PharmacyDto>> getAllPharmacies()
+    {
+        return ApiResponse.success("All pharmacies returned successfully",pharmacyService.getAllPharmacies());
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PageResponse<PharmacyDto>> getPharmacies(@Valid @ModelAttribute PharmacySearchFilter pharmacySearchFilter,
+                                                                @PageableDefault(size = 10) Pageable pageable) {
+        return ApiResponse.success("Pharmacies retrieved successfully", pharmacyService
+                .getPharmacies(
+                        pharmacySearchFilter.name(),
+                        pharmacySearchFilter.minRating(),
+                        pharmacySearchFilter.isOpen(),
+                        pharmacySearchFilter.latitude(),
+                        pharmacySearchFilter.longitude(),
+                        pageable
+                )
+        );
+    }
+
+    @GetMapping("/{pharmacyId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PharmacyInfo> getPharmacyInfo(@PathVariable Long pharmacyId)
+    {
+        return ApiResponse.success("Pharmacy info fetched successfully",pharmacyService.getPharmacyInfo(pharmacyId));
+    }
+
+    @GetMapping("/{pharmacyId}/{categoryId}")
+    public ApiResponse<PageResponse<PharmacyProductDto>> getPharmacyProductsUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "pharmacyProductId") Pageable pageable)
+    {
+        return ApiResponse.success("Products returned successfully",pharmacyService.getPharmacyProductsUnderACategory(pharmacyId, categoryId, pageable));
+
+    }
+
+    @PostMapping("/rating")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<PharmacyRating> createRating(@RequestBody CreateRatingDto createRatingDto, @AuthenticationPrincipal CustomerProfile customerProfile)
+    {
+        return ApiResponse.success("Rating submitted successfully", pharmacyService.createRating(createRatingDto, customerProfile));
+    }
+
+
+    @PostMapping("/review")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<ReviewDto> createReview(@RequestBody CreateReviewDto createReviewDto,@AuthenticationPrincipal CustomerProfile customerProfile)
+    {
+        return ApiResponse.success("Review submitted successfully",pharmacyService.createPharmacyReview(createReviewDto, customerProfile) );
+    }
+
+    @PostMapping("/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createBulk(@RequestBody List<CreatePharmacyRequest> createPharmacyRequestList) {
+        pharmacyService.createPharmacies(createPharmacyRequestList);
+    }
+
+}
+
+================================================================================
+5.2 PHARMACY OWNER CONTROLLER
+================================================================================
+
+File: src/main/java/com/example/pharma/controller/pharmacy/PharmacyOwnerController.java
+Package: com.example.pharma.controller.pharmacy
+
+package com.example.pharma.controller.pharmacy;
+
+import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.PharmacyDto;
+import com.example.pharma.dto.pharmacy.UpdatePharmacyRequest;
+import com.example.pharma.security.AuthenticatedUser;
+import com.example.pharma.service.pharmacy.PharmacyOwnerService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/pharmacies")
+@RequiredArgsConstructor
+public class PharmacyOwnerController {
+
+    private final PharmacyOwnerService pharmacyOwnerService;
+
+    @PreAuthorize("hasRole('OWNER')")
+    @PostMapping
+    public ResponseEntity<?> createPharmacy(
+            @Valid @RequestBody CreatePharmacyRequest request,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        return ResponseEntity.ok(pharmacyOwnerService.createPharmacy(request, authenticatedUser.userId()));
+    }
+
+    @PreAuthorize("hasRole('OWNER')")
+    @DeleteMapping("/{pharmacyId}")
+    public ResponseEntity<?> deletePharmacy(
+            @PathVariable Long pharmacyId,
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) {
+        pharmacyOwnerService.deletePharmacy(pharmacyId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @PatchMapping("/{pharmacyId}")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<PharmacyDto> updatePharmacy(
+            @PathVariable Long pharmacyId,
+            @RequestBody UpdatePharmacyRequest request,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        return ResponseEntity.ok(
+                pharmacyOwnerService.updatePharmacy(pharmacyId, request, authenticatedUser.userId())
+        );
+    }
+
+    @GetMapping("/owner")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<List<PharmacyDto>> getOwnerPharmacies(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        return ResponseEntity.ok(
+                pharmacyOwnerService.getOwnerPharmacies(authenticatedUser.userId())
+        );
+    }
+
+    @GetMapping("/owner/{pharmacyId}")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<PharmacyDto> getOwnerPharmacyById(
+            @PathVariable Long pharmacyId,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        return ResponseEntity.ok(
+                pharmacyOwnerService.getOwnerPharmacyById(pharmacyId, authenticatedUser.userId())
+        );
+    }
+}
+
+================================================================================
+SECTION 6: MAPPERS
+================================================================================
+
+================================================================================
+6.1 PHARMACY MAPPER
+================================================================================
+
+File: src/main/java/com/example/pharma/mapper/pharmacy/PharmacyMapper.java
+Package: com.example.pharma.mapper.pharmacy
+
+package com.example.pharma.mapper.pharmacy;
+
+import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.PharmacyDto;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring")
+public interface PharmacyMapper {
+
+    @Mapping(target = "distanceInKms", ignore = true)
+    @Mapping(target = "isClosed", expression = "java(pharmacy.isClosed())")
+    @Mapping(target = "address", expression = "java(mapAddress(pharmacy.getAddress()))")
+    PharmacyDto toDto(Pharmacy pharmacy);
+    List<PharmacyDto> toDtoList(List<Pharmacy> pharmacies);
+
+    Pharmacy toPharmacy(CreatePharmacyRequest createPharmacyRequest);
+
+    PharmacyAddress toPharmacyAddress(CreatePharmacyRequest createPharmacyRequest);
+
+    default String mapAddress(PharmacyAddress address) {
+        if (address == null) return null;
+
+        String street = address.getStreet() != null ? address.getStreet() : "";
+        String city = address.getCity() != null ? address.getCity() : "";
+
+        if (street.isEmpty()) return city;
+        if (city.isEmpty()) return street;
+
+        return street + ", " + city;
+    }
+
+    @Mapping(target = "pharmacyId", ignore = true)
+    @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "location", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "averageRating", expression = "java(BigDecimal.ZERO)")
+    @Mapping(target = "ratingCount", constant = "0L")
+    @Mapping(target = "reviewCount", constant = "0L")
+    @Mapping(target = "address", expression = "java(mapAddress(request))")
+    Pharmacy toEntity(CreatePharmacyRequest request);
+
+    default PharmacyAddress mapAddress(CreatePharmacyRequest request) {
+        PharmacyAddress address = new PharmacyAddress();
+        address.setStreet(request.street());
+        address.setCity(request.city());
+        address.setPostalCode(request.postalCode());
+        address.setCountry(request.country());
+        address.setApartmentNumber(request.apartmentNumber());
+        return address;
+    }
+}
+
+================================================================================
+6.2 PHARMACY PRODUCT MAPPER
+================================================================================
+
+File: src/main/java/com/example/pharma/mapper/PharmacyProductMapper.java
+Package: com.example.pharma.mapper
+
+package com.example.pharma.mapper;
+
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
+import com.example.pharma.dto.pharmacyProduct.pharmacyProductResponse;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring")
+public interface PharmacyProductMapper {
+
+    @Mapping(source = "pharmacyProductId", target = "id")
+    @Mapping(source = "product.productId", target = "productId")
+    @Mapping(source = "product.name", target = "productName")
+    @Mapping(source = "product.category.categoryName", target = "category")
+    @Mapping(source = "inventory.pharmacy.pharmacyId", target = "pharmacyId")
+    @Mapping(source = "inventory.pharmacy.name", target = "pharmacyName")
+    @Mapping(source = "inventory.pharmacy.latitude", target = "pharmacyLatitude")
+    @Mapping(source = "inventory.pharmacy.longitude", target = "pharmacyLongitude")
+    @Mapping(target = "productImage", ignore = true) // Set up accordingly
+    @Mapping(target = "originalPrice", ignore = true) // Define logic if any
+    @Mapping(target = "pharmacyDistance", ignore = true) // Will be set post-query
+    @Mapping(target = "inStock", expression = "java(pharmacyProduct.getAvailabilityStatus() == com.example.pharma.model.entity.inventory.AvailabilityStatus.Available)")
+    pharmacyProductResponse toResponse(PharmacyProduct pharmacyProduct);
+
+    List<pharmacyProductResponse> toResponseList(List<PharmacyProduct> pharmacyProducts);
+
+    @Mapping(source = "product.productId",            target = "productId")
+    @Mapping(source = "product.name",                 target = "productName")
+    @Mapping(source = "product.description",          target = "description")
+    @Mapping(source = "product.requiresPrescription", target = "requiresPrescription")
+    @Mapping(source = "product.dosageForm",           target = "dosageForm")
+    @Mapping(source = "product.strength",             target = "strength")
+    @Mapping(source = "product.manufacturer",         target = "manufacturer")
+    @Mapping(source = "product.category.categoryId",  target = "categoryId")
+    @Mapping(source = "product.category.categoryName",        target = "categoryName")
+    @Mapping(source = "product.brand.brandId",        target = "brandId")
+    @Mapping(source = "product.brand.brandName",           target = "brandName")
+    @Mapping(source = "inventory.pharmacy.name",      target = "pharmacyName")
+    PharmacyProductDto toPharmacyProductDto(PharmacyProduct pharmacyProduct);
+}
+
+================================================================================
+SECTION 7: SPECIFICATIONS AND VALIDATORS
+================================================================================
+
+================================================================================
+7.1 PHARMACY SPECIFICATIONS
+================================================================================
+
+File: src/main/java/com/example/pharma/repository/Pharmacy/PharmacySpecifications.java
+Package: com.example.pharma.repository.Pharmacy
+
+package com.example.pharma.repository.Pharmacy;
+
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
+import com.example.pharma.service.LocationService;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.WKTWriter;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.time.LocalTime;
+
+public class PharmacySpecifications {
+    private PharmacySpecifications()
+    {
+
+    }
+
+    public static Specification<Pharmacy> hasName(String name) {
+        return (root, query, cb) ->
+                name == null ? cb.conjunction() :
+                        cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+    }
+
+    public static Specification<Pharmacy> hasMinRating(Float rating) {
+        return (root, query, cb) ->
+                rating == null ? cb.conjunction() :
+                        cb.greaterThanOrEqualTo(root.get("totalRating"), rating);
+    }
+
+    public static Specification<Pharmacy> isOpenNow(Boolean isOpen) {
+        if (!Boolean.TRUE.equals(isOpen)) {
+            return (root, query, cb) -> cb.conjunction();
+        }
+        // if the user requested open pharmacies, apply the open-now logic
+        return (root, query, cb) -> {
+
+            LocalTime now = LocalTime.now();
+
+            Expression<Boolean> is24Hours = root.get("is24Hours");
+            Expression<LocalTime> opening = root.get("openingTime");
+            Expression<LocalTime> closing = root.get("closingTime");
+
+            // 24h pharmacies
+            Predicate alwaysOpen = cb.isTrue(is24Hours);
+
+            // Normal same-day hours (opening <= closing)
+            Predicate normalHours = cb.and(
+                    cb.lessThanOrEqualTo(opening, closing),
+                    cb.lessThanOrEqualTo(opening, now),
+                    cb.greaterThanOrEqualTo(closing, now)
+            );
+
+            // Overnight hours (opening > closing)
+            Predicate overnightHours = cb.and(
+                    cb.greaterThan(opening, closing),
+                    cb.or(
+                            cb.lessThanOrEqualTo(opening, now),   // time >= opening
+                            cb.greaterThanOrEqualTo(closing, now) // time <= closing
+                    )
+            );
+
+            return cb.or(alwaysOpen, normalHours, overnightHours);
+        };
+    }
+
+    public static Specification<Pharmacy> withinDistance(
+            Double latitude,
+            Double longitude,
+            Double maxDistanceKm,
+            LocationService locationService
+    ) {
+        return (root, query, cb) -> {
+
+            if (latitude == null || longitude == null || maxDistanceKm == null) {
+                return cb.conjunction();
+            }
+
+            Geometry polygon = locationService.getRoadReachPolygon(
+                    latitude,
+                    longitude,
+                    maxDistanceKm * 1000
+            );
+
+            String wkt = new WKTWriter().write(polygon);
+
+            var polygonExpr = cb.function(
+                    "ST_GeomFromText",
+                    Geometry.class,
+                    cb.literal(wkt),
+                    cb.literal(4326)
+            );
+
+            return cb.isTrue(
+                    cb.function(
+                            "ST_Within",
+                            Boolean.class,
+                            root.get("location"),
+                            polygonExpr
+                    )
+            );
+        };
+    }
+
+    public static Specification<Pharmacy> orderByDistance(Double latitude, Double longitude) {
+        return (root, query, cb) -> {
+            if (latitude == null || longitude == null) {
+                return null;
+            }
+
+            Expression<Double> userPoint = cb.function(
+                    "ST_GeographyFromText",
+                    Double.class,
+                    cb.literal("POINT(" + longitude + " " + latitude + ")")
+            );
+
+            Expression<Double> distance = cb.function(
+                    "ST_Distance",
+                    Double.class,
+                    root.get("location"),
+                    userPoint
+            );
+
+
+            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+                query.orderBy(cb.asc(distance));
+            }
+
+            return null;
+        };
+    }
+
+}
+
+================================================================================
+SECTION 8: API ENDPOINTS SUMMARY
+================================================================================
+
+PHARMACY ENDPOINTS:
+-------------------
+Base URL: /api/v1/pharmacies
+
+PUBLIC ENDPOINTS:
+  GET    /locations                      - Get all pharmacies with basic info
+  GET    /                               - Search pharmacies (paginated)
+                                          Query params: name, minRating, isOpen, latitude, longitude
+  GET    /{pharmacyId}                   - Get pharmacy detailed info
+  GET    /{pharmacyId}/{categoryId}      - Get pharmacy products under category
+  POST   /rating                         - Create pharmacy rating (ROLE_CUSTOMER)
+  POST   /review                         - Create pharmacy review (ROLE_CUSTOMER)
+  POST   /bulk                           - Create multiple pharmacies
+
+OWNER ENDPOINTS (ROLE_OWNER):
+  POST   /                               - Create pharmacy
+  DELETE /{pharmacyId}                   - Delete pharmacy
+  PATCH  /{pharmacyId}                   - Update pharmacy details
+  GET    /owner                          - Get all pharmacies owned by user
+  GET    /owner/{pharmacyId}             - Get specific owned pharmacy
+
+================================================================================
+SECTION 9: KEY FEATURES & BUSINESS LOGIC
+================================================================================
+
+9.1 PHARMACY MANAGEMENT:
+  - Owners can create, read, update, and delete pharmacies
+  - Pharmacies have geospatial data (latitude, longitude)
+  - Pharmacies have opening/closing times and 24-hour flag
+  - Automatic geometry calculation for location (PostGIS)
+  - Pharmacies can be searched by name, rating, and availability
+
+9.2 INVENTORY & PRODUCTS:
+  - Each pharmacy has a 1-to-1 relationship with Inventory
+  - Inventory contains multiple PharmacyProducts
+  - PharmacyProducts track price, quantity, and availability status
+  - Stock depletion updates availability status automatically
+  - Each product in a pharmacy is unique (unique constraint on inventory_id + product_id)
+
+9.3 USER PROFILES:
+  - User entity has multiple roles (CUSTOMER, OWNER, PHARMACIST, ADMIN)
+  - Each role has corresponding profile entity:
+    * OwnerProfile - for pharmacy owners
+    * CustomerProfile - for customers
+    * PharmacistProfile - for pharmacists
+  - Profile entities use shared User as primary key (1-to-1 relationship)
+
+9.4 PHARMACY STAFF MANAGEMENT:
+  - Pharmacies can hire staff (pharmacists)
+  - Staff has embedded ID combining pharmacy_id and pharmacist_user_id
+  - Staff roles: STAFF, INVENTORY_MANAGER, MANAGER
+  - Staff membership tracked with active flag and joined_at timestamp
+  - Hiring request system with status tracking (PENDING, ACCEPTED, REJECTED, CANCELLED)
+
+9.5 RATINGS & REVIEWS:
+  - Customers can rate pharmacies (1-5)
+  - Customers can leave written reviews
+  - Average rating calculated on-the-fly
+  - Review count and rating count maintained
+
+9.6 DISTANCE & LOCATION SERVICES:
+  - Road distance calculation between user and pharmacy
+  - Integration with LocationService for distance queries
+  - Support for filtering pharmacies by distance
+  - Distance included in all pharmacy product responses
+
+================================================================================
+SECTION 10: SECURITY & ACCESS CONTROL
+================================================================================
+
+AUTHENTICATION:
+  - Email/verification code based authentication
+  - Role-based access control (RBAC) using Spring Security
+  - @PreAuthorize annotations for method-level security
+
+ACCESS RESTRICTIONS:
+  - Only OWNER can create/update/delete pharmacies
+  - Only CUSTOMER can rate/review pharmacies
+  - Only authenticated users can access protected endpoints
+  - Owners can only manage their own pharmacies (validated in service)
+
+AUTHENTICATION PRINCIPAL:
+  - AuthenticatedUser object injected for context
+  - CustomUserDetails from security context
+  - Email-based authentication flows
+
+================================================================================
+END OF DOCUMENT
+================================================================================
+

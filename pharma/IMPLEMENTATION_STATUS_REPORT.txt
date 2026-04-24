@@ -1,0 +1,1113 @@
+================================================================================
+     COMPREHENSIVE IMPLEMENTATION STATUS REPORT - PHARMA APPLICATION
+                          April 24, 2026
+================================================================================
+
+================================================================================
+1. HIGH-LEVEL PROJECT OVERVIEW
+================================================================================
+
+PROJECT NAME: Pharma (Pharmacy Management & E-commerce Platform)
+DESCRIPTION: A graduation project to help pharmacies in Egypt:
+  - List available medications
+  - Allow consumers to check availability and prices
+  - Provide AI-powered features for inventory management
+  - Predict demand and manage surplus medicine redistribution
+
+TECHNOLOGY STACK:
+  - Backend: Spring Boot 4.0.2 (Java 25)
+  - Database: PostgreSQL with PostGIS (Spatial data)
+  - Caching: Redis
+  - Payment Gateway: Stripe
+  - Location Services: LocationTech JTS (GIS)
+  - Build Tool: Maven
+  - ORM: JPA/Hibernate
+  - Mapping: MapStruct 1.6.3
+
+================================================================================
+2. CURRENT APPLICATION ARCHITECTURE
+================================================================================
+
+2.1 LAYERED ARCHITECTURE:
+  ┌─────────────────────────────────────────────────────┐
+  │  Controllers (REST Endpoints)                       │
+  ├─────────────────────────────────────────────────────┤
+  │  DTOs & Request/Response Objects                    │
+  ├─────────────────────────────────────────────────────┤
+  │  Services (Business Logic)                          │
+  ├─────────────────────────────────────────────────────┤
+  │  Repositories (Data Access)                         │
+  ├─────────────────────────────────────────────────────┤
+  │  JPA Entities (Domain Models)                       │
+  ├─────────────────────────────────────────────────────┤
+  │  PostgreSQL + Redis + Stripe API                    │
+  └─────────────────────────────────────────────────────┘
+
+2.2 PROJECT STRUCTURE:
+  src/main/java/com/example/pharma/
+  ├── controller/
+  │   ├── auth/            (Login/Signup)
+  │   ├── cart/            (Shopping cart operations)
+  │   ├── category/        (Product categories)
+  │   ├── pharmacy/        (Pharmacy management)
+  │   ├── pharmacyProduct/ (Products in pharmacies)
+  │   ├── prescription/    (Prescriptions)
+  │   └── product/         (Product catalog)
+  ├── service/
+  │   ├── auth/            (Authentication logic)
+  │   ├── cart/            (Cart management)
+  │   ├── pharmacy/        (Pharmacy business logic)
+  │   ├── *.Service.java   (Domain services)
+  │   └── interfaces/      (Service contracts)
+  ├── repository/
+  │   ├── Core/            (User, roles)
+  │   ├── Inventory/       (Products, inventory)
+  │   ├── Pharmacy/        (Pharmacy management)
+  │   ├── Order/           (Order management)
+  │   └── other repos
+  ├── model/entity/
+  │   ├── core/            (User, profiles)
+  │   ├── pharmacy/        (Pharmacy entities)
+  │   ├── inventory/       (Inventory, products)
+  │   ├── catalog/         (Product catalog)
+  │   ├── order/           (Order entities)
+  │   └── other entities
+  ├── dto/
+  │   ├── auth/            (Login/signup DTOs)
+  │   ├── pharmacy/        (Pharmacy DTOs)
+  │   ├── pharmacyProduct/ (Product DTOs)
+  │   ├── Inventory/       (Inventory DTOs)
+  │   ├── order/           (Order DTOs)
+  │   ├── cart/            (Cart DTOs)
+  │   └── common/          (Common responses)
+  ├── mapper/              (MapStruct mappers)
+  ├── security/            (Security config, auth)
+  ├── validators/          (Input validation)
+  ├── exception/           (Exception handling)
+  ├── specification/       (JPA Specifications)
+  ├── config/              (Spring configuration)
+  └── util/                (Utilities)
+
+================================================================================
+3. FRONTEND IMPLEMENTATION STATUS
+================================================================================
+
+STATUS: NO FRONTEND FOUND IN THIS PROJECT
+
+The provided project appears to be BACKEND-ONLY:
+  - No React, Vue, Angular, or other frontend frameworks
+  - No web pages or screens built
+  - REST API only
+  - Can be consumed by any frontend (mobile app, web app, etc.)
+
+API DOCUMENTATION:
+  - Swagger/OpenAPI support available (springdoc-openapi dependency)
+  - Accessible at: http://localhost:8080/swagger-ui.html (after implementation)
+
+================================================================================
+4. BACKEND IMPLEMENTATION STATUS
+================================================================================
+
+4.1 INFRASTRUCTURE & CONFIGURATION:
+  ✅ COMPLETED:
+     - Spring Boot application setup
+     - PostgreSQL database integration
+     - JPA/Hibernate ORM
+     - Redis caching configuration
+     - PostGIS for geospatial queries
+     - MapStruct code generation
+     - Maven build configuration
+     - Spring Security OAuth2 integration
+     - JWT token support (JJWT)
+     - Stripe payment integration
+
+  🟡 PARTIAL:
+     - WebFlux for reactive endpoints
+     - Mail service (framework included, not used yet)
+
+4.2 SECURITY & AUTHENTICATION:
+  ✅ COMPLETED:
+     - Email-based authentication (OTP verification)
+     - Signup flow with 3-minute verification code TTL
+     - Login flow with email verification
+     - Redis-backed session management
+     - Rate limiting (3 max attempts)
+     - User role management (CUSTOMER, OWNER, PHARMACIST, ADMIN)
+     - Profile creation for each role
+     - JWT token generation and validation
+     - Spring Security configuration
+     - PreAuthorize role-based access control
+
+  ✅ TESTED FEATURES:
+     - Email sending for verification codes
+     - Code hashing (SHA-256)
+     - Session timeout handling
+     - Duplicate email prevention
+
+4.3 USER MANAGEMENT:
+  ✅ COMPLETED:
+     - User entity with email, name, phone
+     - Multiple roles per user (ROLE_CUSTOMER, ROLE_OWNER, ROLE_PHARMACIST, ROLE_ADMIN)
+     - User addresses (street, city, postal code, country, apartment)
+     - Profile segregation:
+       * OwnerProfile - pharmacy owners
+       * CustomerProfile - customers
+       * PharmacistProfile - pharmacists
+     - Lazy loading with FetchType configuration
+     - Embedded CreatedAtColumn for audit tracking
+
+  ❌ NOT YET IMPLEMENTED:
+     - User profile editing/update endpoints
+     - User address management endpoints
+     - Profile picture/avatar upload
+     - User deletion/deactivation
+     - Phone verification
+     - Email change flow
+     - Password change (no password system yet - using OTP)
+
+================================================================================
+5. IMPLEMENTED APIs AND THEIR PURPOSES
+================================================================================
+
+5.1 PHARMACY MANAGEMENT APIs:
+   ✅ IMPLEMENTED:
+
+   1. GET /api/v1/pharmacies/locations
+      Purpose: Get all pharmacies with basic information
+      Returns: List of PharmacyDto objects
+      Auth: Public
+
+   2. GET /api/v1/pharmacies
+      Purpose: Search pharmacies with filters and pagination
+      Params: name, minRating, isOpen, latitude, longitude, page, size
+      Returns: Paginated PharmacyDto list
+      Auth: Public
+      Features:
+        - Text search by name
+        - Rating filter (0.0 to 5.0)
+        - Open/closed status filter
+        - Distance ordering (requires location)
+
+   3. GET /api/v1/pharmacies/{pharmacyId}
+      Purpose: Get detailed pharmacy information
+      Returns: PharmacyInfo (pharmacy details, categories, address, reviews)
+      Auth: Public
+
+   4. GET /api/v1/pharmacies/{pharmacyId}/{categoryId}
+      Purpose: Get products in pharmacy under specific category
+      Returns: Paginated PharmacyProductDto list
+      Auth: Public
+
+   5. POST /api/v1/pharmacies/rating (OWNER)
+      Purpose: Submit rating for a pharmacy
+      Request: CreateRatingDto (pharmacyId, rating)
+      Returns: PharmacyRating
+      Auth: ROLE_CUSTOMER
+      Features:
+        - Updates average rating
+        - Increments rating count
+
+   6. POST /api/v1/pharmacies/review (OWNER)
+      Purpose: Submit written review for a pharmacy
+      Request: CreateReviewDto (pharmacyId, comment)
+      Returns: ReviewDto
+      Auth: ROLE_CUSTOMER
+      Features:
+        - Tracks reviewer name
+        - Increments review count
+
+   7. POST /api/v1/pharmacies/bulk
+      Purpose: Bulk create multiple pharmacies
+      Request: List<CreatePharmacyRequest>
+      Auth: Public
+      Note: Data seeding endpoint
+
+   8. POST /api/v1/pharmacies (OWNER)
+      Purpose: Create new pharmacy (owner)
+      Request: CreatePharmacyRequest (full pharmacy details)
+      Returns: PharmacyDto
+      Auth: ROLE_OWNER
+      Features:
+        - Creates associated inventory
+        - Sets owner relationship
+        - Creates address
+
+   9. DELETE /api/v1/pharmacies/{pharmacyId} (OWNER)
+      Purpose: Delete pharmacy (owner only)
+      Auth: ROLE_OWNER
+      Features:
+        - Validates owner access
+        - Cascading delete (address, inventory, products)
+
+   10. PATCH /api/v1/pharmacies/{pharmacyId} (OWNER)
+       Purpose: Update pharmacy details (partial)
+       Request: UpdatePharmacyRequest (optional fields)
+       Returns: PharmacyDto
+       Auth: ROLE_OWNER
+       Features:
+         - Update name, image, hours
+         - Update address details
+         - Update location (lat/lon)
+         - Automatic geometry update
+
+   11. GET /api/v1/pharmacies/owner (OWNER)
+       Purpose: Get all pharmacies owned by authenticated user
+       Returns: List<PharmacyDto>
+       Auth: ROLE_OWNER
+
+   12. GET /api/v1/pharmacies/owner/{pharmacyId} (OWNER)
+       Purpose: Get specific owned pharmacy details
+       Returns: PharmacyDto
+       Auth: ROLE_OWNER
+
+5.2 PHARMACY PRODUCT APIs:
+   ✅ PARTIALLY IMPLEMENTED:
+
+   Note: Service exists but controller endpoints not yet defined
+
+   Available Service Methods:
+   - getPharmacyProducts(filter, pageable) - Search products with filters
+   - Filters: productId, productName, categoryName, dosageForm, price range, distance, stock status
+
+   Not Yet Exposed:
+   - Product creation for pharmacy
+   - Product update
+   - Product deletion
+   - Stock management endpoints
+
+5.3 INVENTORY MANAGEMENT APIs:
+   ❌ NOT FULLY IMPLEMENTED:
+
+   Partial Implementation:
+   - InventoryService exists with AddInventory method
+   - PharmacyProductRepository has stock depletion logic
+
+   Missing:
+   - REST endpoints for inventory operations
+   - Stock transfer between pharmacies
+   - Expiry date tracking
+   - Low stock alerts
+   - Supplier management
+
+5.4 AUTHENTICATION APIs:
+   ✅ IMPLEMENTED (in auth controller):
+
+   1. POST /api/v1/auth/signup/start
+      Purpose: Initiate signup process
+      Request: SignupStartRequest (email, name, role)
+      Returns: SignupStartResponse (signupId)
+
+   2. POST /api/v1/auth/signup/verify
+      Purpose: Verify signup with code
+      Request: SignupVerifyRequest (signupId, code)
+      Returns: User object
+      Creates: Profile (OwnerProfile or CustomerProfile)
+
+   3. POST /api/v1/auth/login/start
+      Purpose: Initiate login process
+      Request: LoginStartRequest (email, role)
+      Returns: LoginStartResponse (loginId)
+
+   4. POST /api/v1/auth/login/verify
+      Purpose: Verify login with code
+      Request: LoginVerifyRequest (loginId, code)
+      Returns: JWT token + user info
+
+5.5 CART & ORDER APIs:
+   ✅ IMPLEMENTED (see entire_code_related_to_cart_and_order.txt):
+
+   Available endpoints for:
+   - Create cart
+   - Get cart
+   - Add/remove items
+   - Update quantities
+   - Checkout with Stripe
+   - Order tracking
+
+5.6 REVIEWS & RATINGS:
+   ✅ IMPLEMENTED:
+
+   - Create rating (1-5 stars)
+   - Create text review
+   - Average rating calculation
+   - Review count tracking
+   - Listed in pharmacy details
+
+================================================================================
+6. PAGES/SCREENS/COMPONENTS ALREADY BUILT
+================================================================================
+
+NO FRONTEND COMPONENTS BUILT - Backend API only
+
+API has been designed to support:
+  - Pharmacy listing screens
+  - Pharmacy detail views
+  - Pharmacy search/filter
+  - Pharmacy owner dashboard
+  - Inventory management views
+  - Product browsing
+  - Shopping cart
+  - Checkout flow
+  - Order history
+  - Ratings and reviews
+
+These would be built in a separate frontend project consuming these APIs.
+
+================================================================================
+7. USER JOURNEY / APP FLOW CURRENTLY SUPPORTED
+================================================================================
+
+7.1 CUSTOMER JOURNEY:
+   ✅ Signup/Login:
+      1. Enter email and select CUSTOMER role
+      2. Receive verification code via email
+      3. Verify code to complete signup
+      4. Next login: email + code verification
+      5. Receive JWT token
+
+   ✅ Browse Pharmacies:
+      6. View all pharmacies or search with filters
+      7. Filter by: name, min rating, open status, distance
+      8. View pharmacy details: address, hours, products
+      9. View pharmacy products by category
+
+   ✅ View Products:
+      10. Search pharmacy products with filters:
+         - By name, category, dosage form
+         - By price range
+         - By distance
+         - In-stock status
+
+   ✅ Ratings & Reviews:
+      11. Rate a pharmacy (1-5 stars) - triggers avg rating update
+      12. Write text review for pharmacy
+
+   ✅ Shopping:
+      13. Add products to cart
+      14. View cart contents
+      15. Update item quantities
+      16. Remove items from cart
+      17. Checkout with Stripe
+      18. Receive order confirmation
+
+   ❌ NOT YET SUPPORTED:
+      - Prescription validation before checkout
+      - Delivery tracking
+      - Multiple delivery addresses
+      - Wishlists
+      - Product recommendations
+
+7.2 PHARMACY OWNER JOURNEY:
+   ✅ Authentication:
+      1. Signup as OWNER role
+      2. Verification code flow
+      3. Receive JWT token
+
+   ✅ Pharmacy Management:
+      4. Create new pharmacy
+      5. Add pharmacy address details
+      6. Set opening/closing times
+      7. Enable 24-hour operation flag
+      8. Update any pharmacy details
+      9. View all owned pharmacies
+
+   ❌ NOT YET SUPPORTED:
+      - Add products to inventory
+      - Update product prices/quantities
+      - Staff/employee management
+      - Hiring pharmacists
+      - View orders
+      - Analytics/reports
+      - Promotions/discounts
+
+7.3 PHARMACIST JOURNEY:
+   ✅ Planned:
+      - Signup with PHARMACIST role
+      - Receive job applications from owners
+      - View assigned pharmacy
+
+   ❌ NOT IMPLEMENTED:
+      - Accept/reject job offers
+      - Manage inventory
+      - Verify prescriptions
+      - View dispensed medications
+
+7.4 ADMIN JOURNEY:
+   ❌ NOT IMPLEMENTED:
+      - User management
+      - Pharmacy verification
+      - Content moderation
+      - Analytics dashboard
+      - System configuration
+
+================================================================================
+8. DATA MODELS / SCHEMA / DATABASE FLOW
+================================================================================
+
+8.1 CORE USER SYSTEM:
+   ┌─────────────────────────────────────────────────────┐
+   │ USER (users table)                                  │
+   ├─────────────────────────────────────────────────────┤
+   │ PK: user_id                                         │
+   │ Columns:                                            │
+   │   - email (unique, not null)                        │
+   │   - name                                            │
+   │   - phone                                           │
+   │   - created_at (embedded, auto)                     │
+   │                                                     │
+   │ Relationships:                                      │
+   │   - user_roles (M:M) → Roles (CUSTOMER/OWNER...)   │
+   │   - addresses (1:M) → UserAddress                   │
+   │   - owner_profile (1:1) → OwnerProfile              │
+   │   - customer_profile (1:1) → CustomerProfile        │
+   │   - pharmacist_profile (1:1) → PharmacistProfile    │
+   └─────────────────────────────────────────────────────┘
+
+8.2 PHARMACY SYSTEM:
+   ┌─────────────────────────────────────────────────────┐
+   │ PHARMACY (pharmacy table)                            │
+   ├─────────────────────────────────────────────────────┤
+   │ PK: pharmacy_id                                     │
+   │ FK: owner_user_id (OwnerProfile.user_id)            │
+   │ Columns:                                            │
+   │   - name                                            │
+   │   - image_url                                       │
+   │   - location (geometry/Point, PostGIS)              │
+   │   - latitude, longitude                             │
+   │   - opening_time, closing_time (LocalTime)          │
+   │   - is_24_hours (Boolean)                           │
+   │   - average_rating (BigDecimal, 0-5)                │
+   │   - rating_count, review_count                      │
+   │   - created_at                                      │
+   │                                                     │
+   │ Relationships:                                      │
+   │   - owner (N:1) → OwnerProfile                      │
+   │   - address (1:1) → PharmacyAddress                 │
+   │   - inventory (1:1) → Inventory                     │
+   │   - staff (1:M) → PharmacyStaff                     │
+   │   - hiring_requests (1:M) → PharmacyHiringRequest   │
+   └─────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────┐
+   │ PHARMACY_ADDRESS (pharmacy_address table)            │
+   ├─────────────────────────────────────────────────────┤
+   │ PK/FK: pharmacy_id                                  │
+   │ Columns:                                            │
+   │   - street, city, postal_code                       │
+   │   - country, apartment_number                       │
+   └─────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────┐
+   │ PHARMACY_STAFF (pharmacy_staff table)                │
+   ├─────────────────────────────────────────────────────┤
+   │ PK (Composite): pharmacy_id + user_id               │
+   │ FK: pharmacy_id → Pharmacy                          │
+   │ FK: user_id → PharmacistProfile                     │
+   │ Columns:                                            │
+   │   - staff_role (STAFF/INVENTORY_MANAGER/MANAGER)    │
+   │   - active (Boolean)                                │
+   │   - joined_at (auto)                                │
+   └─────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────┐
+   │ PHARMACY_HIRING_REQUEST                             │
+   ├─────────────────────────────────────────────────────┤
+   │ PK: request_id                                      │
+   │ FK: pharmacy_id → Pharmacy                          │
+   │ FK: owner_user_id → OwnerProfile                    │
+   │ FK: pharmacist_user_id → PharmacistProfile          │
+   │ Columns:                                            │
+   │   - status (PENDING/ACCEPTED/REJECTED/CANCELLED)    │
+   │   - requested_role (STAFF/INVENTORY_MANAGER/MANAGER)│
+   │   - message                                         │
+   └─────────────────────────────────────────────────────┘
+
+8.3 INVENTORY SYSTEM:
+   ┌─────────────────────────────────────────────────────┐
+   │ INVENTORY (inventory table)                         │
+   ├─────────────────────────────────────────────────────┤
+   │ PK/FK: pharmacy_id                                  │
+   │ Relationships:                                      │
+   │   - pharmacy (1:1) → Pharmacy                       │
+   │   - products (1:M) → PharmacyProduct                │
+   └─────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────┐
+   │ PHARMACY_PRODUCT (pharmacy_product table)            │
+   ├─────────────────────────────────────────────────────┤
+   │ PK: pharmacy_product_id                             │
+   │ FK: pharmacy_id → Pharmacy                          │
+   │ FK: inventory_pharmacy_id → Inventory               │
+   │ FK: product_id → Product (catalog)                  │
+   │ Unique Constraint: (inventory_pharmacy_id, product_id)│
+   │ Columns:                                            │
+   │   - price (BigDecimal)                              │
+   │   - quantity (Integer)                              │
+   │   - availability_status                             │
+   │     (Available/OutOfStock/LimitedSupply)            │
+   │                                                     │
+   │ Auto-updates:                                       │
+   │   - Quantity decrements on order                    │
+   │   - Status updates based on remaining qty           │
+   └─────────────────────────────────────────────────────┘
+
+8.4 RATINGS & REVIEWS:
+   ┌─────────────────────────────────────────────────────┐
+   │ PHARMACY_RATING (pharmacy_rating table)              │
+   ├─────────────────────────────────────────────────────┤
+   │ PK: rating_id                                       │
+   │ FK: pharmacy_id → Pharmacy                          │
+   │ FK: customer_user_id → CustomerProfile              │
+   │ Columns:                                            │
+   │   - rating (1-5 Integer)                            │
+   │   - created_at                                      │
+   └─────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────┐
+   │ PHARMACY_REVIEW (pharmacy_review table)              │
+   ├─────────────────────────────────────────────────────┤
+   │ PK: review_id                                       │
+   │ FK: pharmacy_id → Pharmacy                          │
+   │ FK: customer_user_id → CustomerProfile              │
+   │ Columns:                                            │
+   │   - comment (Text)                                  │
+   │   - created_at                                      │
+   └─────────────────────────────────────────────────────┘
+
+8.5 RELATED ENTITIES (Not Detailed):
+   - PRODUCT (from catalog)
+   - CATEGORY (product categories)
+   - BRAND (product brands)
+   - ORDER (order management)
+   - CART (shopping cart)
+   - CART_ITEM (items in cart)
+
+================================================================================
+9. AUTHENTICATION AND AUTHORIZATION STATUS
+================================================================================
+
+9.1 AUTHENTICATION IMPLEMENTED:
+   ✅ Email-OTP Based Authentication
+      - No password system
+      - Verification code (8 digits) sent via email
+      - SHA-256 hashing for codes
+      - 3-minute TTL for sessions
+      - Max 3 verification attempts
+      - Redis-backed session storage
+
+   ✅ Signup Flow:
+      - Email uniqueness validation
+      - Role assignment at signup
+      - Automatic profile creation
+      - Email verification required
+
+   ✅ Login Flow:
+      - User existence check
+      - Role-based login (user must have role)
+      - OTP verification
+      - JWT token generation
+
+   ✅ JWT Token Support:
+      - JJWT library (0.12.6)
+      - Token generation on successful login
+      - Token validation on protected endpoints
+      - Supports token claims for user info
+
+9.2 AUTHORIZATION (Access Control):
+   ✅ Role-Based Access Control (RBAC):
+      - Four roles: CUSTOMER, OWNER, PHARMACIST, ADMIN
+      - Multiple roles per user (Set<UserRole>)
+      - @PreAuthorize("hasRole('ROLE_NAME')") enforced
+
+   ✅ Implemented Access Controls:
+      - Pharmacy CRUD: OWNER role only
+      - Rating/Review: CUSTOMER role only
+      - Pharmacy search: PUBLIC (no auth)
+      - Product browse: PUBLIC (no auth)
+
+   ✅ Method-Level Security:
+      - Spring Security @PreAuthorize annotations
+      - AuthenticationPrincipal injection for context
+      - Custom AuthenticatedUser object
+
+   ✅ Owner Validation:
+      - Services validate owner access to resources
+      - Prevents cross-owner pharmacy access
+      - Implemented in PharmacyOwnerService
+
+9.3 SECURITY FEATURES:
+   ✅ CSRF Protection: Spring Security default
+   ✅ CORS Configuration: Available (config folder)
+   ✅ Rate Limiting: Max 3 auth attempts
+   ✅ Code Hashing: SHA-256
+   ✅ Session TTL: 3 minutes (configurable)
+   ✅ Email Validation: Basic email format
+
+   ❌ NOT IMPLEMENTED:
+      - Password-based authentication
+      - Multi-factor authentication (beyond OTP)
+      - OAuth2 login (configured but not used)
+      - Audit logging
+      - Account lockout after failed attempts
+      - IP whitelisting
+      - API key authentication
+
+================================================================================
+10. EXTERNAL INTEGRATIONS AND SERVICES
+================================================================================
+
+10.1 STRIPE PAYMENT INTEGRATION:
+   ✅ Dependency: stripe-java (v32.0.0)
+   ✅ Integrated in: CheckoutService
+   ✅ Usage:
+      - Payment processing for orders
+      - Card tokenization
+      - Transaction tracking
+
+   Implementation Status:
+   - Service exists but details in cart/order section
+   - Supports: Checkout flow, payment creation
+
+10.2 EMAIL SERVICE:
+   ✅ Spring Mail support included
+   ✅ Used for:
+      - Signup verification codes
+      - Login verification codes
+      - Order confirmations (prepared but not verified)
+
+   Configuration:
+   - SMTP configuration needed in application.yaml
+   - EmailService exists in service package
+   - Supports plain text and HTML emails
+
+10.3 LOCATION SERVICES:
+   ✅ LocationTech JTS for GIS operations
+   ✅ Used for:
+      - Geospatial distance calculations
+      - Road distance API integration
+      - Pharmacy location filtering
+
+   Features:
+   - PostGIS integration with PostgreSQL
+   - ST_Distance functions
+   - ST_Within polygon queries
+   - Coordinate-based ordering
+
+10.4 REDIS CACHING:
+   ✅ Spring Data Redis configured
+   ✅ Used for:
+      - Signup session storage
+      - Login session storage
+      - OTP code management
+
+   Configuration: src/main/java/com/example/pharma/config/RedisConfig.java
+
+10.5 GEOCODING & MAPPING:
+   ✅ PostGIS spatial extension
+   ✅ Geometry storage (Point type)
+   ✅ Distance calculations between locations
+
+================================================================================
+11. SHARED UTILITIES, HELPERS, AND CORE BUSINESS LOGIC
+================================================================================
+
+11.1 UTILITIES PACKAGE:
+   Available utilities (util folder exists):
+   - RedisKeys: Key management for Redis sessions
+   - Distance calculation utilities
+   - Coordinate utilities (CoordinateDto)
+
+11.2 MAPPERS:
+   ✅ PharmacyMapper:
+      - Pharmacy → PharmacyDto
+      - CreatePharmacyRequest → Pharmacy entity
+      - Address mapping logic
+
+   ✅ PharmacyProductMapper:
+      - PharmacyProduct → pharmacyProductResponse
+      - PharmacyProduct → PharmacyProductDto
+      - Joins product, pharmacy, inventory data
+
+   ✅ Other Mappers:
+      - ProductMapper
+      - ReviewMapper
+      - CartMapper (in cart section)
+
+11.3 VALIDATORS:
+   ✅ PharmacyProductValidator: Filter validation
+   ✅ SortValidator: Safe sort parameter mapping
+   ✅ Custom validation annotations available
+
+11.4 SPECIFICATIONS (JPA Query DSL):
+   ✅ PharmacySpecifications:
+      - hasName(String): Text search on pharmacy name
+      - hasMinRating(Float): Rating filter
+      - isOpenNow(Boolean): Open/closed status logic
+      - withinDistance(): Geospatial distance queries
+      - orderByDistance(): Distance-based ordering
+
+   ✅ PharmacyProductSpecification:
+      - buildFromFilter(): Builds dynamic query
+
+11.5 CORE BUSINESS LOGIC:
+   ✅ Pharmacy Rating Calculation:
+      - Average rating = (sum of all ratings) / count
+      - Incremental calculation on new rating
+      - 2 decimal places precision
+
+   ✅ Pharmacy Status Logic:
+      - isOpen(): Checks current time against hours
+      - Handles 24-hour pharmacies
+      - Handles overnight hours (closing < opening)
+      - Located in Pharmacy entity
+
+   ✅ Stock Management:
+      - Stock depletion on order
+      - Availability status updates
+      - SQL-based atomic updates
+      - Prevents over-selling
+
+   ✅ Distance Calculation:
+      - Road distance via LocationService
+      - Returns list of distances
+      - Used for sorting and filtering
+
+================================================================================
+12. VALIDATION, ERROR HANDLING, LOADING STATES, AND FALLBACK BEHAVIOR
+================================================================================
+
+12.1 INPUT VALIDATION:
+   ✅ Implemented:
+      - @Valid annotations on request bodies
+      - PharmacySearchFilter validation:
+        * Name: 2-100 characters
+        * Rating: 0.0-5.0
+        * Latitude: -90 to 90
+        * Longitude: -180 to 180
+      - PharmacyProductFilter validation:
+        * Distance > 1.0 km
+        * Prices >= 0.0
+        * Stock status enum validation
+
+   ✅ Exception Handling:
+      - GlobalExceptionHandler configured
+      - EntityNotFoundException: Resource not found (404)
+      - AccessDeniedException: Authorization failure (403)
+      - IllegalArgumentException: Invalid input
+      - Transactional rollback on exception
+
+12.2 ERROR RESPONSE FORMAT:
+   ✅ Standardized ApiResponse:
+      {
+        "success": true/false,
+        "message": "User-friendly message",
+        "data": {},
+        "timestamp": "ISO-8601"
+      }
+
+12.3 LOADING STATES:
+   ⚠️ PARTIAL:
+      - Pagination support (Pageable)
+      - Page size defaults: 10
+      - Sort support with validation
+      - Stream processing for large results
+
+   ❌ NOT IMPLEMENTED:
+      - Async/reactive loading (WebFlux available but unused)
+      - Progress indicators
+      - Streaming responses for large datasets
+
+12.4 FALLBACK BEHAVIOR:
+   ✅ Default Values:
+      - Missing pharmacy address → empty string
+      - No rating → 0.0 (BigDecimal.ZERO)
+      - No distance → null (handled as optional)
+      - Missing products → empty list
+
+   ✅ Graceful Degradation:
+      - Pharmacy search works without location
+      - Distance calculation optional
+      - Open status check with null handling
+
+   ❌ NOT IMPLEMENTED:
+      - Fallback services
+      - Circuit breaker pattern
+      - Retry logic
+      - Cache invalidation strategies
+
+================================================================================
+13. TESTING STATUS
+================================================================================
+
+13.1 UNIT TEST SETUP:
+   ✅ Test Dependencies Available:
+      - JUnit 5 (Spring Boot Test)
+      - Mockito
+      - AssertJ
+      - Test containers for DB
+      - Embedded Redis for cache
+
+   Default Test Class:
+   - PharmaApplicationTests.java (empty)
+
+13.2 TESTING STATUS:
+   ❌ NO TESTS IMPLEMENTED:
+      - No unit tests written
+      - No integration tests
+      - No API endpoint tests
+      - No service logic tests
+      - No repository tests
+
+13.3 RECOMMENDED TEST COVERAGE:
+   Priority 1:
+   - Authentication service (signup/login flow)
+   - Pharmacy CRUD operations
+   - Stock management logic
+   - Payment processing
+
+   Priority 2:
+   - Search and filter specs
+   - Rating calculation
+   - Distance calculations
+   - Cart operations
+
+   Priority 3:
+   - Email service
+   - Mapper transformations
+   - Validation rules
+
+================================================================================
+14. INCOMPLETE FEATURES, STUBS, TODOs, AND TECHNICAL GAPS
+================================================================================
+
+14.1 INCOMPLETE MAJOR FEATURES:
+   ❌ INVENTORY MANAGEMENT:
+      - No endpoints to add products to pharmacy
+      - No stock update endpoints
+      - No expiry date tracking
+      - No supplier management
+      - No reorder point alerts
+      - Only service methods exist, no controllers
+
+   ❌ STAFF/PHARMACIST MANAGEMENT:
+      - Hiring request endpoints not exposed
+      - Accept/reject job offers not implemented
+      - Staff schedule management missing
+      - Staff permission validation missing
+      - Pharmacist workspace not built
+
+   ❌ ADMIN PANEL:
+      - No admin endpoints
+      - No user management
+      - No pharmacy verification
+      - No content moderation
+      - No analytics/reports
+
+   ❌ PRESCRIPTION MANAGEMENT:
+      - Controller exists but service incomplete
+      - No prescription upload
+      - No prescription validation
+      - No pharmacist verification
+
+   ❌ ORDER MANAGEMENT:
+      - Order history retrieval incomplete
+      - Order status tracking partial
+      - No delivery management
+      - No return/refund system
+
+14.2 MISSING FUNCTIONALITY:
+   ❌ Delivery Address Management:
+      - No endpoint to set default address
+      - No address book management
+      - No delivery zone validation
+
+   ❌ Favorites/Wishlist:
+      - No wishlist entity
+      - No favorite pharmacies
+      - No price alerts
+
+   ❌ Recommendations:
+      - No recommendation engine
+      - Placeholder for AI features mentioned in description
+
+   ❌ Notifications:
+      - No real-time notifications
+      - No push notifications
+      - Order status alerts missing
+
+   ❌ Analytics:
+      - No sales reports
+      - No pharmacy performance metrics
+      - No customer behavior tracking
+
+14.3 TECHNICAL DEBT & GAPS:
+   ⚠️ PARTIAL IMPLEMENTATIONS:
+      - UpdatePharmacyProductRequest mentioned but not created
+      - PharmacyProductService lacks endpoints
+      - UserService mostly empty (just comments)
+      - AddPharmacyProductRequest commented out in service
+
+   ⚠️ COMMENTED OUT CODE:
+      - addProductToPharmacy method in PharmacyOwnerService
+      - Distance filtering in PharmacyService (commented)
+
+   ❌ MISSING FEATURES:
+      - No phone verification
+      - No password reset flow
+      - No account deactivation
+      - No user data export (GDPR)
+      - No audit logging
+
+   ❌ NOT INTEGRATED:
+      - OAuth2 (configured but unused)
+      - WebFlux (dependency added, not used)
+      - Email service (configured, not fully tested)
+      - Mail test support available
+
+14.4 CONFIGURATION GAPS:
+   ⚠️ application.yaml:
+      - Database connection string
+      - Redis configuration
+      - Email/SMTP settings
+      - Stripe API keys
+      - LocationService API keys
+      - JWT secret key
+
+   These need to be configured for deployment
+
+14.5 DATABASE SCHEMA GAPS:
+   ⚠️ MISSING TABLES/FIELDS:
+      - Prescription table (entity exists, not fully built)
+      - Order table (partially built)
+      - Cart table (partially built)
+      - Payment transaction log
+      - Audit log table
+      - Product expiry dates
+      - Supplier information
+
+================================================================================
+15. OVERALL ASSESSMENT: WHAT IS DONE VS WHAT IS MISSING
+================================================================================
+
+15.1 COMPLETION PERCENTAGE BY FEATURE:
+   ✅ 90% - User Authentication & Authorization
+      - Email-OTP based auth fully working
+      - Role management and access control
+      - Missing: password support, advanced 2FA
+
+   ✅ 85% - Pharmacy Management
+      - CRUD operations complete
+      - Search and filtering comprehensive
+      - Geospatial features integrated
+      - Missing: bulk operations, advanced analytics
+
+   ✅ 75% - Product Management
+      - Product listing and search
+      - Inventory tracking basic
+      - Missing: Add/update/delete products, stock management
+
+   ✅ 70% - Shopping & Checkout
+      - Cart operations available
+      - Stripe integration started
+      - Missing: Complete checkout flow details
+
+   ✅ 65% - Ratings & Reviews
+      - Basic rating system
+      - Average calculation
+      - Missing: Rating/review moderation, sorting
+
+   ⚠️  40% - Staff Management
+      - Entities defined
+      - Data model complete
+      - Missing: All endpoint and most logic
+
+   ⚠️  20% - Admin Features
+      - Entities exist
+      - Missing: All functionality
+
+   ❌ 0% - Recommendations/AI
+      - Mentioned in description
+      - No implementation
+
+15.2 ESTIMATED EFFORT TO COMPLETE:
+   Quick Wins (< 1 day each):
+   - User profile endpoints
+   - Pharmacy product CRUD
+   - Inventory management endpoints
+   - Wishlist feature
+
+   Medium Effort (1-3 days each):
+   - Staff/pharmacist management
+   - Order management completion
+   - Analytics dashboard
+   - Email notification system
+
+   Large Effort (1+ weeks each):
+   - Recommendation engine (AI)
+   - Admin panel
+   - Real-time notifications
+   - Mobile app development
+
+15.3 PRODUCTION READINESS:
+   ✅ READY FOR LIMITED PRODUCTION:
+      - Authentication
+      - Pharmacy browsing
+      - Basic shopping
+      - Payment processing (Stripe ready)
+
+   ⚠️  NEEDS TESTING:
+      - All major features
+      - Load testing
+      - Security audit
+      - Database migration strategy
+
+   ❌ NOT PRODUCTION READY:
+      - Staff management
+      - Prescription flow
+      - Admin features
+      - Analytics/reports
+
+15.4 FRONTEND REQUIREMENTS:
+   To build a complete application, you'll need:
+   1. Web Application (React/Vue/Angular)
+      - Pharmacy browser
+      - Customer dashboard
+      - Shopping cart & checkout
+      - Order history
+      - Ratings/reviews
+
+   2. Owner Portal
+      - Pharmacy management
+      - Product management
+      - Order management
+      - Staff management
+      - Analytics
+
+   3. Pharmacist App
+      - Job offers
+      - Inventory management
+      - Prescription verification
+      - Schedule
+
+   4. Admin Dashboard
+      - User management
+      - Analytics
+      - Moderation
+      - System configuration
+
+================================================================================
+END OF REPORT
+================================================================================
+
+GENERATED: April 24, 2026
+ANALYSIS BASED ON: Complete codebase scan
+NEXT STEPS:
+  1. Review and prioritize incomplete features
+  2. Implement comprehensive test suite
+  3. Set up CI/CD pipeline
+  4. Complete missing endpoints
+  5. Build frontend applications
+  6. Deploy and monitor
+
+================================================================================
+

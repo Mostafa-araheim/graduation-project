@@ -1,4 +1,4 @@
-package com.example.pharma.mapper;
+package com.example.pharma.mapper.pharmacy;
 
 import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
@@ -19,7 +19,9 @@ public interface PharmacyMapper {
     List<PharmacyDto> toDtoList(List<Pharmacy> pharmacies);
 
     Pharmacy toPharmacy(CreatePharmacyRequest createPharmacyRequest);
+
     PharmacyAddress toPharmacyAddress(CreatePharmacyRequest createPharmacyRequest);
+
     default String mapAddress(PharmacyAddress address) {
         if (address == null) return null;
 
@@ -30,5 +32,25 @@ public interface PharmacyMapper {
         if (city.isEmpty()) return street;
 
         return street + ", " + city;
+    }
+
+    @Mapping(target = "pharmacyId", ignore = true)
+    @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "location", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "averageRating", expression = "java(BigDecimal.ZERO)")
+    @Mapping(target = "ratingCount", constant = "0L")
+    @Mapping(target = "reviewCount", constant = "0L")
+    @Mapping(target = "address", expression = "java(mapAddress(request))")
+    Pharmacy toEntity(CreatePharmacyRequest request);
+
+    default PharmacyAddress mapAddress(CreatePharmacyRequest request) {
+        PharmacyAddress address = new PharmacyAddress();
+        address.setStreet(request.street());
+        address.setCity(request.city());
+        address.setPostalCode(request.postalCode());
+        address.setCountry(request.country());
+        address.setApartmentNumber(request.apartmentNumber());
+        return address;
     }
 }

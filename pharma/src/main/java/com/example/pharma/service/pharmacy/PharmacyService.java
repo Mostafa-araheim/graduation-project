@@ -1,4 +1,4 @@
-package com.example.pharma.service;
+package com.example.pharma.service.pharmacy;
 
 import com.example.pharma.dto.Location.CoordinateDto;
 import com.example.pharma.dto.common.PageResponse;
@@ -10,7 +10,7 @@ import com.example.pharma.dto.review.CreateRatingDto;
 import com.example.pharma.dto.review.CreateReviewDto;
 import com.example.pharma.dto.review.ReviewDto;
 import com.example.pharma.exception.resource.EntityNotFoundException;
-import com.example.pharma.mapper.PharmacyMapper;
+import com.example.pharma.mapper.pharmacy.PharmacyMapper;
 import com.example.pharma.mapper.PharmacyProductMapper;
 import com.example.pharma.model.entity.catalog.Category;
 import com.example.pharma.model.entity.core.CustomerProfile;
@@ -26,6 +26,7 @@ import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import com.example.pharma.repository.Pharmacy.PharmacySpecifications;
 import com.example.pharma.repository.Review.PharmacyRatingRepository;
 import com.example.pharma.repository.Review.PharmacyReviewRepository;
+import com.example.pharma.service.LocationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

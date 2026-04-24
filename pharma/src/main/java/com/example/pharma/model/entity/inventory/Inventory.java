@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -12,10 +15,18 @@ import lombok.Setter;
 public class Inventory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long inventoryId;
+    @Column(name = "pharmacy_id")
+    private Long pharmacyId;
 
-    @OneToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pharmacy_id", nullable = false, unique = true)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId
+    @JoinColumn(name = "pharmacy_id")
     private Pharmacy pharmacy;
+
+    @OneToMany(
+            mappedBy = "inventory",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<PharmacyProduct> pharmacyProducts = new ArrayList<>();
 }

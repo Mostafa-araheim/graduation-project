@@ -1,5 +1,6 @@
 package com.example.pharma.repository.Inventory;
 
+import com.example.pharma.model.entity.inventory.AvailabilityStatus;
 import com.example.pharma.model.entity.inventory.Inventory;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import org.springframework.data.domain.Page;
@@ -16,14 +17,19 @@ import java.util.Optional;
 
 @Repository
 public interface PharmacyProductRepository
-        extends JpaRepository<PharmacyProduct, Long> , JpaSpecificationExecutor<PharmacyProduct> {
+        extends JpaRepository<PharmacyProduct, Long>, JpaSpecificationExecutor<PharmacyProduct> {
 
     List<PharmacyProduct> findByInventory(Inventory inventory);
+
+
+    Optional<PharmacyProduct> findByInventory_PharmacyIdAndProduct_ProductId(
+            Long pharmacyId, Long productId
+    );
 
     @Query("""
         SELECT pp
         FROM PharmacyProduct pp
-        WHERE pp.inventory.pharmacy.pharmacyId = :pharmacyId
+        WHERE pp.inventory.pharmacyId = :pharmacyId
         AND pp.product.category.categoryId = :categoryId
     """)
     Page<PharmacyProduct> findProductsByPharmacyAndCategory(
@@ -32,25 +38,52 @@ public interface PharmacyProductRepository
             Pageable pageable
     );
 
-    Optional<PharmacyProduct> findByInventory_Pharmacy_PharmacyIdAndProduct_ProductId(
-            Long pharmacyId, Long productId
-    );
-
     @Modifying
     @Query("""
-    update PharmacyProduct pp
-    set pp.quantity = pp.quantity - :requestedQty,
-        pp.availabilityStatus = case
-            when (pp.quantity - :requestedQty) > 0 then com.example.pharma.model.entity.inventory.AvailabilityStatus.Available
-            else com.example.pharma.model.entity.inventory.AvailabilityStatus.OutOfStock
-        end
-    where pp.inventory.pharmacy.pharmacyId = :pharmacyId
-      and pp.product.productId = :productId
-      and pp.quantity >= :requestedQty
-""")
+        update PharmacyProduct pp
+        set pp.quantity = pp.quantity - :requestedQty,
+            pp.availabilityStatus = case
+                when (pp.quantity - :requestedQty) > 0 
+                then com.example.pharma.model.entity.inventory.AvailabilityStatus.Available
+                else com.example.pharma.model.entity.inventory.AvailabilityStatus.OutOfStock
+            end
+        where pp.inventory.pharmacyId = :pharmacyId
+          and pp.product.productId = :productId
+          and pp.quantity >= :requestedQty
+    """)
     int decrementStockIfEnough(
             @Param("pharmacyId") Long pharmacyId,
             @Param("productId") Long productId,
             @Param("requestedQty") Integer requestedQty
     );
+
+
+    @Query("""
+    select count(pp)
+    from PharmacyProduct pp
+    where pp.pharmacy.owner.userId = :ownerUserId
+""")
+    Long countProductsByOwner(@Param("ownerUserId") Long ownerUserId);
+
+
+    @Query("""
+    select count(pp)
+    from PharmacyProduct pp
+    where pp.pharmacy.owner.userId = :ownerUserId
+      and pp.availabilityStatus = :status
+""")
+    Long countProductsByOwnerAndStatus(
+            @Param("ownerUserId") Long ownerUserId,
+            @Param("status") AvailabilityStatus status
+    );
+
+
+    Long countByInventory_PharmacyId(Long pharmacyId);
+
+    Long countByInventory_PharmacyIdAndAvailabilityStatus(
+            Long pharmacyId,
+            AvailabilityStatus availabilityStatus
+    );
+
+    Page<PharmacyProduct> findByInventory(Inventory inventory, Pageable pageable);
 }

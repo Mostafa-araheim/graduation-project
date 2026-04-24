@@ -1,8 +1,9 @@
 package com.example.pharma.model.entity.pharmacy;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.example.pharma.model.entity.core.CreatedAtColumn;
 import com.example.pharma.model.entity.core.OwnerProfile;
+import com.example.pharma.model.entity.inventory.Inventory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -46,6 +48,9 @@ public class Pharmacy {
     @OneToOne(mappedBy = "pharmacy", cascade = CascadeType.ALL, orphanRemoval = true)
     private PharmacyAddress address;
 
+    @OneToOne(mappedBy = "pharmacy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Inventory inventory;
+
     @Column(name = "opening_time")
     private LocalTime openingTime;
 
@@ -63,6 +68,9 @@ public class Pharmacy {
 
     @Column(name = "review_count")
     private Long reviewCount;
+
+    @OneToMany(mappedBy = "pharmacy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PharmacyStaff> staff;
 
     @PrePersist
     @PreUpdate
@@ -95,5 +103,19 @@ public class Pharmacy {
     public boolean isClosed()
     {
         return !isOpen();
+    }
+
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
+        if (inventory != null) {
+            inventory.setPharmacy(this);
+        }
+    }
+
+    public void setAddress(PharmacyAddress address) {
+        this.address = address;
+        if (address != null) {
+            address.setPharmacy(this);
+        }
     }
 }

@@ -26,6 +26,6 @@ public class InventoryService {
         Inventory inventory = new Inventory();
         inventory.setPharmacy(pharmacy);
         var x = inventoryRepository.save(inventory);
-        return x.getInventoryId();
+        return x.getPharmacyId();
     }
 }

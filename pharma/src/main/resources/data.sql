@@ -32,7 +32,7 @@ INSERT INTO users (email, name, phone) VALUES
 -- 2. USER_ROLES
 -- ────────────────────────────────────────────────────────────
 INSERT INTO user_roles (user_id, role) VALUES
-                                           (1,  'ROLE_CUSTOMER'),
+                                           (1,  'ROLE_OWNER'),
                                            (2,  'ROLE_OWNER'),
                                            (3,  'ROLE_OWNER'),
                                            (4,  'ROLE_PHARMACIST'),
@@ -178,55 +178,54 @@ INSERT INTO inventory (pharmacy_id) VALUES (1), (2), (3);
 -- ────────────────────────────────────────────────────────────
 -- 11. PHARMACY_STAFF
 -- ────────────────────────────────────────────────────────────
-INSERT INTO pharmacy_staff (pharmacy_id, user_id, staff_role, status, joined_at) VALUES
-                                                                                     (1, 4, 'PHARMACIST', 'ACTIVE', '2023-01-15 09:00:00'),
-                                                                                     (2, 5, 'PHARMACIST', 'ACTIVE', '2023-03-20 09:00:00'),
-                                                                                     (3, 6, 'PHARMACIST', 'ACTIVE', '2023-06-01 09:00:00');
+INSERT INTO pharmacy_staff (pharmacy_id, user_id, staff_role, active, joined_at) VALUES
+                                                                                     (1, 4, 'STAFF', true, '2023-01-15 09:00:00'),
+                                                                                     (2, 5, 'STAFF', true, '2023-03-20 09:00:00'),
+                                                                                     (3, 6, 'STAFF', false, '2023-06-01 09:00:00');
 
 
 -- ────────────────────────────────────────────────────────────
 -- 12. PHARMACY_PRODUCT
 -- ────────────────────────────────────────────────────────────
--- Pharmacy 1 (inventory_id=1)
-INSERT INTO pharmacy_product (inventory_id, product_id, price, quantity, availability_status) VALUES
-                                                                                                  (1,  1,  25.50,  200, 'Available'),
-                                                                                                  (1,  2,  35.00,  150, 'Available'),
-                                                                                                  (1,  3,  45.00,   80, 'Available'),
-                                                                                                  (1,  5,  30.00,  300, 'Available'),
-                                                                                                  (1,  7,  55.00,   60, 'Available'),
-                                                                                                  (1,  8,  40.00,  120, 'Available'),
-                                                                                                  (1, 10,  95.00,   40, 'LimitedSupply'),
-                                                                                                  (1, 11,  65.00,   90, 'Available'),
-                                                                                                  (1, 13,  20.00,  250, 'Available'),
-                                                                                                  (1, 17,  15.00,  400, 'Available');
 
--- Pharmacy 2 (inventory_id=2)
-INSERT INTO pharmacy_product (inventory_id, product_id, price, quantity, availability_status) VALUES
-                                                                                                  (2,  1,  24.00,  180, 'Available'),
-                                                                                                  (2,  4,  85.00,   50, 'Available'),
-                                                                                                  (2,  6,  70.00,  100, 'Available'),
-                                                                                                  (2,  9,  50.00,   70, 'Available'),
-                                                                                                  (2, 12, 120.00,   30, 'LimitedSupply'),
-                                                                                                  (2, 14,  28.00,  200, 'Available'),
-                                                                                                  (2, 15,  60.00,   90, 'Available'),
-                                                                                                  (2, 16,  22.00,  300, 'Available'),
-                                                                                                  (2, 18, 250.00,   20, 'LimitedSupply'),
-                                                                                                  (2, 20,  35.00,  110, 'Available');
+-- Pharmacy 1 (inventory_pharmacy_id=1, pharmacy_id=1)
+INSERT INTO pharmacy_product (inventory_pharmacy_id, pharmacy_id, product_id, price, quantity, availability_status) VALUES
+                                                                                                                        (1, 1, 1,  25.50,  200, 'Available'),
+                                                                                                                        (1, 1, 2,  35.00,  150, 'Available'),
+                                                                                                                        (1, 1, 3,  45.00,   80, 'Available'),
+                                                                                                                        (1, 1, 5,  30.00,  300, 'Available'),
+                                                                                                                        (1, 1, 7,  55.00,   60, 'Available'),
+                                                                                                                        (1, 1, 8,  40.00,  120, 'Available'),
+                                                                                                                        (1, 1, 10, 95.00,   40, 'LimitedSupply'),
+                                                                                                                        (1, 1, 11, 65.00,   90, 'Available'),
+                                                                                                                        (1, 1, 13, 20.00,  250, 'Available'),
+                                                                                                                        (1, 1, 17, 15.00,  400, 'Available');
 
--- Pharmacy 3 (inventory_id=3)
-INSERT INTO pharmacy_product (inventory_id, product_id, price, quantity, availability_status) VALUES
-                                                                                                  (3,  2,  34.00,  160, 'Available'),
-                                                                                                  (3,  3,  44.00,  100, 'Available'),
-                                                                                                  (3,  5,  29.00,  350, 'Available'),
-                                                                                                  (3,  7,  54.00,   75, 'Available'),
-                                                                                                  (3,  8,  39.00,  130, 'Available'),
-                                                                                                  (3, 10,  92.00,   55, 'Available'),
-                                                                                                  (3, 11,  63.00,   80, 'Available'),
-                                                                                                  (3, 13,  19.00,  220, 'Available'),
-                                                                                                  (3, 19,  45.00,   60, 'Available'),
-                                                                                                  (3, 20,  34.00,  140, 'Available');
+-- Pharmacy 2 (inventory_pharmacy_id=2, pharmacy_id=2)
+INSERT INTO pharmacy_product (inventory_pharmacy_id, pharmacy_id, product_id, price, quantity, availability_status) VALUES
+                                                                                                                        (2, 2, 1,  24.00,  180, 'Available'),
+                                                                                                                        (2, 2, 4,  85.00,   50, 'Available'),
+                                                                                                                        (2, 2, 6,  70.00,  100, 'Available'),
+                                                                                                                        (2, 2, 9,  50.00,   70, 'Available'),
+                                                                                                                        (2, 2, 12, 120.00,  30, 'LimitedSupply'),
+                                                                                                                        (2, 2, 14, 28.00,  200, 'Available'),
+                                                                                                                        (2, 2, 15, 60.00,   90, 'Available'),
+                                                                                                                        (2, 2, 16, 22.00,  300, 'Available'),
+                                                                                                                        (2, 2, 18, 250.00,  20, 'LimitedSupply'),
+                                                                                                                        (2, 2, 20, 35.00,  110, 'Available');
 
-
+-- Pharmacy 3 (inventory_pharmacy_id=3, pharmacy_id=3)
+INSERT INTO pharmacy_product (inventory_pharmacy_id, pharmacy_id, product_id, price, quantity, availability_status) VALUES
+                                                                                                                        (3, 3, 2,  34.00,  160, 'Available'),
+                                                                                                                        (3, 3, 3,  44.00,  100, 'Available'),
+                                                                                                                        (3, 3, 5,  29.00,  350, 'Available'),
+                                                                                                                        (3, 3, 7,  54.00,   75, 'Available'),
+                                                                                                                        (3, 3, 8,  39.00,  130, 'Available'),
+                                                                                                                        (3, 3, 10, 92.00,   55, 'Available'),
+                                                                                                                        (3, 3, 11, 63.00,   80, 'Available'),
+                                                                                                                        (3, 3, 13, 19.00,  220, 'Available'),
+                                                                                                                        (3, 3, 19, 45.00,   60, 'Available'),
+                                                                                                                        (3, 3, 20, 34.00,  140, 'Available');
 -- ────────────────────────────────────────────────────────────
 -- 13. PHARMACY_RATINGS
 -- ────────────────────────────────────────────────────────────
