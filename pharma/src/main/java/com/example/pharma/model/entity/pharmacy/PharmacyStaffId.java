@@ -19,6 +19,6 @@ public class PharmacyStaffId implements Serializable {
     @Column(name = "pharmacy_id")
     private Long pharmacyId;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "pharmacist_user_id")
+    private Long pharmacistUserId;
 }

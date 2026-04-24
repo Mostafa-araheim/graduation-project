@@ -22,15 +22,15 @@ public class PharmacyStaff {
     private Pharmacy pharmacy;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @MapsId("userId")
+    @MapsId("pharmacistUserId")
     @JoinColumn(name = "user_id")
     private PharmacistProfile pharmacist;
 
-    @Column(name = "staff_role", nullable = false)
-    private String staffRole = "PHARMACIST";
+    @Enumerated(EnumType.STRING)
+    private StaffRole staffRole;
 
-    @Column(name = "status", nullable = false)
-    private String status = "ACTIVE";
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
 
     @Column(name = "joined_at", insertable = false, updatable = false)
     private LocalDateTime joinedAt;

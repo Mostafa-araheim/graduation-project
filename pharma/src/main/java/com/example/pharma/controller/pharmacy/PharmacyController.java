@@ -12,7 +12,8 @@ import com.example.pharma.dto.review.CreateReviewDto;
 import com.example.pharma.dto.review.ReviewDto;
 import com.example.pharma.model.entity.core.CustomerProfile;
 import com.example.pharma.model.entity.review.PharmacyRating;
-import com.example.pharma.service.PharmacyService;
+import com.example.pharma.service.pharmacy.PharmacyOwnerService;
+import com.example.pharma.service.pharmacy.PharmacyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PharmacyController {
     private final PharmacyService pharmacyService;
+    private final PharmacyOwnerService pharmacyOwnerService;
 
     @GetMapping("/locations")
     public ApiResponse<List<PharmacyDto>> getAllPharmacies()
@@ -77,11 +79,13 @@ public class PharmacyController {
         return ApiResponse.success("Review submitted successfully",pharmacyService.createPharmacyReview(createReviewDto, customerProfile) );
     }
 
-    @PostMapping
+    @PostMapping("/bulk")
     @ResponseStatus(HttpStatus.CREATED)
     public void createBulk(@RequestBody List<CreatePharmacyRequest> createPharmacyRequestList) {
         pharmacyService.createPharmacies(createPharmacyRequestList);
     }
+
+
 
 
 }

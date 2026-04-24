@@ -1,6 +1,7 @@
 package com.example.pharma.model.entity.inventory;
 
 import com.example.pharma.model.entity.catalog.Product;
+import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 @Table(
         name = "pharmacy_product",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"inventory_id", "product_id"})
+                @UniqueConstraint(columnNames = {"inventory_pharmacy_id", "product_id"})
         }
 )
 public class PharmacyProduct {
@@ -23,7 +24,11 @@ public class PharmacyProduct {
     private Long pharmacyProductId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventory_id", nullable = false)
+    @JoinColumn(name = "pharmacy_id", nullable = false)
+    private Pharmacy pharmacy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_pharmacy_id", referencedColumnName = "pharmacy_id", nullable = false)
     private Inventory inventory;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,7 +37,7 @@ public class PharmacyProduct {
 
     private BigDecimal price;
 
-    private Integer quantity;
+    private Long quantity;
 
     @Enumerated(EnumType.STRING)
     private AvailabilityStatus availabilityStatus;
