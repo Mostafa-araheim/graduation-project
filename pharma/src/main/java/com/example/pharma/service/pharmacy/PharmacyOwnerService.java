@@ -6,6 +6,7 @@ import com.example.pharma.dto.pharmacy.*;
 import com.example.pharma.dto.pharmacyProduct.AddPharmacyProductRequest;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.UpdatePharmacyProductRequest;
+import com.example.pharma.dto.events.ProductAvailableEvent;
 import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.mapper.PharmacyProductMapper;
@@ -24,6 +25,7 @@ import com.example.pharma.repository.Order.OrderRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +41,7 @@ public class PharmacyOwnerService {
     private final PharmacyProductMapper pharmacyProductMapper;
     private final OrderRepository orderRepository;
     private final OwnerOrderMapper ownerOrderMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public PharmacyDto createPharmacy(CreatePharmacyRequest request, Long ownerUserId) {
@@ -166,6 +169,13 @@ public class PharmacyOwnerService {
             existingProduct.setQuantity(existingProduct.getQuantity() + request.quantity());
             existingProduct.setPrice(request.price());
             existingProduct.setAvailabilityStatus(resolveAvailabilityStatus(existingProduct.getQuantity()));
+            
+            eventPublisher.publishEvent(new ProductAvailableEvent(
+                product.getProductId(),
+                product.getName(),
+                pharmacy.getName(),
+                "PHARMACY"
+            ));
             return;
         }
 
@@ -178,6 +188,13 @@ public class PharmacyOwnerService {
         pharmacyProduct.setAvailabilityStatus(resolveAvailabilityStatus(request.quantity()));
 
         pharmacyProductRepository.save(pharmacyProduct);
+
+        eventPublisher.publishEvent(new ProductAvailableEvent(
+            product.getProductId(),
+            product.getName(),
+            pharmacy.getName(),
+            "PHARMACY"
+        ));
     }
 
     private AvailabilityStatus resolveAvailabilityStatus(Long quantity) {
