@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -50,5 +51,14 @@ public class ProductService implements IProductService {
         Product product = ProductRepository.findById(id)
                 .orElseThrow(()-> new ValidationException("Product with id " + id + " does not exist"));
         return ProductMapper.toResponse(product);
+    }
+
+    @Override
+    public List<ProductResponse> searchProductsByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return List.of();
+        }
+        var products = ProductRepository.searchByName(name.trim(), PageRequest.of(0, 10));
+        return ProductMapper.toResponseList(products);
     }
 }

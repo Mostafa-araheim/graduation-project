@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -39,5 +40,13 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable Long id) {
         ProductResponse product = productService.getProductById(id);
         return ResponseEntity.ok(ApiResponse.success("Product retrieved successfully", product));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> searchProductsByName(
+            @RequestParam(required = false, defaultValue = "A") String name
+    ) {
+        List<ProductResponse> products = productService.searchProductsByName(name);
+        return ResponseEntity.ok(ApiResponse.success("Products retrieved successfully", products));
     }
 }
