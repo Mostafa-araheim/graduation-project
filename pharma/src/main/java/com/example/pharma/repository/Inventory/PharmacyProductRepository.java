@@ -63,9 +63,6 @@ public interface PharmacyProductRepository
             Pageable pageable
     );
 
-    Optional<PharmacyProduct> findByInventory_Pharmacy_PharmacyIdAndProduct_ProductId(
-            Long pharmacyId, Long productId
-    );
 
     @Modifying
     @Query("""
@@ -115,4 +112,5 @@ public interface PharmacyProductRepository
     );
 
     Page<PharmacyProduct> findByInventory(Inventory inventory, Pageable pageable);
+    Optional<PharmacyProduct> findByInventory_PharmacyIdAndProduct_ProductId(Long pharmacyId, Long productId);
 }

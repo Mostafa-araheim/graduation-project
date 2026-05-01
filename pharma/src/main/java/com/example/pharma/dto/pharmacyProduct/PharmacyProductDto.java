@@ -15,7 +15,7 @@ public record PharmacyProductDto(
         @JsonProperty("product_image") String productImage,
 
         @JsonProperty("price") BigDecimal price,
-        @JsonProperty("quantity") Integer quantity,
+        @JsonProperty("quantity") Long quantity,
         @JsonProperty("in_stock") Boolean inStock,
 
         @JsonProperty("requires_prescription") boolean requiresPrescription,

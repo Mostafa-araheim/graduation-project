@@ -14,6 +14,7 @@ public interface P2PListingMapper {
     
     @Mapping(target = "listingId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "seller", source = "seller")
