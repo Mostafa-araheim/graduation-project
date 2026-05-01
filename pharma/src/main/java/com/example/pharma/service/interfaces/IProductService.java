@@ -9,4 +9,5 @@ import java.util.List;
 public interface IProductService {
     List<ProductResponse> getProducts(ProductFilter filter, Sort sort);
     ProductResponse getProductById(Long id);
+    List<ProductResponse> searchProductsByName(String name);
 }
