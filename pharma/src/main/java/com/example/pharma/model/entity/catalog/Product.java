@@ -45,6 +45,8 @@ public class Product {
     @JoinColumn(name = "brand_id")
     private Brand brand;
 
+    private String imageUrl;
+
     @JsonIgnore
     @OneToMany(mappedBy = "product")
 
