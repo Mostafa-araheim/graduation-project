@@ -14,6 +14,9 @@ import com.example.pharma.model.entity.core.CustomerProfile;
 import com.example.pharma.model.entity.review.PharmacyRating;
 import com.example.pharma.service.pharmacy.PharmacyOwnerService;
 import com.example.pharma.service.pharmacy.PharmacyService;
+import com.example.pharma.service.interfaces.IPharmacyService;
+import com.example.pharma.service.interfaces.IPharmacyService;
+import com.example.pharma.service.pharmacy.PharmacyOwnerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -28,10 +31,11 @@ import java.util.List;
 @RequestMapping("/api/v1/pharmacies")
 @RequiredArgsConstructor
 public class PharmacyController {
-    private final PharmacyService pharmacyService;
+    private final IPharmacyService pharmacyService;
     private final PharmacyOwnerService pharmacyOwnerService;
 
     @GetMapping("/locations")
+    @ResponseStatus(HttpStatus.OK)
     public ApiResponse<List<PharmacyDto>> getAllPharmacies()
     {
         return ApiResponse.success("All pharmacies returned successfully",pharmacyService.getAllPharmacies());
@@ -43,11 +47,7 @@ public class PharmacyController {
                                                                 @PageableDefault(size = 10) Pageable pageable) {
         return ApiResponse.success("Pharmacies retrieved successfully", pharmacyService
                 .getPharmacies(
-                        pharmacySearchFilter.name(),
-                        pharmacySearchFilter.minRating(),
-                        pharmacySearchFilter.isOpen(),
-                        pharmacySearchFilter.latitude(),
-                        pharmacySearchFilter.longitude(),
+                        pharmacySearchFilter,
                         pageable
                 )
         );
@@ -59,6 +59,7 @@ public class PharmacyController {
         return ApiResponse.success("Pharmacy info fetched successfully",pharmacyService.getPharmacyInfo(pharmacyId));
     }
     @GetMapping("/{pharmacyId}/{categoryId}")
+    @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PharmacyProductDto>> getPharmacyProductsUnderACategory(@PathVariable Long pharmacyId, @PathVariable Long categoryId, @PageableDefault(sort = "pharmacyProductId") Pageable pageable)
     {
         return ApiResponse.success("Products returned successfully",pharmacyService.getPharmacyProductsUnderACategory(pharmacyId, categoryId, pageable));

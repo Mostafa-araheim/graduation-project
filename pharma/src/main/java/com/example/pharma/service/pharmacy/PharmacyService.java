@@ -5,6 +5,7 @@ import com.example.pharma.dto.common.PageResponse;
 import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
+import com.example.pharma.dto.pharmacy.PharmacySearchFilter;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.review.CreateRatingDto;
 import com.example.pharma.dto.review.CreateReviewDto;
@@ -14,7 +15,6 @@ import com.example.pharma.mapper.pharmacy.PharmacyMapper;
 import com.example.pharma.mapper.PharmacyProductMapper;
 import com.example.pharma.model.entity.catalog.Category;
 import com.example.pharma.model.entity.core.CustomerProfile;
-import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
 import com.example.pharma.model.entity.review.PharmacyRating;
@@ -26,6 +26,7 @@ import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import com.example.pharma.repository.Pharmacy.PharmacySpecifications;
 import com.example.pharma.repository.Review.PharmacyRatingRepository;
 import com.example.pharma.repository.Review.PharmacyReviewRepository;
+import com.example.pharma.service.interfaces.IPharmacyService;
 import com.example.pharma.service.LocationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PharmacyService {
+public class PharmacyService implements IPharmacyService {
     private final PharmacyRepository pharmacyRepository;
     private final CategoryRepository categoryRepository;
     private final PharmacyReviewRepository pharmacyReviewRepository;
@@ -54,17 +55,13 @@ public class PharmacyService {
     private final PharmacyMapper pharmacyMapper;
     private final PharmacyProductMapper pharmacyProductMapper;
     private final LocationService locationService;
-    public PageResponse<PharmacyDto> getPharmacies( String name,
-                                                    Float minRating,
-                                                    Boolean isOpen,
-                                                    Double latitude,
-                                                    Double longitude,
+    public PageResponse<PharmacyDto> getPharmacies( PharmacySearchFilter pharmacySearchFilter,
                                                     Pageable pageable)
     {
-        Specification<Pharmacy> spec = Specification.where(PharmacySpecifications.hasName(name))
-                .and(PharmacySpecifications.hasMinRating(minRating))
-                .and(PharmacySpecifications.isOpenNow(isOpen))
-                .and(PharmacySpecifications.orderByDistance(latitude,longitude));
+        Specification<Pharmacy> spec = Specification.where(PharmacySpecifications.hasName(pharmacySearchFilter.name()))
+                .and(PharmacySpecifications.hasMinRating(pharmacySearchFilter.minRating()))
+                .and(PharmacySpecifications.isOpenNow(pharmacySearchFilter.isOpen()))
+                .and(PharmacySpecifications.orderByDistance(pharmacySearchFilter.latitude(),pharmacySearchFilter.longitude()));
 //        .and(PharmacySpecifications.withinDistance(
 //            latitude,
 //            longitude,
@@ -74,11 +71,11 @@ public class PharmacyService {
         Page<Pharmacy> pharmacies = pharmacyRepository.findAll(spec, pageable);
 
         List<Double> distances = null;
-        if (latitude != null && longitude != null && !pharmacies.isEmpty()) {
+        if (pharmacySearchFilter.latitude() != null && pharmacySearchFilter.longitude() != null && !pharmacies.isEmpty()) {
             List<CoordinateDto> coordinates = pharmacies.getContent().stream()
                     .map(p -> new CoordinateDto(p.getLongitude(), p.getLatitude()))
                     .toList();
-            distances = locationService.getRoadDistances(latitude, longitude, coordinates);
+            distances = locationService.getRoadDistances(pharmacySearchFilter.latitude(), pharmacySearchFilter.longitude(), coordinates);
         }
 
         List<PharmacyDto> dtoList = mapToDtos(pharmacies.getContent(), distances);
@@ -96,11 +93,8 @@ public class PharmacyService {
     }
     public PageResponse<PharmacyProductDto> getPharmacyProductsUnderACategory(Long pharmacyId, Long categoryId, Pageable pageable)
     {
-       Page<PharmacyProduct> pharmacyProducts = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
-        Page<PharmacyProductDto> responsePage = pharmacyProducts
-                .map(pharmacyProductMapper::toPharmacyProductDto);
-
-       return PageResponse.from(responsePage);
+       Page<PharmacyProductDto> pharmacyProducts = pharmacyProductRepository.findProductsByPharmacyAndCategory(pharmacyId, categoryId, pageable);
+       return PageResponse.from(pharmacyProducts);
     }
 
     @Transactional

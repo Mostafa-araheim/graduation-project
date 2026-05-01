@@ -40,6 +40,7 @@ public interface PharmacyProductMapper {
     @Mapping(source = "product.brand.brandId",        target = "brandId")
     @Mapping(source = "product.brand.brandName",           target = "brandName")
     @Mapping(source = "inventory.pharmacy.name",      target = "pharmacyName")
+    @Mapping(target = "inStock", expression = "java(pharmacyProduct.getAvailabilityStatus() == com.example.pharma.model.entity.inventory.AvailabilityStatus.Available)")
     PharmacyProductDto toPharmacyProductDto(PharmacyProduct pharmacyProduct);
 }
 

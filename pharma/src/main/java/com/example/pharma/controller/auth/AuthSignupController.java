@@ -8,6 +8,8 @@ import com.example.pharma.model.entity.core.User;
 import com.example.pharma.security.AuthenticatedUser;
 import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.auth.AuthSignupService;
+import com.example.pharma.service.auth.RefreshTokenService;
+import com.example.pharma.util.CookieUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class AuthSignupController {
 
     private final AuthSignupService signupService;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<SignupStartResponse>> start(
@@ -61,7 +64,9 @@ public class AuthSignupController {
 
         String jwt = jwtService.generateToken(auth);
 
-        response.setHeader("Authorization", "Bearer " + jwt);
+        response.setHeader("Authorization", jwt);
+        String refreshToken = refreshTokenService.createRefreshToken(user.getUserId()).getToken();
+        CookieUtils.addRefreshTokenCookie(response, refreshToken);
 
         return ResponseEntity.ok().build();
     }

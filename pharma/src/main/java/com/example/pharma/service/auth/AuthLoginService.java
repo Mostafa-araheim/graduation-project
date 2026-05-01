@@ -8,7 +8,7 @@ import com.example.pharma.exception.access.IllegalStateException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.repository.Core.UserRepository;
-import com.example.pharma.service.EmailService;
+import com.example.pharma.service.interfaces.IEmailService;
 import com.example.pharma.util.RedisKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,7 +26,7 @@ public class AuthLoginService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final UserRepository userRepo;
-    private final EmailService emailService;
+    private final IEmailService emailService;
 
     private static final Duration TTL = Duration.ofMinutes(3);
     private static final int MAX_ATTEMPTS = 3;

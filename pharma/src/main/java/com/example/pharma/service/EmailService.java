@@ -1,5 +1,6 @@
 package com.example.pharma.service;
 
+import com.example.pharma.service.interfaces.IEmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService {
+public class EmailService implements IEmailService {
     private final JavaMailSender javaMailSender;
     @Value("${spring.mail.username}")
     private String fromEmailId;

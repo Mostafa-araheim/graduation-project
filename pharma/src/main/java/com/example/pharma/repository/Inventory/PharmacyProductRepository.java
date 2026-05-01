@@ -1,5 +1,6 @@
 package com.example.pharma.repository.Inventory;
 
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.model.entity.inventory.AvailabilityStatus;
 import com.example.pharma.model.entity.inventory.Inventory;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
@@ -21,21 +22,49 @@ public interface PharmacyProductRepository
 
     List<PharmacyProduct> findByInventory(Inventory inventory);
 
-
-    Optional<PharmacyProduct> findByInventory_PharmacyIdAndProduct_ProductId(
-            Long pharmacyId, Long productId
-    );
-
-    @Query("""
-        SELECT pp
-        FROM PharmacyProduct pp
-        WHERE pp.inventory.pharmacyId = :pharmacyId
-        AND pp.product.category.categoryId = :categoryId
-    """)
-    Page<PharmacyProduct> findProductsByPharmacyAndCategory(
+//    @Query("""
+//        SELECT pp
+//        FROM PharmacyProduct pp
+//        WHERE pp.inventory.pharmacy.pharmacyId = :pharmacyId
+//        AND pp.product.category.categoryId = :categoryId
+//    """)
+@Query("""
+    SELECT new com.example.pharma.dto.pharmacyProduct.PharmacyProductDto(
+        pp.pharmacyProductId,
+        ph.name,
+        p.productId,
+        p.name,
+        p.description,
+        p.imageUrl,
+        pp.price,
+        pp.quantity,
+        (pp.quantity > 0),
+        p.requiresPrescription,
+        p.dosageForm,
+        p.strength,
+        p.manufacturer,
+        c.categoryId,
+        c.categoryName,
+        b.brandId,
+        b.brandName
+    )
+    FROM PharmacyProduct pp
+    JOIN pp.product p
+    JOIN p.category c
+    JOIN p.brand b
+    JOIN pp.inventory i
+    JOIN i.pharmacy ph
+    WHERE ph.pharmacyId = :pharmacyId
+    AND c.categoryId = :categoryId
+""")
+    Page<PharmacyProductDto> findProductsByPharmacyAndCategory(
             @Param("pharmacyId") Long pharmacyId,
             @Param("categoryId") Long categoryId,
             Pageable pageable
+    );
+
+    Optional<PharmacyProduct> findByInventory_Pharmacy_PharmacyIdAndProduct_ProductId(
+            Long pharmacyId, Long productId
     );
 
     @Modifying
