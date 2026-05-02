@@ -2,7 +2,7 @@ package com.example.pharma.controller.pharmacy;
 
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.common.PageResponse;
-import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
 import com.example.pharma.dto.pharmacy.PharmacySearchFilter;

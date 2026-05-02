@@ -1,9 +1,12 @@
 package com.example.pharma.controller.pharmacy;
 
+import com.example.pharma.dto.Product.ProductFilter;
+import com.example.pharma.dto.Product.ProductResponse;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.common.PageResponse;
 import com.example.pharma.dto.order.response.OwnerOrderResponse;
-import com.example.pharma.dto.pharmacy.*;
+import com.example.pharma.dto.pharmacy.PharmacyDto;
+import com.example.pharma.dto.pharmacy.owner.*;
 import com.example.pharma.dto.pharmacyProduct.AddPharmacyProductRequest;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.UpdatePharmacyProductRequest;
@@ -94,6 +97,7 @@ public class PharmacyOwnerController {
     @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<PageResponse<PharmacyProductDto>> getOwnerPharmacyProducts(
             @PathVariable Long pharmacyId,
+            @ModelAttribute OwnerPharmacyProductFilter filter,
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @PageableDefault(size = 10, sort = "pharmacyProductId") Pageable pageable
     ) {
@@ -102,6 +106,7 @@ public class PharmacyOwnerController {
                 pharmacyOwnerService.getOwnerPharmacyProducts(
                         pharmacyId,
                         authenticatedUser.userId(),
+                        filter,
                         pageable
                 )
         );
@@ -181,6 +186,18 @@ public class PharmacyOwnerController {
                         authenticatedUser.userId(),
                         pageable
                 )
+        );
+    }
+
+    @GetMapping("/owner/products/search")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<PageResponse<ProductResponse>> searchProductsToAdd(
+            @ModelAttribute ProductFilter filter,
+            @PageableDefault(size = 10, sort = "name") Pageable pageable
+    ) {
+        return ApiResponse.success(
+                "Products retrieved successfully",
+                pharmacyOwnerService.searchProductsToAdd(filter, pageable)
         );
     }
 

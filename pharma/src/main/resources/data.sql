@@ -364,14 +364,14 @@ INSERT INTO notification (user_id, message, type, is_read) VALUES
 -- ────────────────────────────────────────────────────────────
 -- 22. P2P LISTINGS
 -- ────────────────────────────────────────────────────────────
-INSERT INTO p2p_listing (seller_id, product_name, price, quantity, expiry_date, image_url, status) VALUES
-                                                                                                       (7,  'Panadol Extra 500mg',   20.00, 10, '2025-12-31', 'p2p_panadol.png',    'ACTIVE'),
-                                                                                                       (8,  'Vitamin C 1000mg',      25.00,  5, '2026-06-30', 'p2p_vitc.png',       'ACTIVE'),
-                                                                                                       (9,  'Omega-3 Fish Oil',      60.00,  3, '2025-09-30', 'p2p_omega3.png',     'SOLD'),
-                                                                                                       (10, 'Brufen 400mg',          30.00,  8, '2025-11-30', 'p2p_brufen.png',     'ACTIVE'),
-                                                                                                       (11, 'Nexium 20mg',           55.00,  4, '2026-01-31', 'p2p_nexium.png',     'ACTIVE'),
-                                                                                                       (12, 'Zinc 50mg',             18.00, 20, '2026-03-31', 'p2p_zinc.png',       'ACTIVE'),
-                                                                                                       (13, 'Aspirin 100mg',         12.00, 15, '2025-10-31', 'p2p_aspirin.png',    'ACTIVE');
+INSERT INTO p2p_listing (medicine_id, seller_id, product_name, price, quantity, expiry_date, image_url, status) VALUES
+                                                                                                                    (1,  7,  'Panadol Extra 500mg',   20.00, 10, '2025-12-31', 'p2p_panadol.png',    'AVAILABLE'),
+                                                                                                                    (5,  8,  'Vitamin C 1000mg',      25.00,  5, '2026-06-30', 'p2p_vitc.png',       'AVAILABLE'),
+                                                                                                                    (6,  9,  'Omega-3 Fish Oil',      60.00,  3, '2025-09-30', 'p2p_omega3.png',     'AVAILABLE'),
+                                                                                                                    (2,  10, 'Brufen 400mg',          30.00,  8, '2025-11-30', 'p2p_brufen.png',     'AVAILABLE'),
+                                                                                                                    (11, 11, 'Nexium 20mg',           55.00,  4, '2026-01-31', 'p2p_nexium.png',     'AVAILABLE'),
+                                                                                                                    (16, 12, 'Zinc 50mg',             18.00, 20, '2026-03-31', 'p2p_zinc.png',       'SOLD'),
+                                                                                                                    (17, 13, 'Aspirin 100mg',         12.00, 15, '2025-10-31', 'p2p_aspirin.png',    'SOLD');
 -- listing_id sequence: 1–7
 
 

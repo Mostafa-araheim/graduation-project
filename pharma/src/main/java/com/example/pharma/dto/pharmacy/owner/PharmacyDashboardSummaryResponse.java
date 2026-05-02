@@ -1,11 +1,11 @@
-package com.example.pharma.dto.pharmacy;
+package com.example.pharma.dto.pharmacy.owner;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record OwnerDashboardSummaryResponse(
+public record PharmacyDashboardSummaryResponse(
 
-        @JsonProperty("total_pharmacies")
-        Long totalPharmacies,
+        @JsonProperty("pharmacy_id")
+        Long pharmacyId,
 
         @JsonProperty("total_products")
         Long totalProducts,

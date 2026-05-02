@@ -1,5 +1,7 @@
 package com.example.pharma.service.auth;
 
+import com.example.pharma.dto.auth.AuthVerification;
+import com.example.pharma.dto.auth.AuthVerificationResult;
 import com.example.pharma.dto.auth.login.LoginSession;
 import com.example.pharma.dto.auth.login.LoginStartRequest;
 import com.example.pharma.dto.auth.login.LoginStartResponse;
@@ -9,9 +11,14 @@ import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.model.entity.core.User;
 import com.example.pharma.repository.Core.UserRepository;
 import com.example.pharma.service.interfaces.IEmailService;
+import com.example.pharma.security.AuthenticatedUser;
+import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.util.RedisKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
@@ -27,6 +34,8 @@ public class AuthLoginService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final UserRepository userRepo;
     private final IEmailService emailService;
+    private final JwtService jwtService;
+
 
     private static final Duration TTL = Duration.ofMinutes(3);
     private static final int MAX_ATTEMPTS = 3;
@@ -61,15 +70,16 @@ public class AuthLoginService {
         return new LoginStartResponse(loginId, "Verification code sent");
     }
 
-    public User verify(LoginVerifyRequest req) {
+    public AuthVerificationResult verify(LoginVerifyRequest req) {
 
         String key = RedisKeys.loginSession(req.loginId());
 
         LoginSession session =
                 (LoginSession) redisTemplate.opsForValue().get(key);
 
-        if (session == null)
+        if (session == null) {
             throw new EntityNotFoundException("Invalid or expired login session");
+        }
 
         Long attempts = session.attempts();
 
@@ -92,8 +102,9 @@ public class AuthLoginService {
         );
 
         if (!sha256(req.code()).equals(session.codeHash())) {
-            if (attempts >= MAX_ATTEMPTS)
+            if (attempts >= MAX_ATTEMPTS) {
                 redisTemplate.delete(key);
+            }
 
             throw new EntityNotFoundException("Invalid code");
         }
@@ -105,7 +116,35 @@ public class AuthLoginService {
 
         redisTemplate.delete(key);
 
-        return user;
+        Authentication auth = buildAuthentication(user);
+
+        String jwt = jwtService.generateToken(auth);
+
+        AuthVerification authVerification = new AuthVerification(
+                user.getUserId(),
+                user.getEmail()
+        );
+
+        return new AuthVerificationResult(authVerification, jwt);
+    }
+
+    private Authentication buildAuthentication(User user) {
+        AuthenticatedUser principal =
+                new AuthenticatedUser(
+                        user.getUserId(),
+                        user.getEmail()
+                );
+
+        return new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                AuthorityUtils.createAuthorityList(
+                        user.getRoles()
+                                .stream()
+                                .map(Enum::name)
+                                .toArray(String[]::new)
+                )
+        );
     }
 
     private String generate8Digits() {
