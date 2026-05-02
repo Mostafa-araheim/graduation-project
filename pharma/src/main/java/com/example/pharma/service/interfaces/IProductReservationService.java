@@ -13,11 +13,11 @@ public interface IProductReservationService {
 
     PageResponse<ReservationResponse> getReservationsByUser(Long userId, Pageable pageable);
 
-    ReservationResponse createReservation(ReservationRequest request);
+    ReservationResponse createReservation(Long userId,ReservationRequest request);
 
     void markReservationsAsNotified(List<ProductReservation> reservations);
 
-    void deleteReservation(Long id);
+    void deleteReservation(Long userId, Long id);
 
     int expireOldReservations();
 }

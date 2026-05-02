@@ -9,6 +9,7 @@ import com.example.pharma.repository.P2P.ProductReservationRepository;
 import com.example.pharma.repository.Catalog.ProductRepository;
 import com.example.pharma.repository.Core.CustomerProfileRepository;
 import com.example.pharma.service.interfaces.IProductReservationService;
+import com.example.pharma.validators.ProductReservationValidator;
 import com.example.pharma.dto.P2P.ReservationRequest;
 import com.example.pharma.dto.P2P.ReservationResponse;
 import com.example.pharma.mapper.ProductReservationMapper;
@@ -31,6 +32,7 @@ public class ProductReservationService implements IProductReservationService {
     private final ProductRepository productRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final ProductReservationMapper mapper;
+    private final ProductReservationValidator validator;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,18 +42,11 @@ public class ProductReservationService implements IProductReservationService {
 
     @Override
     @Transactional
-    public ReservationResponse createReservation(ReservationRequest request) {
-        boolean alreadyExists = reservationRepository.existsByUserIdAndProduct_ProductIdAndStatusIn(
-                request.userId(),
-                request.productId(),
-                List.of(ReservationStatus.PENDING)
-        );
+    public ReservationResponse createReservation(Long userId,ReservationRequest request) {
+        validator.validateAlreadyExists(userId, request.productId());
 
-        if (alreadyExists) {
-            throw new EntityAlreadyExistsException("You already have an active reservation for this product.");
-        }
-        CustomerProfile user = customerProfileRepository.findById(request.userId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + request.userId()));
+        CustomerProfile user = customerProfileRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
 
         Product product = productRepository.findById(request.productId())
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + request.productId()));
@@ -82,20 +77,21 @@ public class ProductReservationService implements IProductReservationService {
 
     @Override
     @Transactional
+    public void deleteReservation(Long userId, Long id) {
+        ProductReservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation not found with id: " + id));
+        validator.validateReservationOwnership(userId, reservation);
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservationRepository.save(reservation);
+    }
+
+    @Override
+    @Transactional
     public void markReservationsAsNotified(List<ProductReservation> reservations) {
         reservations.forEach(res -> res.setStatus(ReservationStatus.NOTIFIED));
         reservationRepository.saveAll(reservations);
     }
 
-    @Override
-    @Transactional
-    public void deleteReservation(Long id) {
-        ProductReservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Reservation not found with id: " + id));
-        
-        reservation.setStatus(ReservationStatus.CANCELLED);
-        reservationRepository.save(reservation);
-    }
 
     @Override
     @Transactional
