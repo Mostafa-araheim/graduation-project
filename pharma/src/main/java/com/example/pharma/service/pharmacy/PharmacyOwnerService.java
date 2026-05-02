@@ -1,8 +1,11 @@
 package com.example.pharma.service.pharmacy;
 
+import com.example.pharma.dto.Product.ProductFilter;
+import com.example.pharma.dto.Product.ProductResponse;
 import com.example.pharma.dto.common.PageResponse;
 import com.example.pharma.dto.order.response.OwnerOrderResponse;
-import com.example.pharma.dto.pharmacy.*;
+import com.example.pharma.dto.pharmacy.PharmacyDto;
+import com.example.pharma.dto.pharmacy.owner.*;
 import com.example.pharma.dto.pharmacyProduct.AddPharmacyProductRequest;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.UpdatePharmacyProductRequest;
@@ -10,6 +13,7 @@ import com.example.pharma.dto.events.ProductAvailableEvent;
 import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.mapper.PharmacyProductMapper;
+import com.example.pharma.mapper.ProductMapper;
 import com.example.pharma.mapper.pharmacy.OwnerOrderMapper;
 import com.example.pharma.mapper.pharmacy.PharmacyMapper;
 import com.example.pharma.model.entity.catalog.Product;
@@ -23,10 +27,13 @@ import com.example.pharma.repository.Core.OwnerProfileRepository;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.repository.Order.OrderRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
+import com.example.pharma.specification.OwnerPharmacyProductSpecification;
+import com.example.pharma.specification.ProductSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,6 +49,9 @@ public class PharmacyOwnerService {
     private final OrderRepository orderRepository;
     private final OwnerOrderMapper ownerOrderMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final ProductMapper productMapper;
+
+
 
     @Transactional
     public PharmacyDto createPharmacy(CreatePharmacyRequest request, Long ownerUserId) {
@@ -251,12 +261,16 @@ public class PharmacyOwnerService {
     public PageResponse<PharmacyProductDto> getOwnerPharmacyProducts(
             Long pharmacyId,
             Long ownerUserId,
+            OwnerPharmacyProductFilter filter,
             Pageable pageable
     ) {
-        Pharmacy pharmacy = validateOwnerPharmacyAccess(pharmacyId, ownerUserId);
+        validateOwnerPharmacyAccess(pharmacyId, ownerUserId);
+
+        Specification<PharmacyProduct> spec =
+                OwnerPharmacyProductSpecification.build(pharmacyId, filter);
 
         return PageResponse.from(
-                pharmacyProductRepository.findByInventory(pharmacy.getInventory(), pageable)
+                pharmacyProductRepository.findAll(spec, pageable)
                         .map(pharmacyProductMapper::toPharmacyProductDto)
         );
     }
@@ -276,6 +290,18 @@ public class PharmacyOwnerService {
         return pharmacyProductMapper.toPharmacyProductDto(pharmacyProduct);
     }
 
+    @Transactional
+    public PageResponse<ProductResponse> searchProductsToAdd(
+            ProductFilter filter,
+            Pageable pageable
+    ) {
+        Specification<Product> spec = ProductSpecification.buildFromFilter(filter);
+
+        return PageResponse.from(
+                productRepository.findAll(spec, pageable)
+                        .map(productMapper::toResponse)
+        );
+    }
 
     @Transactional
     public OwnerDashboardSummaryResponse getOwnerDashboardSummary(Long ownerUserId) {

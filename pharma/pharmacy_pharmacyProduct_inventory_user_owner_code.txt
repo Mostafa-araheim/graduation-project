@@ -1147,7 +1147,7 @@ package com.example.pharma.service.pharmacy;
 
 import com.example.pharma.dto.Location.CoordinateDto;
 import com.example.pharma.dto.common.PageResponse;
-import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
@@ -1351,9 +1351,9 @@ Package: com.example.pharma.service.pharmacy
 
 package com.example.pharma.service.pharmacy;
 
-import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
-import com.example.pharma.dto.pharmacy.UpdatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.UpdatePharmacyRequest;
 import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.mapper.pharmacy.PharmacyMapper;
@@ -1666,7 +1666,7 @@ package com.example.pharma.controller.pharmacy;
 
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.common.PageResponse;
-import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.PharmacyInfo;
 import com.example.pharma.dto.pharmacy.PharmacySearchFilter;
@@ -1763,9 +1763,9 @@ Package: com.example.pharma.controller.pharmacy
 
 package com.example.pharma.controller.pharmacy;
 
-import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
-import com.example.pharma.dto.pharmacy.UpdatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.UpdatePharmacyRequest;
 import com.example.pharma.security.AuthenticatedUser;
 import com.example.pharma.service.pharmacy.PharmacyOwnerService;
 import jakarta.validation.Valid;
@@ -1851,7 +1851,7 @@ Package: com.example.pharma.mapper.pharmacy
 
 package com.example.pharma.mapper.pharmacy;
 
-import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.model.entity.pharmacy.PharmacyAddress;

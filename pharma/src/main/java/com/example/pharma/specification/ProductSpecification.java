@@ -1,4 +1,5 @@
 package com.example.pharma.specification;
+
 import com.example.pharma.dto.Product.ProductFilter;
 import com.example.pharma.model.entity.catalog.Product;
 import jakarta.persistence.criteria.*;
@@ -15,11 +16,23 @@ public class ProductSpecification {
     public static Specification<Product> buildFromFilter(ProductFilter filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-                var categoryFetch = root.fetch("category", JoinType.INNER);
+
+            boolean isCountQuery =
+                    query.getResultType() == Long.class ||
+                            query.getResultType() == long.class;
+
+
+            if (!isCountQuery) {
+                root.fetch("category", JoinType.LEFT);
                 root.fetch("brand", JoinType.LEFT);
-            var categoryJoin = (Join<Object, Object>) categoryFetch;
+                query.distinct(true);
+            }
+
 
             if (filter.categoryName() != null && !filter.categoryName().isBlank()) {
+                Join<Product, Object> categoryJoin =
+                        root.join("category", JoinType.INNER);
+
                 predicates.add(buildCategoryFilter(categoryJoin, cb, filter));
             }
 
@@ -31,7 +44,6 @@ public class ProductSpecification {
                 predicates.add(buildDosageFormFilter(root, cb, filter));
             }
 
-
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -41,7 +53,7 @@ public class ProductSpecification {
                                                  ProductFilter filter) {
         return cb.equal(
                 cb.lower(categoryJoin.get("categoryName")),
-                filter.categoryName().toLowerCase()
+                filter.categoryName().trim().toLowerCase()
         );
     }
 
@@ -50,7 +62,7 @@ public class ProductSpecification {
                                                     ProductFilter filter) {
         return cb.like(
                 cb.lower(root.get("name")),
-                "%" + filter.productName().toLowerCase() + "%"
+                "%" + filter.productName().trim().toLowerCase() + "%"
         );
     }
 
@@ -59,5 +71,4 @@ public class ProductSpecification {
                                                    ProductFilter filter) {
         return cb.equal(root.get("dosageForm"), filter.dosageForm());
     }
-
 }

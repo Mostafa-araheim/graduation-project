@@ -1,6 +1,6 @@
 package com.example.pharma.mapper.pharmacy;
 
-import com.example.pharma.dto.pharmacy.CreatePharmacyRequest;
+import com.example.pharma.dto.pharmacy.owner.CreatePharmacyRequest;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.model.entity.pharmacy.PharmacyAddress;

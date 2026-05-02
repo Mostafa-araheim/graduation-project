@@ -1,4 +1,4 @@
-package com.example.pharma.dto.pharmacy;
+package com.example.pharma.dto.pharmacy.owner;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;

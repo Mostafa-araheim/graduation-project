@@ -1,5 +1,7 @@
 package com.example.pharma.service.auth;
 
+import com.example.pharma.dto.auth.AuthVerification;
+import com.example.pharma.dto.auth.AuthVerificationResult;
 import com.example.pharma.dto.auth.signup.SignupSession;
 import com.example.pharma.dto.auth.signup.SignupStartRequest;
 import com.example.pharma.dto.auth.signup.SignupStartResponse;
@@ -15,11 +17,16 @@ import com.example.pharma.model.entity.core.UserRole;
 import com.example.pharma.repository.Core.CustomerProfileRepository;
 import com.example.pharma.repository.Core.OwnerProfileRepository;
 import com.example.pharma.repository.Core.UserRepository;
+import com.example.pharma.security.AuthenticatedUser;
+import com.example.pharma.security.jwt.JwtService;
 import com.example.pharma.service.EmailService;
 import com.example.pharma.util.RedisKeys;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
@@ -37,7 +44,7 @@ public class AuthSignupService {
     private final EmailService emailService;
     private final CustomerProfileRepository customerProfileRepository;
     private final OwnerProfileRepository ownerProfileRepository;
-
+    private final JwtService jwtService;
     private static final Duration TTL = Duration.ofMinutes(3);
     private static final int MAX_ATTEMPTS = 3;
 
@@ -70,15 +77,16 @@ public class AuthSignupService {
     }
 
     @Transactional
-    public User verify(SignupVerifyRequest req) {
+    public AuthVerificationResult verify(SignupVerifyRequest req) {
 
         String key = RedisKeys.signupSession(req.signupId());
 
         SignupSession session =
                 (SignupSession) redisTemplate.opsForValue().get(key);
 
-        if (session == null)
+        if (session == null) {
             throw new EntityNotFoundException("Invalid or expired signup session");
+        }
 
         Long attempts = session.attempts();
 
@@ -102,8 +110,9 @@ public class AuthSignupService {
         );
 
         if (!sha256(req.code()).equals(session.codeHash())) {
-            if (attempts >= MAX_ATTEMPTS)
+            if (attempts >= MAX_ATTEMPTS) {
                 redisTemplate.delete(key);
+            }
 
             throw new EntityNotFoundException("Invalid code");
         }
@@ -139,10 +148,34 @@ public class AuthSignupService {
 
         redisTemplate.delete(key);
 
+        Authentication auth = buildAuthentication(user);
 
+        String jwt = jwtService.generateToken(auth);
 
-        return user;
+        AuthVerification authVerification = new AuthVerification(
+                user.getUserId(),
+                user.getEmail()
+        );
+
+        return new AuthVerificationResult(authVerification, jwt);
     }
+
+    private Authentication buildAuthentication(User user) {
+        return UsernamePasswordAuthenticationToken.authenticated(
+                new AuthenticatedUser(
+                        user.getUserId(),
+                        user.getEmail()
+                ),
+                null,
+                AuthorityUtils.createAuthorityList(
+                        user.getRoles()
+                                .stream()
+                                .map(Enum::name)
+                                .toArray(String[]::new)
+                )
+        );
+    }
+
 
     private void ensureEmailNotRegistered(String email, UserRole role) {
         if (userRepo.findByEmailAndRolesContaining(email, role).isPresent()) {
