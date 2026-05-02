@@ -48,16 +48,15 @@ public class P2PListingService implements IP2PListingService {
             "listingId", "listingId"
     );
 
-    @Override
-    @Transactional
-    public P2PListing createListing(ListingRequest request) {
-        CustomerProfile seller = customerProfileRepository.findById(request.sellerId())
+    @Override    @Transactional
+    public P2PListing createListing(Long userId,ListingRequest request) {
+        CustomerProfile seller = customerProfileRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
 
         Product product = productRepository.findById(request.productId())
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        p2pListingValidator.validateListingCreation(request);
+        p2pListingValidator.validateListingCreation(userId,request);
 
         P2PListing listing = listingMapper.toEntity(request, product, seller);
 
@@ -75,9 +74,11 @@ public class P2PListingService implements IP2PListingService {
 
     @Override
     @Transactional
-    public P2PListing updateListing(Long listingId, UpdateListingRequest request) {
+    public P2PListing updateListing(Long userId, Long listingId, UpdateListingRequest request) {
         P2PListing listing = listingRepository.findById(listingId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        p2pListingValidator.validateListingOwnership(userId, listing);
 
         if (request.quantity() != null) {
             listing.setQuantity(request.quantity());
@@ -97,9 +98,11 @@ public class P2PListingService implements IP2PListingService {
 
     @Override
     @Transactional
-    public void deleteListing(Long listingId) {
+    public void deleteListing(Long userId, Long listingId) {
         P2PListing listing = listingRepository.findById(listingId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+        
+        p2pListingValidator.validateListingOwnership(userId, listing);
         
         listingRepository.delete(listing);
     }

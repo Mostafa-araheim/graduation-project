@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,22 +24,28 @@ public class P2PListingController {
     private final IP2PListingService listingService;
 
     @PostMapping
-    public ResponseEntity<P2PListing> createListing(@Valid @RequestBody ListingRequest request) {
-        P2PListing createdListing = listingService.createListing(request);
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<P2PListing> createListing(@Valid @RequestBody ListingRequest request,
+                                                    @AuthenticationPrincipal(expression = "userId") Long userId ) {
+        P2PListing createdListing = listingService.createListing(userId,request);
         return new ResponseEntity<>(createdListing, HttpStatus.CREATED);
     }
-
+    
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<P2PListing> updateListing(
             @PathVariable("id") Long listingId,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @Valid @RequestBody UpdateListingRequest request) {
-        P2PListing updatedListing = listingService.updateListing(listingId, request);
+        P2PListing updatedListing = listingService.updateListing(userId, listingId, request);
         return ResponseEntity.ok(updatedListing);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteListing(@PathVariable("id") Long listingId) {
-        listingService.deleteListing(listingId);
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<Void> deleteListing(@PathVariable("id") Long listingId,
+                                              @AuthenticationPrincipal(expression = "userId") Long userId) {
+        listingService.deleteListing(userId, listingId);
         return ResponseEntity.noContent().build();
     }
 

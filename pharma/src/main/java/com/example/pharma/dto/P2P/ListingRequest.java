@@ -9,9 +9,6 @@ public record ListingRequest(
         @NotNull(message = "Product ID is required")
         Long productId,
 
-        @NotNull(message = "Seller ID is required")
-        Long sellerId,
-
         @NotNull(message = "Quantity is required")
         @Min(value = 1, message = "Quantity must be at least 1")
         Long quantity,
@@ -27,5 +24,5 @@ public record ListingRequest(
         @Future(message = "Expiry date must be in the future")
         LocalDate expiryDate,
 
-        String imageUrl
+        String imageUrls
 ) {}
