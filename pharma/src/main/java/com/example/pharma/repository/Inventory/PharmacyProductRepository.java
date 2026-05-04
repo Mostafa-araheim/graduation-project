@@ -113,4 +113,19 @@ public interface PharmacyProductRepository
 
     Page<PharmacyProduct> findByInventory(Inventory inventory, Pageable pageable);
     Optional<PharmacyProduct> findByInventory_PharmacyIdAndProduct_ProductId(Long pharmacyId, Long productId);
+
+
+    @Query("""
+    SELECT pp
+    FROM PharmacyProduct pp
+    JOIN FETCH pp.product p
+    JOIN FETCH p.category c
+    JOIN FETCH p.brand b
+    JOIN FETCH pp.inventory i
+    JOIN FETCH i.pharmacy ph
+    WHERE pp.pharmacyProductId = :pharmacyProductId
+""")
+    Optional<PharmacyProduct> findWithDetailsById(
+            @Param("pharmacyProductId") Long pharmacyProductId
+    );
 }

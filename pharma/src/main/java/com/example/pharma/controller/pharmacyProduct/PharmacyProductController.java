@@ -1,23 +1,17 @@
 package com.example.pharma.controller.pharmacyProduct;
 
+import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.common.PageResponse;
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductFilter;
 import com.example.pharma.dto.pharmacyProduct.pharmacyProductResponse;
-import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.service.interfaces.IPharmacyProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/pharmacy-products")
@@ -35,6 +29,19 @@ public class PharmacyProductController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Pharmacy products retrieved successfully", pharmacyProducts)
+        );
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PharmacyProductDto>> getPharmacyProductById(
+            @PathVariable("id") Long pharmacyProductId
+    ) {
+        PharmacyProductDto pharmacyProduct =
+                pharmacyProductService.getPharmacyProductById(pharmacyProductId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Pharmacy product retrieved successfully", pharmacyProduct)
         );
     }
 }

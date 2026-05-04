@@ -11,7 +11,7 @@ public record pharmacyProductResponse(
         @JsonProperty("price") Double price,
         @JsonProperty("original_price") Double originalPrice,
         @JsonProperty("in_stock") Boolean inStock,
-        @JsonProperty("category") String category,
+        @JsonProperty("category_name") String category,
         @JsonProperty("pharmacy_name") String pharmacyName,
         @JsonProperty("pharmacy_latitude") Double pharmacyLatitude,
         @JsonProperty("pharmacy_longitude") Double pharmacyLongitude,
