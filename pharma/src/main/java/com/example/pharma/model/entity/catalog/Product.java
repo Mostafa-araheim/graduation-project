@@ -51,4 +51,12 @@ public class Product {
     @OneToMany(mappedBy = "product")
 
     private List<PharmacyProduct> pharmacyProducts;
+
+    @OneToMany(
+            mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("sortOrder ASC")
+    private List<ProductImage> images;
 }

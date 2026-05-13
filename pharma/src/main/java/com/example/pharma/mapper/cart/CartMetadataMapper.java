@@ -11,6 +11,7 @@ import java.time.Instant;
 public interface CartMetadataMapper {
 
     @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "pharmacyId", source = "request.pharmacyId")
     @Mapping(target = "name", source = "request.name")
     @Mapping(target = "createdAt", expression = "java(Instant.now())")
     @Mapping(target = "updatedAt", expression = "java(Instant.now())")

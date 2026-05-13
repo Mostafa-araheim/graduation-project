@@ -22,6 +22,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("ya gd3aaaaaaaaaan ana mab3oot mn 8eer Bearer");
             filterChain.doFilter(request, response);
             return;
         }

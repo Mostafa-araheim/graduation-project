@@ -1,11 +1,16 @@
 package com.example.pharma.service;
 
+import com.example.pharma.dto.Location.CoordinateDto;
 import com.example.pharma.dto.common.PageResponse;
+import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductFilter;
 import com.example.pharma.dto.pharmacyProduct.pharmacyProductResponse;
+import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.mapper.PharmacyProductMapper;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.service.interfaces.ILocationService;
+import com.example.pharma.service.interfaces.IPharmacyProductService;
 import com.example.pharma.specification.PharmacyProductSpecification;
 import com.example.pharma.validators.PharmacyProductValidator;
 import com.example.pharma.validators.SortValidator;
@@ -17,9 +22,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
-import com.example.pharma.dto.Location.CoordinateDto;
-import com.example.pharma.service.interfaces.IPharmacyProductService;
-import com.example.pharma.service.interfaces.ILocationService;
 
 @Service
 @RequiredArgsConstructor
@@ -84,5 +86,16 @@ public class PharmacyProductService implements IPharmacyProductService {
                     );
                 })
                 .toList();
+    }
+
+    @Override
+    public PharmacyProductDto getPharmacyProductById(Long pharmacyProductId) {
+        PharmacyProduct pharmacyProduct = pharmacyProductRepository
+                .findWithDetailsById(pharmacyProductId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Pharmacy product not found with id: " + pharmacyProductId
+                ));
+
+        return mapper.toPharmacyProductDto(pharmacyProduct);
     }
 }

@@ -135,7 +135,21 @@ INSERT INTO product (name, description, dosage_form, strength, manufacturer, bra
                                                                                                                                ('Prednisolone',         'Corticosteroid for inflammation',           'Tablet',   '5mg',         'Novartis Egypt',   2, 7,  true);
 -- product_id sequence: 1–20
 
+INSERT INTO product_image (product_id, image_url, sort_order) VALUES
+                                                                  ((SELECT product_id FROM product WHERE name = 'Panadol Extra'), '/images/panadol-extra-1.jpg', 1),
+                                                                  ((SELECT product_id FROM product WHERE name = 'Panadol Extra'), '/images/panadol-extra-2.jpg', 2),
 
+                                                                  ((SELECT product_id FROM product WHERE name = 'Brufen'), '/images/brufen-1.jpg', 1),
+                                                                  ((SELECT product_id FROM product WHERE name = 'Brufen'), '/images/brufen-2.jpg', 2),
+
+                                                                  ((SELECT product_id FROM product WHERE name = 'Amoxicillin'), '/images/amoxicillin-1.jpg', 1),
+                                                                  ((SELECT product_id FROM product WHERE name = 'Augmentin'), '/images/augmentin-1.jpg', 1),
+
+                                                                  ((SELECT product_id FROM product WHERE name = 'Vitamin C'), '/images/vitamin-c-1.jpg', 1),
+                                                                  ((SELECT product_id FROM product WHERE name = 'Omega-3 Fish Oil'), '/images/omega-3-fish-oil-1.jpg', 1),
+
+                                                                  ((SELECT product_id FROM product WHERE name = 'Concor'), '/images/concor-1.jpg', 1),
+                                                                  ((SELECT product_id FROM product WHERE name = 'Glucophage'), '/images/glucophage-1.jpg', 1);
 -- ────────────────────────────────────────────────────────────
 -- 8. PHARMACIES
 -- ────────────────────────────────────────────────────────────

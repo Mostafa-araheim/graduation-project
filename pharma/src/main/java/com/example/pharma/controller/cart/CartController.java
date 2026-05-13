@@ -1,7 +1,8 @@
 package com.example.pharma.controller.cart;
 
+import com.example.pharma.dto.cart.request.AssignCartToUserRequest;
 import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
-import com.example.pharma.dto.cart.request.CartItemQuantityRequest;
+import com.example.pharma.dto.cart.request.CartItemRequest;
 import com.example.pharma.dto.cart.response.CartResponse;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.order.request.CheckoutRequest;
@@ -68,7 +69,7 @@ public class CartController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<Void> updateQuantity(
             @PathVariable Long cartId,
-            @Valid @RequestBody CartItemQuantityRequest request,
+            @Valid @RequestBody CartItemRequest request,
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
 
@@ -144,18 +145,7 @@ public class CartController {
         return ApiResponse.success("Cart deleted successfully", null);
     }
 
-//    // POST   /carts/assign
-//    @PostMapping("/assign")
-//    @PreAuthorize("hasRole('CUSTOMER')")
-//    public ApiResponse<CartResponse> assignCartToUser(
-//            @Valid @RequestBody AssignCartToUserRequest request,
-//            @AuthenticationPrincipal(expression = "userId") Long userId
-//    ) {
-//
-//        CartResponse cart = cartService.assignCartToUser(userId, request);
-//
-//        return ApiResponse.success("Cart assigned successfully", cart);
-//    }
+
 
     @PostMapping("/{cartId}/checkout")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -166,5 +156,17 @@ public class CartController {
     ) throws StripeException {
         CheckoutResponse response = checkoutService.checkout(cartId, userId, request);
         return ApiResponse.success("Checkout completed successfully", response);
+    }
+
+    @PostMapping("/assign")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<List<CartResponse>> assignCartToUser(
+            @Valid @RequestBody List<@Valid AssignCartToUserRequest> requests,
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) {
+
+        List<CartResponse> responses = cartService.assignCartToUser(userId, requests);
+
+        return ApiResponse.success("Cart assigned to user successfully", responses);
     }
 }
