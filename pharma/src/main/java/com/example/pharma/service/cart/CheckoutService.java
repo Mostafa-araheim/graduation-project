@@ -56,6 +56,7 @@ public class CheckoutService {
             String currency,
             List<CheckoutItemResponse> items
     ) {}
+    @Transactional
     public CheckoutResponse checkout(Long cartId, Long userId, CheckoutRequest request) throws StripeException {
         CheckoutDraft draft = createCheckoutDraft(cartId, userId, request);
 

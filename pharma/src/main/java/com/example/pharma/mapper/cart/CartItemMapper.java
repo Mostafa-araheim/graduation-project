@@ -12,13 +12,19 @@ import java.math.BigDecimal;
 public interface CartItemMapper {
 
     @Mapping(target = "totalPrice", expression = "java(calculateTotal(cartItem))")
-    CartItemResponse toDto(CartItem cartItem);
-
+    @Mapping(target = "productImageUrl", source = "productImageUrl")
+    @Mapping(target = "productName", source = "productName")
+    CartItemResponse toDto(
+            CartItem cartItem,
+            String productImageUrl,
+            String productName
+    );
     default BigDecimal calculateTotal(CartItem cartItem) {
         if (cartItem == null || cartItem.getPricePerUnit() == null || cartItem.getQuantity() == null) {
             return BigDecimal.ZERO;
         }
-        return cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+        return cartItem.getPricePerUnit()
+                .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
     }
 
     @Mapping(target = "pharmacyProductId", source = "pharmacyProduct.pharmacyProductId")
@@ -30,5 +36,4 @@ public interface CartItemMapper {
     @Mapping(target = "quantity", source = "quantity")
     @Mapping(target = "pricePerUnit", source = "pharmacyProduct.price")
     CartItem toEntity(PharmacyProduct pharmacyProduct, Long quantity);
-
 }

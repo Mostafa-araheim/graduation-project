@@ -6,5 +6,7 @@ public record CartItemResponse(
         Long pharmacyProductId,
         Long quantity,
         BigDecimal pricePerUnit,
-        BigDecimal totalPrice
+        BigDecimal totalPrice,
+        String productImageUrl,
+        String productName
 ) {}

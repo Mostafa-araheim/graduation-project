@@ -3,7 +3,7 @@ package com.example.pharma.dto.cart.request;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-public record CartItemQuantityRequest(
+public record CartItemRequest(
 
         @NotNull(message = "pharmacyProductId is required")
         @Positive(message = "pharmacyProductId must be positive")

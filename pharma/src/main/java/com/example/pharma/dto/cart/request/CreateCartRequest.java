@@ -10,5 +10,5 @@ public record CreateCartRequest(
         @Size(max = 100, message = "Cart name cannot exceed 100 characters")
         String name,
 
-        Long PharmacyId
+        Long pharmacyId
 ) {}

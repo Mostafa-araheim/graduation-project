@@ -24,15 +24,17 @@ public class CartRedisRepository implements CartRepository {
     @Override
     public Long createCart(CartMetadata metadata) {
 
-        Long cartId = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
-
+        Long cartId = UUID.randomUUID().getMostSignificantBits() & ((1L << 53) - 1);
 
         redisTemplate.opsForHash().putAll(RedisKeys.cart(cartId), Map.of(
-                "userId", metadata.getUserId()
-                , "name", metadata.getName()
-                , "createdAt", metadata.getCreatedAt().toString(),
+                "cartId", cartId,
+                "userId", metadata.getUserId(),
+                "pharmacyId", metadata.getPharmacyId(),
+                "name", metadata.getName(),
+                "createdAt", metadata.getCreatedAt().toString(),
                 "updatedAt", metadata.getUpdatedAt().toString()
         ));
+
         return cartId;
     }
 
@@ -192,6 +194,8 @@ public class CartRedisRepository implements CartRepository {
 
 
         return CartMetadata.builder()
+                .cartId(cartId)
+                .pharmacyId(((Number) entries.get("pharmacyId")).longValue())
                 .userId(((Number) entries.get("userId")).longValue())
                 .name((String) entries.get("name"))
                 .createdAt(Instant.parse((String) entries.get("createdAt")))
@@ -203,13 +207,15 @@ public class CartRedisRepository implements CartRepository {
     public Long saveCart(Long cartId, CartMetadata metadata) {
 
         if (cartId == null) {
-            cartId = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+            cartId = UUID.randomUUID().getMostSignificantBits() & ((1L << 53) - 1);;
         }
 
         redisTemplate.opsForHash().putAll(
                 RedisKeys.cart(cartId),
                 Map.of(
+                        "cartId", cartId,
                         "userId", metadata.getUserId(),
+                        "pharmacyId", metadata.getPharmacyId(),
                         "name", metadata.getName(),
                         "createdAt", metadata.getCreatedAt().toString(),
                         "updatedAt", metadata.getUpdatedAt().toString()
