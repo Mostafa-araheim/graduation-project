@@ -6,17 +6,28 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record ListingResponse(
-        Long listingId,
-        Long productId,
-        String productName,
-        Long sellerId,
-        String sellerName,
-        Long quantity,
-        Float price,
-        LocalDate expiryDate,
-        String additionalDetails,
-        String imageUrl,
+        Long listingId, // Present
+        Long productId, //present
+        String productName, //present
+        Long sellerId, //Not required
+        String sellerName,//Present
+        String sellerPhoneNumber,//Present
+        String categoryName,//Added
+        String condition, //Added
+        Long quantity,//Present
+        Float price,//Present
+        LocalDate expiryDate, //present
+        String description,//present
+        String imageUrl,//Present
         ListingStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,//Present
+        String city
 ) {}
 
+//interface Listing {
+//
+//
+//
+//    location: string;
+//    verified?: boolean;
+//}
