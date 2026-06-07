@@ -1,20 +1,17 @@
 package com.example.pharma.repository.P2P;
 
-import com.example.pharma.model.entity.P2P.P2PListing;
 import com.example.pharma.model.entity.P2P.ListingStatus;
+import com.example.pharma.model.entity.P2P.P2PListing;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface P2PListingRepository extends JpaRepository<P2PListing, Long> {
+public interface P2PListingRepository extends JpaRepository<P2PListing, Long>, JpaSpecificationExecutor<P2PListing> {
     List<P2PListing> findBySeller_UserId(Long userId);
     
     boolean existsBySeller_UserIdAndProduct_ProductIdAndExpiryDateAndStatus(Long userId, Long productId, LocalDate expiryDate, ListingStatus status);
@@ -24,7 +21,12 @@ public interface P2PListingRepository extends JpaRepository<P2PListing, Long> {
     @EntityGraph(attributePaths = {"product", "seller", "seller.user"})
     Optional<P2PListing> findById(Long id);
 
-    @EntityGraph(attributePaths = {"product", "seller", "seller.user"})
+    @EntityGraph(attributePaths = {
+            "product",
+            "product.category",
+            "seller",
+            "seller.user"
+    })
     Page<P2PListing> findAll(Pageable pageable);
 
     @Modifying

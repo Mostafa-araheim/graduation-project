@@ -1,5 +1,6 @@
 package com.example.pharma.controller.p2p;
 
+import com.example.pharma.dto.P2P.ListingFilter;
 import com.example.pharma.dto.P2P.ListingRequest;
 import com.example.pharma.dto.P2P.ListingResponse;
 import com.example.pharma.dto.P2P.UpdateListingRequest;
@@ -9,8 +10,8 @@ import com.example.pharma.service.interfaces.IP2PListingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,9 +24,9 @@ public class P2PListingController {
 
     private final IP2PListingService listingService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<P2PListing> createListing(@Valid @RequestBody ListingRequest request,
+    public ResponseEntity<P2PListing> createListing(@Valid @ModelAttribute ListingRequest request,
                                                     @AuthenticationPrincipal(expression = "userId") Long userId ) {
         P2PListing createdListing = listingService.createListing(userId,request);
         return new ResponseEntity<>(createdListing, HttpStatus.CREATED);
@@ -57,8 +58,14 @@ public class P2PListingController {
 
     @GetMapping
     public ResponseEntity<PageResponse<ListingResponse>> getAllListings(
-            @PageableDefault(size = 10, sort = "listingId") Pageable pageable) {
-        PageResponse<ListingResponse> response = listingService.getAllListings(pageable);
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String condition,
+            @RequestParam(required = false) String categoryName,
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+
+        ListingFilter filter = new ListingFilter(city, condition, categoryName, search);
+        PageResponse<ListingResponse> response = listingService.getAllListings(filter, pageable);
         return ResponseEntity.ok(response);
     }
 }

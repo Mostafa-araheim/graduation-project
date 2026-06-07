@@ -14,16 +14,22 @@ public interface P2PListingMapper {
     
     @Mapping(target = "listingId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "imageUrl", ignore = true)
+    @Mapping(target = "imageUrl", source = "imageUrl")
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "seller", source = "seller")
     @Mapping(target = "product", source = "product")
-    P2PListing toEntity(ListingRequest request, Product product, CustomerProfile seller);
+    @Mapping(target = "description", source = "request.description")
+    @Mapping(target = "city", source = "request.city")
+    P2PListing toEntity(ListingRequest request, Product product, CustomerProfile seller, String imageUrl);
 
     @Mapping(target = "sellerId", source = "seller.userId")
     @Mapping(target = "sellerName", source = "seller.user.name")
     @Mapping(target = "productId", source = "product.productId")
     @Mapping(target = "createdAt", source = "createdAt.value")
+    @Mapping(target = "sellerPhoneNumber", source = "seller.user.phone")
+    @Mapping(target = "imageUrl", source = "imageUrl")
+    @Mapping(target = "condition", source = "condition")
+    @Mapping(target = "categoryName", source = "product.category.categoryName")
     ListingResponse toResponse(P2PListing entity);
 }

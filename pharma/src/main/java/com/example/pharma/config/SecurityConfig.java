@@ -1,9 +1,13 @@
 package com.example.pharma.config;
 
 import com.example.pharma.security.filter.JwtValidatorFilter;
+import com.example.pharma.service.auth.RefreshTokenService;
+import com.example.pharma.util.CookieUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtValidatorFilter jwtValidatorFilter;
+    private final RefreshTokenService refreshTokenService;
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -34,7 +39,28 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").permitAll()
                         .anyRequest().permitAll() // TODO: revert to .authenticated() after testing
                 )
-                .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout(logout -> logout
+                .logoutUrl("/api/v1/auth/logout")
+                .addLogoutHandler((request, response, authentication) -> {
+                    String token = CookieUtils.extractRefreshTokenFromCookies(request);
+                    if (token != null) {
+                        refreshTokenService.revokeToken(token);
+                    }
+                })
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    ResponseCookie deleteCookie = ResponseCookie.from("refresh_token", "")
+                            .httpOnly(true)
+                            .secure(true)
+                            .path("/api/v1/auth")
+                            .maxAge(0)
+                            .sameSite("None")
+                            .build();
+
+                    response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+                })
+                .permitAll()
+        );
 
         return http.build();
     }
