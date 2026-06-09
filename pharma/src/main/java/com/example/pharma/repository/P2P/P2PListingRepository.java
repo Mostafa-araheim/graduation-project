@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface P2PListingRepository extends JpaRepository<P2PListing, Long>, JpaSpecificationExecutor<P2PListing> {
-    List<P2PListing> findBySeller_UserId(Long userId);
+    Page<P2PListing> findBySeller_UserId(Long userId, Pageable pageable);
     
     boolean existsBySeller_UserIdAndProduct_ProductIdAndExpiryDateAndStatus(Long userId, Long productId, LocalDate expiryDate, ListingStatus status);
     

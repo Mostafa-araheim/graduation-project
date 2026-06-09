@@ -21,7 +21,7 @@ INSERT INTO users (email, name, phone) VALUES
                                            ('mona.sayed@gmail.com',      'Mona Sayed',      '01810987654'),
                                            ('hassan.ali@gmail.com',      'Hassan Ali',      '01909876543'),
                                            ('dina.karim@gmail.com',      'Dina Karim',      '01098765431'),
-                                           ('amr.lotfy@gmail.com',       'Amr Lotfy',       '01187654320');
+                                           ('mohanadazazy@gmail.com',       'Mohanad Tarek',       '01187654320');
 -- user_id sequence: 1–15
 -- 1  = owner1, 2  = owner2, 3  = owner3
 -- 4  = pharmacist1, 5  = pharmacist2, 6  = pharmacist3

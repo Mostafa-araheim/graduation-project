@@ -22,7 +22,7 @@ public class InventoryService {
         Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).orElseThrow(() ->
                 new EntityNotFoundException("Pharmacy is not found for"));
 
-        Inventory existedInventory = inventoryRepository.findByPharmacy_PharmacyId(pharmacyId).orElseThrow( ()-> new EntityNotFoundException("the pharmacy already has inventory"));
+        Inventory existedInventory = inventoryRepository.findByPharmacy_PharmacyId(pharmacyId).orElseThrow( ()-> new EntityNotFoundException("the pharmacy  has no inventory"));
         Inventory inventory = new Inventory();
         inventory.setPharmacy(pharmacy);
         var x = inventoryRepository.save(inventory);

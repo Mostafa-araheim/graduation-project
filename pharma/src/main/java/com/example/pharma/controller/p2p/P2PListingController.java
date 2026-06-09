@@ -31,7 +31,7 @@ public class P2PListingController {
         P2PListing createdListing = listingService.createListing(userId,request);
         return new ResponseEntity<>(createdListing, HttpStatus.CREATED);
     }
-    
+
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<P2PListing> updateListing(
@@ -66,6 +66,15 @@ public class P2PListingController {
 
         ListingFilter filter = new ListingFilter(city, condition, categoryName, search);
         PageResponse<ListingResponse> response = listingService.getAllListings(filter, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<PageResponse<ListingResponse>> getMyListings(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            Pageable pageable) {
+        PageResponse<ListingResponse> response = listingService.getMyListings(userId, pageable);
         return ResponseEntity.ok(response);
     }
 }

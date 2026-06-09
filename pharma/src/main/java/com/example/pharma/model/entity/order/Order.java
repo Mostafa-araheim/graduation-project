@@ -2,10 +2,13 @@ package com.example.pharma.model.entity.order;
 
 import com.example.pharma.model.entity.core.CreatedAtColumn;
 import com.example.pharma.model.entity.core.CustomerProfile;
+import com.example.pharma.model.entity.core.UserAddress;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -38,6 +41,11 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_address_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private UserAddress deliveryAddress;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

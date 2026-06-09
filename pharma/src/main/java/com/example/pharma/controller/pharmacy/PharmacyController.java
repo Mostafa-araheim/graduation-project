@@ -12,6 +12,7 @@ import com.example.pharma.dto.review.CreateReviewDto;
 import com.example.pharma.dto.review.ReviewDto;
 import com.example.pharma.model.entity.core.CustomerProfile;
 import com.example.pharma.model.entity.review.PharmacyRating;
+import com.example.pharma.security.AuthenticatedUser;
 import com.example.pharma.service.interfaces.IPharmacyService;
 import com.example.pharma.service.pharmacy.PharmacyOwnerService;
 import jakarta.validation.Valid;
@@ -64,17 +65,17 @@ public class PharmacyController {
     }
     @PostMapping("/rating")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<PharmacyRating> createRating(@RequestBody CreateRatingDto createRatingDto, @AuthenticationPrincipal CustomerProfile customerProfile)
+    public ApiResponse<PharmacyRating> createRating(@RequestBody CreateRatingDto createRatingDto, @AuthenticationPrincipal AuthenticatedUser authenticatedUser)
     {
-        return ApiResponse.success("Rating submitted successfully", pharmacyService.createRating(createRatingDto, customerProfile));
+        return ApiResponse.success("Rating submitted successfully", pharmacyService.createRating(createRatingDto, authenticatedUser));
     }
 
 
     @PostMapping("/review")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<ReviewDto> createReview(@RequestBody CreateReviewDto createReviewDto,@AuthenticationPrincipal CustomerProfile customerProfile)
+    public ApiResponse<ReviewDto> createReview(@RequestBody CreateReviewDto createReviewDto,@AuthenticationPrincipal AuthenticatedUser authenticatedUser)
     {
-        return ApiResponse.success("Review submitted successfully",pharmacyService.createPharmacyReview(createReviewDto, customerProfile) );
+        return ApiResponse.success("Review submitted successfully",pharmacyService.createPharmacyReview(createReviewDto, authenticatedUser) );
     }
 
     @PostMapping("/bulk")

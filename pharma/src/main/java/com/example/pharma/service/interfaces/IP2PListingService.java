@@ -6,6 +6,7 @@ import com.example.pharma.dto.P2P.ListingResponse;
 import com.example.pharma.dto.P2P.UpdateListingRequest;
 import com.example.pharma.dto.common.PageResponse;
 import com.example.pharma.model.entity.P2P.P2PListing;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface IP2PListingService {
@@ -14,6 +15,8 @@ public interface IP2PListingService {
     void deleteListing(Long userId, Long listingId);
     ListingResponse getListingById(Long listingId);
     PageResponse<ListingResponse> getAllListings(ListingFilter listingFilter, Pageable pageable);
+    
+    PageResponse<ListingResponse> getMyListings(Long sellerId, Pageable pageable);
     
     int expireOldListings();
 }

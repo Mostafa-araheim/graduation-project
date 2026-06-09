@@ -1,25 +1,23 @@
 package com.example.pharma.dto.order.response;
 
+import com.example.pharma.dto.user.AddressDto;
 import com.example.pharma.model.entity.order.DeliveryType;
 import com.example.pharma.model.entity.order.OrderStatus;
 import com.example.pharma.model.entity.order.PaymentMethod;
-import com.example.pharma.model.entity.order.PaymentStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
-public record CheckoutResponse(
+public record CustomerOrderResponse(
         Long orderId,
-        Long cartId,
         Long pharmacyId,
+        String pharmacyName,
+        BigDecimal totalPrice,
         DeliveryType deliveryType,
         PaymentMethod paymentMethod,
-        OrderStatus orderStatus,
-        BigDecimal totalPrice,
-        String currency,
-        boolean paymentRequired,
-        PaymentStatus paymentStatus,
-        String clientSecret,
-        String checkoutUrl,
-        List<CheckoutItemResponse> items
+        OrderStatus status,
+        LocalDateTime createdAt,
+        AddressDto deliveryAddress,
+        List<CustomerOrderItemResponse> items
 ) {}
