@@ -24,7 +24,7 @@ public class PharmacySpecifications {
     public static Specification<Pharmacy> hasMinRating(Float rating) {
         return (root, query, cb) ->
                 rating == null ? cb.conjunction() :
-                        cb.greaterThanOrEqualTo(root.get("totalRating"), rating);
+                        cb.greaterThanOrEqualTo(root.get("averageRating"), rating);
     }
 
     public static Specification<Pharmacy> isOpenNow(Boolean isOpen) {

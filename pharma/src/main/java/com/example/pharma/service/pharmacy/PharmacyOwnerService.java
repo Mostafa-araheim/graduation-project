@@ -10,6 +10,7 @@ import com.example.pharma.dto.pharmacyProduct.AddPharmacyProductRequest;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.UpdatePharmacyProductRequest;
 import com.example.pharma.dto.events.ProductAvailableEvent;
+import com.example.pharma.dto.review.PharmacyReviewDetailDto;
 import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
 import com.example.pharma.mapper.PharmacyProductMapper;
@@ -21,12 +22,15 @@ import com.example.pharma.model.entity.core.OwnerProfile;
 import com.example.pharma.model.entity.inventory.AvailabilityStatus;
 import com.example.pharma.model.entity.inventory.Inventory;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.model.entity.order.OrderStatus;
 import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.repository.Catalog.ProductRepository;
 import com.example.pharma.repository.Core.OwnerProfileRepository;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.repository.Order.OrderRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
+import com.example.pharma.repository.Review.PharmacyRatingRepository;
+import com.example.pharma.repository.Review.PharmacyReviewRepository;
 import com.example.pharma.specification.OwnerPharmacyProductSpecification;
 import com.example.pharma.specification.ProductSpecification;
 import jakarta.transaction.Transactional;
@@ -50,6 +54,8 @@ public class PharmacyOwnerService {
     private final OwnerOrderMapper ownerOrderMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final ProductMapper productMapper;
+    private final PharmacyReviewRepository pharmacyReviewRepository;
+    private final PharmacyRatingRepository pharmacyRatingRepository;
 
 
 
@@ -306,24 +312,19 @@ public class PharmacyOwnerService {
     @Transactional
     public OwnerDashboardSummaryResponse getOwnerDashboardSummary(Long ownerUserId) {
         Long totalPharmacies = pharmacyRepository.countByOwner_UserId(ownerUserId);
-
         Long totalProducts = pharmacyProductRepository.countProductsByOwner(ownerUserId);
-
-        Long outOfStockCount = pharmacyProductRepository.countProductsByOwnerAndStatus(
-                ownerUserId,
-                AvailabilityStatus.OutOfStock
-        );
-
-        Long limitedSupplyCount = pharmacyProductRepository.countProductsByOwnerAndStatus(
-                ownerUserId,
-                AvailabilityStatus.LimitedSupply
-        );
+        Long outOfStockCount = pharmacyProductRepository.countProductsByOwnerAndStatus(ownerUserId, AvailabilityStatus.OutOfStock);
+        Long limitedSupplyCount = pharmacyProductRepository.countProductsByOwnerAndStatus(ownerUserId, AvailabilityStatus.LimitedSupply);
+        Long totalOrders = orderRepository.countOrdersByOwner(ownerUserId);
+        java.math.BigDecimal totalRevenue = orderRepository.sumRevenueByOwnerAndStatus(ownerUserId, OrderStatus.PLACED);
 
         return new OwnerDashboardSummaryResponse(
                 totalPharmacies,
                 totalProducts,
                 outOfStockCount,
-                limitedSupplyCount
+                limitedSupplyCount,
+                totalOrders,
+                totalRevenue
         );
     }
 
@@ -336,24 +337,61 @@ public class PharmacyOwnerService {
         validateOwnerPharmacyAccess(pharmacyId, ownerUserId);
 
         Long totalProducts = pharmacyProductRepository.countByInventory_PharmacyId(pharmacyId);
-
-        Long outOfStockCount = pharmacyProductRepository
-                .countByInventory_PharmacyIdAndAvailabilityStatus(
-                        pharmacyId,
-                        AvailabilityStatus.OutOfStock
-                );
-
-        Long limitedSupplyCount = pharmacyProductRepository
-                .countByInventory_PharmacyIdAndAvailabilityStatus(
-                        pharmacyId,
-                        AvailabilityStatus.LimitedSupply
-                );
+        Long outOfStockCount = pharmacyProductRepository.countByInventory_PharmacyIdAndAvailabilityStatus(pharmacyId, AvailabilityStatus.OutOfStock);
+        Long limitedSupplyCount = pharmacyProductRepository.countByInventory_PharmacyIdAndAvailabilityStatus(pharmacyId, AvailabilityStatus.LimitedSupply);
+        Long totalOrders = orderRepository.countByPharmacy_PharmacyId(pharmacyId);
+        Long pendingOrders = orderRepository.countByPharmacy_PharmacyIdAndStatus(pharmacyId, OrderStatus.PENDING_PAYMENT);
+        java.math.BigDecimal totalRevenue = orderRepository.sumRevenueByPharmacyIdAndStatus(pharmacyId, OrderStatus.PLACED);
+        Double avgRating = pharmacyRatingRepository.findAverageRatingByPharmacyId(pharmacyId).orElse(null);
+        Long totalReviews = pharmacyReviewRepository.countByPharmacy_PharmacyId(pharmacyId);
 
         return new PharmacyDashboardSummaryResponse(
                 pharmacyId,
                 totalProducts,
                 outOfStockCount,
-                limitedSupplyCount
+                limitedSupplyCount,
+                totalOrders,
+                pendingOrders,
+                totalRevenue,
+                avgRating,
+                totalReviews
+        );
+    }
+
+    @Transactional
+    public PageResponse<PharmacyReviewDetailDto> getPharmacyReviews(
+            Long pharmacyId,
+            Long ownerUserId,
+            org.springframework.data.domain.Pageable pageable
+    ) {
+        validateOwnerPharmacyAccess(pharmacyId, ownerUserId);
+
+        return PageResponse.from(
+                pharmacyReviewRepository.findByPharmacy_PharmacyId(pharmacyId, pageable)
+                        .map(review -> new PharmacyReviewDetailDto(
+                                review.getReviewId(),
+                                review.getCustomer().getUser().getName(),
+                                review.getComment(),
+                                review.getCreatedAt() != null ? review.getCreatedAt().getValue() : null
+                        ))
+        );
+    }
+
+    @Transactional
+    public OwnerProfileDto getOwnerProfile(Long ownerUserId) {
+        OwnerProfile owner = ownerProfileRepository.findById(ownerUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Owner profile not found"));
+
+        Long totalPharmacies = pharmacyRepository.countByOwner_UserId(ownerUserId);
+
+        return new OwnerProfileDto(
+                owner.getUserId(),
+                owner.getUser().getName(),
+                owner.getUser().getEmail(),
+                owner.getUser().getPhone(),
+                owner.getUser().getImageUrl(),
+                owner.getCreatedAt() != null ? owner.getCreatedAt().getValue() : null,
+                totalPharmacies
         );
     }
 

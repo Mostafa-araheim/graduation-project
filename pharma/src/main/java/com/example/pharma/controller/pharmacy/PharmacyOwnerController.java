@@ -10,6 +10,7 @@ import com.example.pharma.dto.pharmacy.owner.*;
 import com.example.pharma.dto.pharmacyProduct.AddPharmacyProductRequest;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.UpdatePharmacyProductRequest;
+import com.example.pharma.dto.review.PharmacyReviewDetailDto;
 import com.example.pharma.security.AuthenticatedUser;
 import com.example.pharma.service.pharmacy.PharmacyOwnerService;
 import jakarta.validation.Valid;
@@ -198,6 +199,30 @@ public class PharmacyOwnerController {
         return ApiResponse.success(
                 "Products retrieved successfully",
                 pharmacyOwnerService.searchProductsToAdd(filter, pageable)
+        );
+    }
+
+    @GetMapping("/{pharmacyId}/reviews")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<PageResponse<PharmacyReviewDetailDto>> getPharmacyReviews(
+            @PathVariable Long pharmacyId,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ApiResponse.success(
+                "Pharmacy reviews retrieved successfully",
+                pharmacyOwnerService.getPharmacyReviews(pharmacyId, authenticatedUser.userId(), pageable)
+        );
+    }
+
+    @GetMapping("/owner/profile")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<OwnerProfileDto> getOwnerProfile(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        return ApiResponse.success(
+                "Owner profile retrieved successfully",
+                pharmacyOwnerService.getOwnerProfile(authenticatedUser.userId())
         );
     }
 

@@ -2,6 +2,8 @@ package com.example.pharma.repository.Review;
 
 import com.example.pharma.dto.review.ReviewDto;
 import com.example.pharma.model.entity.review.PharmacyReview;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,6 +16,8 @@ public interface PharmacyReviewRepository extends JpaRepository<PharmacyReview, 
     List<PharmacyReview> findByCustomer_UserId(Long userId);
     List<PharmacyReview> findByPharmacy_PharmacyId(Long pharmacyId);
 
+    Page<PharmacyReview> findByPharmacy_PharmacyId(Long pharmacyId, Pageable pageable);
+
     @Query("SELECT new com.example.pharma.dto.review.ReviewDto(u.name, pr.comment) " +
             "FROM PharmacyReview pr " +
             "JOIN pr.customer c " +
@@ -21,4 +25,5 @@ public interface PharmacyReviewRepository extends JpaRepository<PharmacyReview, 
             "WHERE pr.pharmacy.pharmacyId = :pharmacyId")
     List<ReviewDto> findReviewDtosByPharmacyId(@Param("pharmacyId") Long pharmacyId);
 
+    Long countByPharmacy_PharmacyId(Long pharmacyId);
 }

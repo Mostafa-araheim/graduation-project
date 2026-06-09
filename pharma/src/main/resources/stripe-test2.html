@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إتمام عملية الدفع بأمان</title>
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9fafb; color: #333; max-width: 450px; margin: 60px auto; padding: 20px; }
+        .payment-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { text-align: center; margin-bottom: 24px; color: #1a1f36; }
+        #payment-element { margin-bottom: 24px; }
+
+        button {
+            width: 100%; padding: 12px; background-color: #5469d4; color: #fff;
+            border: none; border-radius: 4px; font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease; box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);
+        }
+        button:hover { filter: brightness(0.94); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #error-message { color: #df1b41; font-size: 14px; margin-top: 12px; text-align: center; display: none; }
+        .spinner { display: none; /* يمكنك إضافة انميشن تحميل هنا */ }
+    </style>
+</head>
+<body>
+
+<div class="payment-card">
+    <h2>الدفع الإلكتروني الأمني</h2>
+
+    <!-- Stripe Payment Element سيتم حقنه هنا -->
+    <form id="payment-form">
+        <div id="payment-element">
+            <!-- تحميل مؤشر انتظار بسيط لحين ظهور الفورم -->
+            <p style="text-align:center; color:#6b7280;">جاري تحميل بوابة الدفع...</p>
+        </div>
+        <button id="submit-btn" disabled>
+            <span id="button-text">ادفع الآن (105.00 EGP)</span>
+        </button>
+        <div id="error-message" role="alert"></div>
+    </form>
+</div>
+
+<script>
+    // تأكد من تغيير المفتاح إلى مفتاح الـ Production (live) عندما تطلق الموقع رسمياً
+    const stripe = Stripe("pk_test_51TLOYZJxRbNzNeVKDMbwE3BEmhgHW03peh1CvffCQDsoeMVHf3ygP3zZzn0X9GMw1D5TWPEiNPDE3ogfb8cghfWB00t23He59h");
+
+    // استخرج الـ clientSecret القادم من الـ JSON API الخاص بك
+    // في الحقيقة: يفضل عمل fetch للـ API لجلب الـ secret تلقائياً، هنا كمثال نأخذه من الـ Response اللي انت أرفقته
+    const clientSecret = "pi_3Tg5cLJxRbNzNeVK0xJlxCJH_secret_monHwOojuMkjBP1v3faobFM4l";
+
+    let elements;
+
+    // 1. تهيئة وفورم الدفع تلقائياً عند فتح الصفحة
+    async function initializePayment() {
+        if (!clientSecret) {
+            showError("فشل تهيئة الدفع. الـ Client Secret غير موجود.");
+            return;
+        }
+
+        // تخصيص مظهر فورم الدفع ليتناسب مع موقعك (Stripe Appearance API)
+        const appearance = { theme: 'stripe', labels: 'floating' };
+        elements = stripe.elements({ clientSecret, appearance });
+
+        const paymentElement = elements.create("payment");
+
+        // إخفاء رسالة التحميل بمجرد جاهزية الـ Element
+        paymentElement.on('ready', () => {
+            document.getElementById("submit-btn").disabled = false;
+        });
+
+        paymentElement.mount("#payment-element");
+    }
+
+    // 2. معالجة عملية الدفع عند الضغط على الزر
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setLoading(true);
+
+        const { error } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+                // هامة جداً: يجب أن تكون صفحة حقيقية على السيرفر لتأكيد الدفع للمستخدم
+                return_url: "https://yourdomain.com/payment-confirm.html",
+            },
+            // لو الدفع مش محتاج Redirect (زي الـ Cards العادية في أغلب الأوقات)، هينفذ الـ المكتوب تحتها فوراً
+            redirect: "if_required"
+        });
+
+        // في حال حدوث خطأ فوراً أثناء الدفع (مثل كارت مرفوض)
+        if (error) {
+            if (error.type === "card_error" || error.type === "validation_error") {
+                showError(error.message);
+            } else {
+                showError("حدث خطأ غير متوقع أثناء معالجة الدفع.");
+            }
+            setLoading(false);
+        } else {
+            // إذا لم يكن هناك Redirect وتم الدفع بنجاح
+            // هنا تقوم بتوجيه المستخدم لصفحة النجاح الخاصة بك داخل التطبيق
+            window.location.href = "/order-success?id=11";
+        }
+    }
+
+    // دالات مساعدة (Helper Functions)
+    function showError(messageText) {
+        const messageContainer = document.getElementById("error-message");
+        messageContainer.style.display = "block";
+        messageContainer.textContent = messageText;
+    }
+
+    function setLoading(isLoading) {
+        const submitBtn = document.getElementById("submit-btn");
+        const btnText = document.getElementById("button-text");
+        if (isLoading) {
+            submitBtn.disabled = true;
+            btnText.textContent = "جاري معالجة الدفع...";
+        } else {
+            submitBtn.disabled = false;
+            btnText.textContent = "ادفع الآن (105.00 EGP)";
+        }
+    }
+
+    // تشغيل الدالة فور تحميل الصفحة
+    document.addEventListener("DOMContentLoaded", initializePayment);
+    document.getElementById("payment-form").addEventListener("submit", handleSubmit);
+</script>
+</body>
+</html>

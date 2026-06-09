@@ -20,12 +20,14 @@ import com.example.pharma.model.entity.pharmacy.PharmacyAddress;
 import com.example.pharma.model.entity.review.PharmacyRating;
 import com.example.pharma.model.entity.review.PharmacyReview;
 import com.example.pharma.repository.Catalog.CategoryRepository;
+import com.example.pharma.repository.Core.CustomerProfileRepository;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyAddressRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import com.example.pharma.repository.Pharmacy.PharmacySpecifications;
 import com.example.pharma.repository.Review.PharmacyRatingRepository;
 import com.example.pharma.repository.Review.PharmacyReviewRepository;
+import com.example.pharma.security.AuthenticatedUser;
 import com.example.pharma.service.interfaces.IPharmacyService;
 import com.example.pharma.service.LocationService;
 import jakarta.transaction.Transactional;
@@ -55,6 +57,7 @@ public class PharmacyService implements IPharmacyService {
     private final PharmacyMapper pharmacyMapper;
     private final PharmacyProductMapper pharmacyProductMapper;
     private final LocationService locationService;
+    private final CustomerProfileRepository customerProfileRepository;
     public PageResponse<PharmacyDto> getPharmacies( PharmacySearchFilter pharmacySearchFilter,
                                                     Pageable pageable)
     {
@@ -113,8 +116,11 @@ public class PharmacyService implements IPharmacyService {
         pharmacyRepository.saveAll(pharmacies);
     }
     @Transactional
-    public PharmacyRating createRating(CreateRatingDto createRatingDto, CustomerProfile customerProfile)
+    public PharmacyRating createRating(CreateRatingDto createRatingDto, AuthenticatedUser authenticatedUser)
     {
+        Long customerId = authenticatedUser.userId();
+        CustomerProfile customerProfile = customerProfileRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
         Pharmacy pharmacy = pharmacyRepository.findById(createRatingDto.pharmacyId())
                 .orElseThrow(() -> new EntityNotFoundException("Pharmacy not found"));
         PharmacyRating pharmacyRating = PharmacyRating.builder()
@@ -127,8 +133,12 @@ public class PharmacyService implements IPharmacyService {
         return saved;
     }
     @Transactional
-    public ReviewDto createPharmacyReview(CreateReviewDto createReviewDto, CustomerProfile customerProfile)
+    public ReviewDto createPharmacyReview(CreateReviewDto createReviewDto, AuthenticatedUser authenticatedUser)
     {
+        Long customerId = authenticatedUser.userId();
+        CustomerProfile customerProfile = customerProfileRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
+
         Pharmacy pharmacy = pharmacyRepository.findById(createReviewDto.pharmacyId())
                 .orElseThrow(() -> new EntityNotFoundException("Pharmacy not found"));
         PharmacyReview pharmacyReview = PharmacyReview.builder()

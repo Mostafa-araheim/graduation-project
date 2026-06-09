@@ -56,7 +56,8 @@ public class P2PListingService implements IP2PListingService {
             "quantity", "quantity",
             "productName", "productName",
             "expiryDate", "expiryDate",
-            "listingId", "listingId"
+            "listingId", "listingId",
+            "createdAt", "createdAt.value"
     );
 
     @Override    @Transactional
@@ -140,6 +141,21 @@ public class P2PListingService implements IP2PListingService {
 
         Specification<P2PListing> spec = ListingSpecifications.build(filter);
         Page<P2PListing> listings = listingRepository.findAll(spec, validatedPageable);
+
+        return PageResponse.from(listings.map(listingMapper::toResponse));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ListingResponse> getMyListings(Long sellerId, Pageable pageable) {
+        Sort mappedSort = SortValidator.validateAndMap(pageable.getSort(), SORT_FIELD_MAPPING);
+        Pageable validatedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                mappedSort
+        );
+
+        Page<P2PListing> listings = listingRepository.findBySeller_UserId(sellerId, validatedPageable);
 
         return PageResponse.from(listings.map(listingMapper::toResponse));
     }

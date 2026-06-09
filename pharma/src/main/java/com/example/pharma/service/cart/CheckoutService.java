@@ -20,7 +20,7 @@ import com.example.pharma.repository.Order.OrderRepository;
 import com.example.pharma.repository.Order.PaymentRepository;
 import com.example.pharma.repository.cart.CartRepository;
 import com.stripe.exception.StripeException;
-import com.stripe.model.PaymentIntent;
+import com.stripe.model.checkout.Session;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -56,12 +56,67 @@ public class CheckoutService {
             String currency,
             List<CheckoutItemResponse> items
     ) {}
+//    @Transactional
+//    public CheckoutResponse checkout(Long cartId, Long userId, CheckoutRequest request) throws StripeException {
+//        CheckoutDraft draft = createCheckoutDraft(cartId, userId, request);
+//
+//        if (request.paymentMethod() == PaymentMethod.CARD) {
+//            PaymentIntent intent = stripePaymentService.createPaymentIntent(
+//                    draft.totalPrice(),
+//                    draft.currency(),
+//                    draft.orderId()
+//            );
+//
+//            Payment savedPayment = attachStripePaymentIntent(
+//                    draft.paymentId(),
+//                    intent.getId(),
+//                    intent.getClientSecret()
+//            );
+//
+//            return new CheckoutResponse(
+//                    draft.orderId(),
+//                    draft.cartId(),
+//                    draft.pharmacyId(),
+//                    draft.deliveryType(),
+//                    draft.paymentMethod(),
+//                    draft.orderStatus(),
+//                    draft.totalPrice(),
+//                    savedPayment.getCurrency(),
+//                    true,
+//                    savedPayment.getStatus(),
+//                    savedPayment.getClientSecret(),
+//                    draft.items()
+//            );
+//        }
+//
+//        finalizePaidOrder(draft.orderId());
+//
+//        Payment cashPayment = markCashPaymentPending(draft.paymentId());
+//
+//        return new CheckoutResponse(
+//                draft.orderId(),
+//                draft.cartId(),
+//                draft.pharmacyId(),
+//                draft.deliveryType(),
+//                draft.paymentMethod(),
+//                OrderStatus.PLACED,
+//                draft.totalPrice(),
+//                cashPayment.getCurrency(),
+//                false,
+//                cashPayment.getStatus(),
+//                null,
+//                draft.items()
+//        );
+//    }
+
+
     @Transactional
     public CheckoutResponse checkout(Long cartId, Long userId, CheckoutRequest request) throws StripeException {
         CheckoutDraft draft = createCheckoutDraft(cartId, userId, request);
 
         if (request.paymentMethod() == PaymentMethod.CARD) {
-            PaymentIntent intent = stripePaymentService.createPaymentIntent(
+
+            Session session = stripePaymentService.createCheckoutSession(
                     draft.totalPrice(),
                     draft.currency(),
                     draft.orderId()
@@ -69,8 +124,8 @@ public class CheckoutService {
 
             Payment savedPayment = attachStripePaymentIntent(
                     draft.paymentId(),
-                    intent.getId(),
-                    intent.getClientSecret()
+                    session.getId(),
+                    null
             );
 
             return new CheckoutResponse(
@@ -84,11 +139,13 @@ public class CheckoutService {
                     savedPayment.getCurrency(),
                     true,
                     savedPayment.getStatus(),
-                    savedPayment.getClientSecret(),
+                    null,
+                    session.getUrl(),
                     draft.items()
             );
         }
 
+        // ... باقى كود الـ CASH كما هو ...
         finalizePaidOrder(draft.orderId());
 
         Payment cashPayment = markCashPaymentPending(draft.paymentId());
@@ -104,6 +161,7 @@ public class CheckoutService {
                 cashPayment.getCurrency(),
                 false,
                 cashPayment.getStatus(),
+                null,
                 null,
                 draft.items()
         );
@@ -132,11 +190,17 @@ public class CheckoutService {
         CustomerProfile customer = customerProfileRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
 
+        UserAddress selectedAddress = validateDeliveryRequirements(request, userId);
+
         Order order = new Order();
         order.setCustomer(customer);
         order.setSourceCartId(cartId);
         order.setDeliveryType(request.deliveryType());
         order.setPaymentMethod(request.paymentMethod());
+
+        if(request.deliveryType() == DeliveryType.DELIVERY) {
+            order.setDeliveryAddress(selectedAddress);
+        }
 
         List<OrderItem> orderItems = new ArrayList<>();
         List<CheckoutItemResponse> responseItems = new ArrayList<>();
@@ -300,19 +364,20 @@ public class CheckoutService {
         }
     }
 
-    private void validateDeliveryRequirements(CheckoutRequest request, Long userId) {
+    private UserAddress validateDeliveryRequirements(CheckoutRequest request, Long userId) {
         if (request.deliveryType() == DeliveryType.DELIVERY) {
             if (request.deliveryAddressId() == null) {
                 throw new BusinessRuleViolationException("Delivery address is required for delivery orders");
             }
-
             UserAddress address = userAddressRepository.findById(request.deliveryAddressId())
                     .orElseThrow(() -> new EntityNotFoundException("Delivery address not found"));
 
             if (address.getUser() == null || !address.getUser().getUserId().equals(userId)) {
                 throw new AccessDeniedException("You are not allowed to use this delivery address");
             }
+            return address;
         }
+        return null;
     }
 
     private OrderStatus resolveInitialOrderStatus() {

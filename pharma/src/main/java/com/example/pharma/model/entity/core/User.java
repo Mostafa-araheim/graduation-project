@@ -27,6 +27,9 @@ public class User {
     private String name;
     private String phone;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Embedded
     private CreatedAtColumn createdAt;
 
