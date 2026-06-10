@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record CustomerOrderItemResponse(
         Long productId,
         String productName,
+        String productImage,
         Integer quantity,
         BigDecimal priceAtPurchase,
         BigDecimal subtotal

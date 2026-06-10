@@ -226,4 +226,28 @@ public class PharmacyOwnerController {
         );
     }
 
+    @GetMapping("/{pharmacyId}/sales-analytics")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<SalesAnalyticsResponse> getPharmacySalesAnalytics(
+            @PathVariable Long pharmacyId,
+            @RequestParam(value = "period", defaultValue = "month") String period,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        return ApiResponse.success(
+                "Pharmacy sales analytics retrieved successfully",
+                pharmacyOwnerService.getPharmacySalesAnalytics(pharmacyId, authenticatedUser.userId(), period)
+        );
+    }
+
+    @GetMapping("/owner/sales-analytics")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<SalesAnalyticsResponse> getOwnerSalesAnalytics(
+            @RequestParam(value = "period", defaultValue = "month") String period,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        return ApiResponse.success(
+                "Owner sales analytics retrieved successfully",
+                pharmacyOwnerService.getOwnerSalesAnalytics(authenticatedUser.userId(), period)
+        );
+    }
 }

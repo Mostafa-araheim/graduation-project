@@ -87,6 +87,7 @@ public class CustomerOrderService {
         return new CustomerOrderItemResponse(
                 item.getProduct().getProductId(),
                 item.getProduct().getName(),
+                item.getProduct().getImageUrl(),
                 item.getQuantity(),
                 item.getPriceAtPurchase(),
                 item.getSubtotal()
