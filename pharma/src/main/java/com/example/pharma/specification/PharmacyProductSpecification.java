@@ -2,7 +2,6 @@ package com.example.pharma.specification;
 
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductFilter;
 import com.example.pharma.model.entity.inventory.AvailabilityStatus;
-import com.example.pharma.model.entity.catalog.Product;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
 import com.example.pharma.service.interfaces.ILocationService;
 import jakarta.persistence.criteria.*;
@@ -15,25 +14,48 @@ import java.util.List;
 
 public class PharmacyProductSpecification {
 
+    @SuppressWarnings("unchecked")
     public static Specification<PharmacyProduct> buildFromFilter(PharmacyProductFilter filter, ILocationService locationService) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            var productFetch = root.fetch("product", JoinType.INNER);
-            var productJoin = (Join<Object, Object>) productFetch;
+            Class<?> queryType = query.getResultType();
+            boolean isCountQuery = queryType.equals(Long.class) || queryType.equals(long.class);
 
-            var categoryFetch = productFetch.fetch("category", JoinType.INNER);
-            var categoryJoin = (Join<Object, Object>) categoryFetch;
+            Join<Object, Object> productJoin;
+            Join<Object, Object> categoryJoin;
+            Join<Object, Object> brandJoin;
+            Join<Object, Object> inventoryJoin;
+            Join<Object, Object> pharmacyJoin;
 
-            var brandFetch = productFetch.fetch("brand", JoinType.LEFT);
-            var brandJoin = (Join<Object, Object>) brandFetch;
+            if (isCountQuery) {
+                // في حالة الـ Count نستخدم Join فقط بدون Fetch لتجنب خطأ SemanticException
+                productJoin = (Join<Object, Object>) root.join("product", JoinType.INNER);
+                categoryJoin = (Join<Object, Object>) productJoin.join("category", JoinType.INNER);
+                brandJoin = (Join<Object, Object>) productJoin.join("brand", JoinType.LEFT);
 
-            var inventoryFetch = root.fetch("inventory", JoinType.INNER);
-            var inventoryJoin = (Join<Object, Object>) inventoryFetch;
+                inventoryJoin = (Join<Object, Object>) root.join("inventory", JoinType.INNER);
+                pharmacyJoin = (Join<Object, Object>) inventoryJoin.join("pharmacy", JoinType.INNER);
+                pharmacyJoin.join("address", JoinType.LEFT);
+            } else {
+                var productFetch = root.fetch("product", JoinType.INNER);
+                productJoin = (Join<Object, Object>) productFetch;
 
-            var pharmacyFetch = inventoryFetch.fetch("pharmacy", JoinType.INNER);
-            pharmacyFetch.fetch("address", JoinType.LEFT);
-            var pharmacyJoin = (Join<Object, Object>) pharmacyFetch;
+                var categoryFetch = productFetch.fetch("category", JoinType.INNER);
+                categoryJoin = (Join<Object, Object>) categoryFetch;
+
+                var brandFetch = productFetch.fetch("brand", JoinType.LEFT);
+                brandJoin = (Join<Object, Object>) brandFetch;
+
+                var inventoryFetch = root.fetch("inventory", JoinType.INNER);
+                inventoryJoin = (Join<Object, Object>) inventoryFetch;
+
+                var pharmacyFetch = inventoryFetch.fetch("pharmacy", JoinType.INNER);
+                pharmacyFetch.fetch("address", JoinType.LEFT);
+                pharmacyJoin = (Join<Object, Object>) pharmacyFetch;
+            }
+
+
 
             boolean hasProductId = filter.productId() != null;
             if (hasProductId) {
@@ -74,6 +96,7 @@ public class PharmacyProductSpecification {
                 var distancePredicate = buildDistanceFilter(pharmacyJoin, cb, polygon);
                 predicates.add(distancePredicate);
             }
+            query.distinct(true);
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

@@ -27,6 +27,15 @@ import com.example.pharma.model.entity.pharmacy.Pharmacy;
 import com.example.pharma.repository.Catalog.ProductRepository;
 import com.example.pharma.repository.Core.OwnerProfileRepository;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.repository.Order.OrderItemRepository;
+import com.example.pharma.dto.pharmacy.owner.*;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.PageRequest;
+
 import com.example.pharma.repository.Order.OrderRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import com.example.pharma.repository.Review.PharmacyRatingRepository;
@@ -51,6 +60,7 @@ public class PharmacyOwnerService {
     private final PharmacyProductRepository pharmacyProductRepository;
     private final PharmacyProductMapper pharmacyProductMapper;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final OwnerOrderMapper ownerOrderMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final ProductMapper productMapper;
@@ -409,6 +419,123 @@ public class PharmacyOwnerService {
         );
     }
 
+    @Transactional
+    public SalesAnalyticsResponse getPharmacySalesAnalytics(Long pharmacyId, Long ownerUserId, String period) {
+        validateOwnerPharmacyAccess(pharmacyId, ownerUserId);
+        LocalDateTime startDate = resolveStartDate(period);
 
+        // Fetch revenue data
+        List<OrderRevenueProjection> orders = orderRepository.findRevenueData(pharmacyId, startDate);
 
+        return buildSalesAnalyticsResponse(orders, startDate, (statuses, limit) ->
+            orderItemRepository.findBestSellers(pharmacyId, statuses, startDate, PageRequest.of(0, limit))
+        );
+    }
+
+    @Transactional
+    public SalesAnalyticsResponse getOwnerSalesAnalytics(Long ownerUserId, String period) {
+        // Verify owner exists
+        if (!ownerProfileRepository.existsById(ownerUserId)) {
+            throw new EntityNotFoundException("Owner profile not found");
+        }
+        LocalDateTime startDate = resolveStartDate(period);
+
+        // Fetch revenue data
+        List<OrderRevenueProjection> orders = orderRepository.findRevenueDataForOwner(ownerUserId, startDate);
+
+        return buildSalesAnalyticsResponse(orders, startDate, (statuses, limit) ->
+            orderItemRepository.findBestSellersForOwner(ownerUserId, statuses, startDate, PageRequest.of(0, limit))
+        );
+    }
+
+    private LocalDateTime resolveStartDate(String period) {
+        if (period == null) {
+            period = "month";
+        }
+        LocalDateTime now = LocalDateTime.now();
+        switch (period.toLowerCase()) {
+            case "week":
+                return now.minusDays(7);
+            case "year":
+                return now.minusDays(365);
+            case "month":
+            default:
+                return now.minusDays(30);
+        }
+    }
+
+    @FunctionalInterface
+    private interface BestSellersFetcher {
+        List<ProductSalesProjection> fetch(List<OrderStatus> statuses, int limit);
+    }
+
+    private SalesAnalyticsResponse buildSalesAnalyticsResponse(
+            List<OrderRevenueProjection> orders,
+            LocalDateTime startDate,
+            BestSellersFetcher bestSellersFetcher
+    ) {
+        List<OrderStatus> revenueStatuses = List.of(OrderStatus.PLACED, OrderStatus.CONFIRMED);
+
+        // 1. Calculate General Metrics
+        BigDecimal totalRevenue = orders.stream()
+                .filter(o -> revenueStatuses.contains(o.getStatus()))
+                .map(OrderRevenueProjection::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long totalOrders = orders.size();
+
+        long revenueOrdersCount = orders.stream()
+                .filter(o -> revenueStatuses.contains(o.getStatus()))
+                .count();
+
+        BigDecimal averageOrderValue = revenueOrdersCount > 0
+                ? totalRevenue.divide(BigDecimal.valueOf(revenueOrdersCount), 2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        // 2. Sales Over Time
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        Map<String, List<OrderRevenueProjection>> groupedByDate = orders.stream()
+                .collect(Collectors.groupingBy(o -> o.getCreatedAtValue().format(formatter)));
+
+        List<DailySalesDto> salesOverTime = groupedByDate.entrySet().stream()
+                .map(entry -> {
+                    String dateStr = entry.getKey();
+                    List<OrderRevenueProjection> dayOrders = entry.getValue();
+                    BigDecimal dayRevenue = dayOrders.stream()
+                            .filter(o -> revenueStatuses.contains(o.getStatus()))
+                            .map(OrderRevenueProjection::getTotalPrice)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    long dayOrderCount = dayOrders.size();
+                    return new DailySalesDto(dateStr, dayRevenue, dayOrderCount);
+                })
+                .sorted(java.util.Comparator.comparing(DailySalesDto::date))
+                .collect(Collectors.toList());
+
+        // 3. Best Sellers
+        List<ProductSalesProjection> bestSellerProjections = bestSellersFetcher.fetch(revenueStatuses, 5);
+        List<BestSellerProductDto> bestSellers = bestSellerProjections.stream()
+                .map(p -> new BestSellerProductDto(
+                        p.getProductId(),
+                        p.getProductName(),
+                        p.getQuantitySold(),
+                        p.getTotalRevenue()
+                ))
+                .collect(Collectors.toList());
+
+        // 4. Status Distribution
+        Map<String, Long> statusDistribution = orders.stream()
+                .collect(Collectors.groupingBy(
+                        o -> o.getStatus().name(),
+                        Collectors.counting()
+                ));
+
+        return new SalesAnalyticsResponse(
+                totalRevenue,
+                totalOrders,
+                averageOrderValue,
+                salesOverTime,
+                bestSellers,
+                statusDistribution
+        );
+    }
 }
