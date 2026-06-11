@@ -4,6 +4,8 @@ import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.dto.exception.ErrorCode;
 import com.example.pharma.dto.exception.ErrorResponse;
 import com.example.pharma.exception.common.BaseException;
+import com.example.pharma.exception.prescription.PrescriptionScanFailedException;
+import com.example.pharma.exception.prescription.PrescriptionScanTimeoutException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -112,6 +114,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.failure("",error));
+    }
+
+
+    /*
+        Prescription Exceptions
+     */
+    @ExceptionHandler(PrescriptionScanFailedException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handlePrescriptionScanFailed(PrescriptionScanFailedException ex, HttpServletRequest request)
+    {
+        ErrorResponse errorResponse = buildError(ex, request);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.failure("", errorResponse));
+    }
+
+    @ExceptionHandler(PrescriptionScanTimeoutException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handlePrescriptionScanTimeoutFailed(PrescriptionScanTimeoutException ex, HttpServletRequest request)
+    {
+        ErrorResponse errorResponse = buildError(ex, request);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.failure("", errorResponse));
     }
 
     /**
