@@ -34,3 +34,8 @@ build/
 /src/main/resources/application.yaml
 /src/main/resources/application.properties
 
+
+drugs_data_set.xlsx
+images/*
+import_drugs.sql
+pharmacy_owner_api_docs.md
