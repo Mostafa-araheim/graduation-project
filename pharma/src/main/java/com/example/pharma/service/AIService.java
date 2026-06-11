@@ -208,8 +208,8 @@ public class AIService {
         List<CoordinateDto> pharmacyCoords = pharmacyRepresentatives.stream()
                 .map(pp -> {
                     var pharmacy = pp.getInventory().getPharmacy();
-                    double lat = pharmacy.getLatitude()  != null ? pharmacy.getLatitude()  : 0.0;
-                    double lon = pharmacy.getLongitude() != null ? pharmacy.getLongitude() : 0.0;
+                    double lat = pharmacy.getLatitude()  != null ? pharmacy.getLongitude()  : 0.0;
+                    double lon = pharmacy.getLongitude() != null ? pharmacy.getLatitude() : 0.0;
                     return new CoordinateDto(lat, lon);
                 })
                 .toList();
