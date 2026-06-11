@@ -1,13 +1,21 @@
 package com.example.pharma.service;
 
+import com.example.pharma.dto.ai.NearbyPharmacyResponse;
 import com.example.pharma.dto.ai.PredictionDto;
+import com.example.pharma.dto.ai.PrescriptionMedicineOption;
 import com.example.pharma.dto.ai.ScanResponseDto;
+import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
+import com.example.pharma.dto.cart.response.CartResponse;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductFilter;
 import com.example.pharma.exception.prescription.PrescriptionScanFailedException;
 import com.example.pharma.exception.prescription.PrescriptionScanTimeoutException;
 import com.example.pharma.model.entity.catalog.Product;
+import com.example.pharma.dto.Location.CoordinateDto;
+import com.example.pharma.model.entity.inventory.PharmacyProduct;
+import com.example.pharma.service.interfaces.ILocationService;
 import com.example.pharma.repository.Catalog.ProductRepository;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
+import com.example.pharma.service.cart.CartService;
 import com.example.pharma.service.interfaces.IPharmacyProductService;
 import com.example.pharma.specification.ProductSpecification;
 import io.netty.handler.timeout.TimeoutException;
@@ -19,10 +27,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,6 +41,8 @@ public class AIService {
     private final PharmacyProductRepository pharmacyProductRepository;
     private final ProductRepository productRepository;
     private final ObjectMapper objectMapper;
+    private final CartService cartService;
+    private final ILocationService locationService;
     private static final String PRESCRIPTION_PROMPT = """
             You are a medical prescription reader. Extract ALL medicines from this prescription image.
                     Return ONLY valid JSON with no explanation, markdown, or extra text. Use this exact format:
@@ -54,27 +64,229 @@ public class AIService {
                     If the image is not a prescription or is unreadable, return: {"success": false, "medicines": []}
             """;
 
-    public List<Product> scanPrescription(
+    public List<CartResponse> scanPrescription(
+            MultipartFile image,
+            Double userLatitude,
+            Double userLongitude,
+            Long userId
+    ) {
+        // 1. استدعاء OpenAI Vision لاستخراج أسماء الأدوية من الصورة
+        ScanResponseDto scanResult = callOpenAiVision(image);
+        validateScanResult(scanResult);
+
+        List<String> medicineNames = scanResult.medicines()
+                .stream()
+                .map(PredictionDto::drugName)
+                .filter(name -> name != null && !name.isBlank())
+                .toList();
+
+//        List<String> medicineNames= List.of("amoxicillin", "panadol");
+
+        log.info("Extracted medicine names from prescription: {}", medicineNames);
+
+        // 2. البحث عن Products في الداتابيز بناءً على أسماء الأدوية
+        List<Product> products =
+                productRepository.findAll(ProductSpecification.nameMatchesAny(medicineNames));
+
+        if (products.isEmpty()) {
+            log.warn("No matching products found in catalog for names: {}", medicineNames);
+            return List.of();
+        }
+
+        List<Long> productIds = products.stream()
+                .map(Product::getProductId)
+                .toList();
+
+        // 3. جيب كل PharmacyProduct المتاحة لهذه الأدوية
+        List<PharmacyProduct> availablePharmacyProducts =
+                pharmacyProductRepository.findAvailableByProductIds(productIds);
+
+        if (availablePharmacyProducts.isEmpty()) {
+            log.warn("No pharmacy products available for productIds: {}", productIds);
+            return List.of();
+        }
+
+        // 4. لكل product، اختار PharmacyProduct من أقرب صيدلية للمستخدم (مسافة طريق حقيقية)
+        Map<Long, List<PharmacyProduct>> byProductId = availablePharmacyProducts.stream()
+                .collect(Collectors.groupingBy(pp -> pp.getProduct().getProductId()));
+
+        List<PharmacyProduct> selectedItems = new ArrayList<>();
+        for (Product product : products) {
+            List<PharmacyProduct> candidates = byProductId.get(product.getProductId());
+            if (candidates == null || candidates.isEmpty()) {
+                log.warn("No available pharmacy product for productId={}", product.getProductId());
+                continue;
+            }
+            PharmacyProduct nearest = findNearestByRoad(candidates, userLatitude, userLongitude);
+            selectedItems.add(nearest);
+        }
+
+        // 5. أضف كل دواء مختار للكارت (CartService يدير إيجاد أو إنشاء الكارت المناسب)
+        for (PharmacyProduct pp : selectedItems) {
+            cartService.addItem(userId, new CartItemIdentifierRequest(pp.getPharmacyProductId()));
+            log.info("Added pharmacyProductId={} to cart for userId={}", pp.getPharmacyProductId(), userId);
+        }
+
+        // 6. إرجاع الكارتات المحدّثة للمستخدم
+        return cartService.getUserCarts(userId);
+    }
+
+    /**
+     * تسكن الروشتة وترجع أقرب 10 صيدليات عندها الأدوية المطلوبة،
+     * مرتبة بمسافة الطريق الفعلية، وكل صيدلية فيها الأدوية المتاحة عندها.
+     */
+    public List<NearbyPharmacyResponse> scanPrescriptionNearby(
             MultipartFile image,
             Double userLatitude,
             Double userLongitude
     ) {
-        //ScanResponseDto scanResult = callOpenAiVision(image);
-        //validateScanResult(scanResult);
-        //fetch the closest pharmacies with the medicines that they contain from the result
-        List<String> medicineNames = List.of("Hair", "Activin", "Unizinc");
+        // 1. استدعاء OpenAI Vision لاستخراج أسماء الأدوية
+        ScanResponseDto scanResult = callOpenAiVision(image);
+        validateScanResult(scanResult);
+
+        List<String> medicineNames = scanResult.medicines()
+                .stream()
+                .map(PredictionDto::drugName)
+                .filter(name -> name != null && !name.isBlank())
+                .toList();
+
+//        List<String> medicineNames= List.of("amoxicillin", "panadol");
+        log.info("Extracted medicine names from prescription: {}", medicineNames);
+
+        // 2. البحث عن Products في الداتابيز
         List<Product> products =
                 productRepository.findAll(ProductSpecification.nameMatchesAny(medicineNames));
 
+        if (products.isEmpty()) {
+            log.warn("No matching products found for names: {}", medicineNames);
+            return List.of();
+        }
 
-        //List<PharmacyProduct> pharmacyProducts = pharmacyProductRepository.findAll()
+        int totalMedicinesRequested = products.size();
 
+        List<Long> productIds = products.stream()
+                .map(Product::getProductId)
+                .toList();
 
+        // 3. جيب كل PharmacyProducts المتاحة لهذه الأدوية
+        List<PharmacyProduct> availablePharmacyProducts =
+                pharmacyProductRepository.findAvailableByProductIds(productIds);
 
+        if (availablePharmacyProducts.isEmpty()) {
+            log.warn("No pharmacy products available for productIds: {}", productIds);
+            return List.of();
+        }
 
+        // 4. Group by صيدلية — كل صيدلية فيها الأدوية المتاحة عندها
+        Map<Long, List<PharmacyProduct>> byPharmacyId = availablePharmacyProducts.stream()
+                .collect(Collectors.groupingBy(pp -> pp.getInventory().getPharmacy().getPharmacyId()));
 
+        // 5. بناء list من الصيدليات الفريدة مع coordinates بتاعتها
+        //    (نحتاج ترتيب ثابت عشان نربط مع roadDistances بالـ index)
+        List<PharmacyProduct> pharmacyRepresentatives = byPharmacyId.values().stream()
+                .map(list -> list.get(0))   // representative واحد لكل صيدلية
+                .toList();
 
-        return products;
+        List<CoordinateDto> pharmacyCoords = pharmacyRepresentatives.stream()
+                .map(pp -> {
+                    var pharmacy = pp.getInventory().getPharmacy();
+                    double lat = pharmacy.getLatitude()  != null ? pharmacy.getLatitude()  : 0.0;
+                    double lon = pharmacy.getLongitude() != null ? pharmacy.getLongitude() : 0.0;
+                    return new CoordinateDto(lat, lon);
+                })
+                .toList();
+
+        // 6. batch call واحد لمسافات الطريق لكل الصيدليات
+        List<Double> roadDistances =
+                locationService.getRoadDistances(userLatitude, userLongitude, pharmacyCoords);
+
+        // 7. بناء الـ response لكل صيدلية
+        List<NearbyPharmacyResponse> pharmacyResults = new ArrayList<>();
+        for (int i = 0; i < pharmacyRepresentatives.size(); i++) {
+            var pharmacy = pharmacyRepresentatives.get(i).getInventory().getPharmacy();
+            Long pharmacyId = pharmacy.getPharmacyId();
+            double distanceKm = roadDistances.get(i);
+
+            List<PharmacyProduct> medicinesInPharmacy = byPharmacyId.get(pharmacyId);
+
+            // بناء قائمة الأدوية المتاحة في الصيدلية دي
+            List<PrescriptionMedicineOption> medicineOptions = medicinesInPharmacy.stream()
+                    .map(pp -> new PrescriptionMedicineOption(
+                            pp.getPharmacyProductId(),
+                            pp.getProduct().getProductId(),
+                            pp.getProduct().getName(),
+                            pp.getProduct().getImageUrl(),
+                            pp.getProduct().getDosageForm() != null
+                                    ? pp.getProduct().getDosageForm().name() : null,
+                            pp.getProduct().getStrength(),
+                            pp.getPrice(),
+                            pp.getQuantity()
+                    ))
+                    .toList();
+
+            // إجمالي السعر
+            BigDecimal totalPrice = medicinesInPharmacy.stream()
+                    .map(PharmacyProduct::getPrice)
+                    .filter(p -> p != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            pharmacyResults.add(new NearbyPharmacyResponse(
+                    pharmacyId,
+                    pharmacy.getName(),
+                    pharmacy.getImageUrl(),
+                    pharmacy.getLatitude(),
+                    pharmacy.getLongitude(),
+                    distanceKm,
+                    pharmacy.getAverageRating(),
+                    pharmacy.isOpen(),
+                    medicineOptions,
+                    medicineOptions.size(),
+                    totalMedicinesRequested,
+                    totalPrice
+            ));
+        }
+
+        // 8. ترتيب بالمسافة الأقرب أولاً وأخذ أقرب 10 صيدليات
+        return pharmacyResults.stream()
+                .sorted(Comparator.comparingDouble(NearbyPharmacyResponse::distanceKm))
+                .limit(10)
+                .toList();
+    }
+
+    /**
+     * يختار PharmacyProduct من أقرب صيدلية للمستخدم بناءً على مسافة الطريق الفعلية.
+     * يستخدم getRoadDistances لإرسال batch call واحد بدل call لكل صيدلية.
+     */
+    private PharmacyProduct findNearestByRoad(
+            List<PharmacyProduct> candidates,
+            Double userLat,
+            Double userLon
+    ) {
+        // بناء list من الـ coordinates لكل الصيدليات المرشحة
+        List<CoordinateDto> pharmacyCoords = candidates.stream()
+                .map(pp -> {
+                    var pharmacy = pp.getInventory().getPharmacy();
+                    double lat = pharmacy.getLatitude()  != null ? pharmacy.getLatitude()  : 0.0;
+                    double lon = pharmacy.getLongitude() != null ? pharmacy.getLongitude() : 0.0;
+                    return new CoordinateDto(lat, lon);
+                })
+                .toList();
+
+        // batch call واحد → قائمة مسافات بنفس ترتيب pharmacyCoords
+        List<Double> roadDistances =
+                locationService.getRoadDistances(userLat, userLon, pharmacyCoords);
+
+        // إيجاد الـ index اللي عنده أقل مسافة
+        int nearestIndex = 0;
+        double minDistance = Double.MAX_VALUE;
+        for (int i = 0; i < roadDistances.size(); i++) {
+            if (roadDistances.get(i) < minDistance) {
+                minDistance = roadDistances.get(i);
+                nearestIndex = i;
+            }
+        }
+
+        return candidates.get(nearestIndex);
     }
     private ScanResponseDto callOpenAiVision(MultipartFile image) {
         String base64Image = encodeImageToBase64(image);

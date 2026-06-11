@@ -128,4 +128,17 @@ public interface PharmacyProductRepository
     Optional<PharmacyProduct> findWithDetailsById(
             @Param("pharmacyProductId") Long pharmacyProductId
     );
+
+    @Query("""
+        SELECT pp
+        FROM PharmacyProduct pp
+        JOIN FETCH pp.product p
+        JOIN FETCH pp.inventory i
+        JOIN FETCH i.pharmacy ph
+        WHERE p.productId IN :productIds
+          AND pp.quantity > 0
+    """)
+    List<PharmacyProduct> findAvailableByProductIds(
+            @Param("productIds") List<Long> productIds
+    );
 }

@@ -26,7 +26,7 @@ public class WebClientConfig {
     public WebClient aiWebClient() {
         return WebClient.builder()
                 .baseUrl("https://api.freemodel.dev")
-                .defaultHeader("Authorization", "Bearer " + "fe_oa_49fac72547186cef961f95bdde685315369e8374b95851ed")
+                .defaultHeader("Authorization", "Bearer " + "fe_oa_1205c6850641a08b91cdf54caed416dfb5197cf5f3cb9a3f")
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
