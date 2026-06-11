@@ -71,4 +71,17 @@ public class ProductSpecification {
                                                    ProductFilter filter) {
         return cb.equal(root.get("dosageForm"), filter.dosageForm());
     }
+    public static Specification<Product> nameMatchesAny(List<String> names) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = names.stream()
+                    .map(name ->
+                            cb.like(
+                                    cb.lower(root.get("name")),
+                                    "%" + name.toLowerCase() + "%"
+                            ))
+                    .toList();
+
+            return cb.or(predicates.toArray(new Predicate[0]));
+        };
+    }
 }
