@@ -1,9 +1,12 @@
 package com.example.pharma.controller.prescription;
 
-import com.example.pharma.model.entity.catalog.Product;
+import com.example.pharma.dto.ai.NearbyPharmacyResponse;
+import com.example.pharma.dto.cart.response.CartResponse;
+import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.service.AIService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,17 +21,33 @@ import java.util.List;
 public class PrescriptionController {
 
     private final AIService aiService;
-      @PostMapping("/scan")
-    public ResponseEntity<List<Product>> scanPrescription(
+
+
+    @PostMapping("/scan")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<List<CartResponse>> scanPrescription(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam Double userLatitude,
+            @RequestParam Double userLongitude,
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) {
+        List<CartResponse> updatedCarts =
+                aiService.scanPrescription(file, userLatitude, userLongitude, userId);
+
+        return ApiResponse.success("Prescription scanned and medicines added to cart successfully", updatedCarts);
+    }
+
+    @PostMapping("/scan/nearby")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<List<NearbyPharmacyResponse>> scanPrescriptionNearby(
             @RequestParam("file") MultipartFile file,
             @RequestParam Double userLatitude,
             @RequestParam Double userLongitude
     ) {
-        List<Product> result =
-                aiService.scanPrescription(file, userLatitude, userLongitude);
+        List<NearbyPharmacyResponse> nearbyPharmacies =
+                aiService.scanPrescriptionNearby(file, userLatitude, userLongitude);
 
-        return ResponseEntity.ok(
-                 result
-        );
+        return ApiResponse.success("Nearby pharmacies retrieved successfully", nearbyPharmacies);
     }
 }
+
