@@ -3,6 +3,8 @@ package com.example.pharma.service;
 import com.example.pharma.dto.ai.NearbyPharmacyResponse;
 import com.example.pharma.dto.ai.PredictionDto;
 import com.example.pharma.dto.ai.PrescriptionMedicineOption;
+import com.example.pharma.dto.ai.PrescriptionScanResult;
+import com.example.pharma.dto.ai.ScannedProductDto;
 import com.example.pharma.dto.ai.ScanResponseDto;
 import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
 import com.example.pharma.dto.cart.response.CartResponse;
@@ -132,10 +134,11 @@ public class AIService {
     }
 
     /**
-     * تسكن الروشتة وترجع أقرب 10 صيدليات عندها الأدوية المطلوبة،
-     * مرتبة بمسافة الطريق الفعلية، وكل صيدلية فيها الأدوية المتاحة عندها.
+     * تسكن الروشتة وترجع:
+     * - الأدوية اللي اتعرف عليها من الروشتة (scanned_medicines)
+     * - أقرب 10 صيدليات مرتبة بمسافة الطريق (nearby_pharmacies)
      */
-    public List<NearbyPharmacyResponse> scanPrescriptionNearby(
+    public PrescriptionScanResult scanPrescriptionNearby(
             MultipartFile image,
             Double userLatitude,
             Double userLongitude
@@ -150,16 +153,31 @@ public class AIService {
                 .filter(name -> name != null && !name.isBlank())
                 .toList();
 
-//        List<String> medicineNames= List.of("amoxicillin", "panadol");
         log.info("Extracted medicine names from prescription: {}", medicineNames);
 
         // 2. البحث عن Products في الداتابيز
         List<Product> products =
                 productRepository.findAll(ProductSpecification.nameMatchesAny(medicineNames));
 
+        // mapping الـ products لـ ScannedProductDto
+        List<ScannedProductDto> scannedMedicines = products.stream()
+                .map(p -> new ScannedProductDto(
+                        p.getProductId(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.isRequiresPrescription(),
+                        p.getDosageForm() != null ? p.getDosageForm().name() : null,
+                        p.getStrength(),
+                        p.getManufacturer(),
+                        p.getImageUrl(),
+                        p.getCategory() != null ? p.getCategory().getCategoryName() : null,
+                        p.getBrand()    != null ? p.getBrand().getBrandName()       : null
+                ))
+                .toList();
+
         if (products.isEmpty()) {
             log.warn("No matching products found for names: {}", medicineNames);
-            return List.of();
+            return new PrescriptionScanResult(scannedMedicines, List.of());
         }
 
         int totalMedicinesRequested = products.size();
@@ -174,7 +192,7 @@ public class AIService {
 
         if (availablePharmacyProducts.isEmpty()) {
             log.warn("No pharmacy products available for productIds: {}", productIds);
-            return List.of();
+            return new PrescriptionScanResult(scannedMedicines, List.of());
         }
 
         // 4. Group by صيدلية — كل صيدلية فيها الأدوية المتاحة عندها
@@ -184,7 +202,7 @@ public class AIService {
         // 5. بناء list من الصيدليات الفريدة مع coordinates بتاعتها
         //    (نحتاج ترتيب ثابت عشان نربط مع roadDistances بالـ index)
         List<PharmacyProduct> pharmacyRepresentatives = byPharmacyId.values().stream()
-                .map(list -> list.get(0))   // representative واحد لكل صيدلية
+                .map(list -> list.get(0))
                 .toList();
 
         List<CoordinateDto> pharmacyCoords = pharmacyRepresentatives.stream()
@@ -247,10 +265,12 @@ public class AIService {
         }
 
         // 8. ترتيب بالمسافة الأقرب أولاً وأخذ أقرب 10 صيدليات
-        return pharmacyResults.stream()
+        List<NearbyPharmacyResponse> sortedPharmacies = pharmacyResults.stream()
                 .sorted(Comparator.comparingDouble(NearbyPharmacyResponse::distanceKm))
                 .limit(10)
                 .toList();
+
+        return new PrescriptionScanResult(scannedMedicines, sortedPharmacies);
     }
 
     /**

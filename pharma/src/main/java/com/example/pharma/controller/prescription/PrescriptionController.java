@@ -1,6 +1,6 @@
 package com.example.pharma.controller.prescription;
 
-import com.example.pharma.dto.ai.NearbyPharmacyResponse;
+import com.example.pharma.dto.ai.PrescriptionScanResult;
 import com.example.pharma.dto.cart.response.CartResponse;
 import com.example.pharma.dto.common.ApiResponse;
 import com.example.pharma.service.AIService;
@@ -39,15 +39,15 @@ public class PrescriptionController {
 
     @PostMapping("/scan/nearby")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<List<NearbyPharmacyResponse>> scanPrescriptionNearby(
+    public ApiResponse<PrescriptionScanResult> scanPrescriptionNearby(
             @RequestParam("file") MultipartFile file,
             @RequestParam Double userLatitude,
             @RequestParam Double userLongitude
     ) {
-        List<NearbyPharmacyResponse> nearbyPharmacies =
+        PrescriptionScanResult result =
                 aiService.scanPrescriptionNearby(file, userLatitude, userLongitude);
 
-        return ApiResponse.success("Nearby pharmacies retrieved successfully", nearbyPharmacies);
+        return ApiResponse.success("Nearby pharmacies retrieved successfully", result);
     }
 }
 
