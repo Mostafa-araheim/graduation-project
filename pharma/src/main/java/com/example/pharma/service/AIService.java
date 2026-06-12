@@ -1,28 +1,23 @@
 package com.example.pharma.service;
 
-import com.example.pharma.dto.ai.NearbyPharmacyResponse;
-import com.example.pharma.dto.ai.PredictionDto;
-import com.example.pharma.dto.ai.PrescriptionMedicineOption;
-import com.example.pharma.dto.ai.PrescriptionScanResult;
-import com.example.pharma.dto.ai.ScannedProductDto;
-import com.example.pharma.dto.ai.ScanResponseDto;
+import com.example.pharma.dto.Location.CoordinateDto;
+import com.example.pharma.dto.ai.*;
 import com.example.pharma.dto.cart.request.CartItemIdentifierRequest;
 import com.example.pharma.dto.cart.response.CartResponse;
-import com.example.pharma.dto.pharmacyProduct.PharmacyProductFilter;
 import com.example.pharma.exception.prescription.PrescriptionScanFailedException;
 import com.example.pharma.exception.prescription.PrescriptionScanTimeoutException;
 import com.example.pharma.model.entity.catalog.Product;
-import com.example.pharma.dto.Location.CoordinateDto;
 import com.example.pharma.model.entity.inventory.PharmacyProduct;
-import com.example.pharma.service.interfaces.ILocationService;
 import com.example.pharma.repository.Catalog.ProductRepository;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.service.cart.CartService;
-import com.example.pharma.service.interfaces.IPharmacyProductService;
+import com.example.pharma.service.interfaces.ILocationService;
 import com.example.pharma.specification.ProductSpecification;
 import io.netty.handler.timeout.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -38,14 +33,20 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AIService {
-    private final WebClient aiWebClient;
-    private final IPharmacyProductService pharmacyProductService;
+    @Qualifier("openAiWebClient")
+    private final WebClient openAiWebClient;
+
+    @Qualifier("geminiWebClient")
+    private final WebClient geminiWebClient;
+
+    @Value("${api.gemini.key}")
+    private String apiKey;
     private final PharmacyProductRepository pharmacyProductRepository;
     private final ProductRepository productRepository;
     private final ObjectMapper objectMapper;
     private final CartService cartService;
     private final ILocationService locationService;
-    private static final String PRESCRIPTION_PROMPT = """
+    private static final String OPENAI_PRESCRIPTION_PROMPT = """
             You are a medical prescription reader. Extract ALL medicines from this prescription image.
                     Return ONLY valid JSON with no explanation, markdown, or extra text. Use this exact format:
                     {
@@ -66,6 +67,29 @@ public class AIService {
                     If the image is not a prescription or is unreadable, return: {"success": false, "medicines": []}
             """;
 
+    private static final String GEMINI_PRESCRIPTION_PROMPT = """
+            You are a medical prescription reader. Extract ALL medicines from this prescription image.
+                    Return ONLY valid JSON with no explanation, markdown, or extra text. Use this exact format:
+                    {
+                      "success": true,
+                      "medicines": [
+                        {
+                          "drug_name": "Amoxicillin",
+                          "form": "Tablet",
+                          "category": "Antibiotics",
+                          "dosage": "500mg",
+                          "frequency": "3x daily"
+                        }
+                      ]
+                    }
+                    Each medicine must be its own separate object in the "medicines" array, even if multiple medicines appear on the same line, are combined in the same prescribed item, or share the same dosage/frequency. NEVER combine multiple drug names into a single "drug_name" field (e.g. do NOT write "Belladonna Tincture and Amphogel" as one entry — split them into two separate medicine objects, one for "Belladonna Tincture" and one for "Amphogel", each with its own form, category, dosage, and frequency).
+                    Valid form values: Tablet, Capsule, Syrup, Suspension, Injection, Cream, Ointment, Inhaler, Suppository, Patch, Drops.
+                    The form field MUST be one of the valid form values listed above. Pick the closest match if the exact form is not listed (e.g. "Solution" or "Liquid" -> "Syrup" or "Suspension", "Gel" -> "Ointment", "Lozenge" -> "Tablet").
+                    Valid category values: Pain Relief, Antibiotics, Vitamins & Supplements, Cardiovascular, Diabetes, Dermatology, Respiratory, Gastrointestinal, Mental Health, Eye & Ear Care.
+                    The category field MUST be one of the valid category values listed above. Pick the closest match if the exact category is not listed.
+                    If the image is not a prescription or is unreadable, return: {"success": false, "medicines": []}
+            """;
+
     public List<CartResponse> scanPrescription(
             MultipartFile image,
             Double userLatitude,
@@ -73,7 +97,7 @@ public class AIService {
             Long userId
     ) {
         // 1. استدعاء OpenAI Vision لاستخراج أسماء الأدوية من الصورة
-        ScanResponseDto scanResult = callOpenAiVision(image);
+        ScanResponseDto scanResult = callApis(image);
         validateScanResult(scanResult);
 
         List<String> medicineNames = scanResult.medicines()
@@ -144,7 +168,7 @@ public class AIService {
             Double userLongitude
     ) {
         // 1. استدعاء OpenAI Vision لاستخراج أسماء الأدوية
-        ScanResponseDto scanResult = callOpenAiVision(image);
+        ScanResponseDto scanResult = callApis(image);
         validateScanResult(scanResult);
 
         List<String> medicineNames = scanResult.medicines()
@@ -329,7 +353,7 @@ public class AIService {
                                         ),
                                         Map.of(
                                                 "type", "text",
-                                                "text", PRESCRIPTION_PROMPT
+                                                "text", OPENAI_PRESCRIPTION_PROMPT
                                         )
                                 )
                         )
@@ -337,7 +361,7 @@ public class AIService {
         );
 
         try {
-            String rawResponse = aiWebClient.post()
+            String rawResponse = openAiWebClient.post()
                     .uri("/v1/chat/completions")
                     .bodyValue(requestBody)
                     .retrieve()
@@ -370,6 +394,93 @@ public class AIService {
             throw new PrescriptionScanFailedException("Failed to parse OpenAI response: " + e.getMessage());
         }
     }
+    private ScanResponseDto callGeminiVision(MultipartFile image) {
+        String base64Image = encodeImageToBase64(image);
+        String mediaType = image.getContentType() != null ? image.getContentType() : "image/jpeg";
+
+        Map<String, Object> requestBody = Map.of(
+                "contents", List.of(
+                        Map.of(
+                                "parts", List.of(
+                                        Map.of("text", GEMINI_PRESCRIPTION_PROMPT),
+                                        Map.of(
+                                                "inline_data", Map.of(
+                                                        "mime_type", mediaType,
+                                                        "data", base64Image
+                                                )
+                                        )
+                                )
+                        )
+                ),
+                "generationConfig", Map.of(
+                        "responseMimeType", "application/json",
+                        "maxOutputTokens", 10000
+                )
+        );
+
+        try {
+            String rawResponse = geminiWebClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v1beta/models/gemini-2.5-flash:generateContent")
+                            .queryParam("key", apiKey)
+                            .build())
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            response -> response.bodyToMono(String.class)
+                                    .map(body -> new PrescriptionScanFailedException(
+                                            "Gemini API error: " + body
+                                    ))
+                    )
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(120))
+                    .block();
+
+            com.fasterxml.jackson.databind.ObjectMapper fasterxmlMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode rootNode = fasterxmlMapper.readTree(rawResponse);
+
+            // Extract content from candidates[0].content.parts[0].text
+            String content = rootNode
+                    .path("candidates")
+                    .get(0)
+                    .path("content")
+                    .path("parts")
+                    .get(0)
+                    .path("text")
+                    .asText();
+
+            return objectMapper.readValue(content, ScanResponseDto.class);
+
+        } catch (TimeoutException e) {
+            throw new PrescriptionScanTimeoutException("Gemini Vision request timed out");
+        } catch (Exception e) {
+            throw new PrescriptionScanFailedException("Failed to parse Gemini response: " + e.getMessage());
+        }
+    }
+    private ScanResponseDto callApis(MultipartFile image) {
+        ScanResponseDto scanResult;
+
+        try {
+            scanResult = callOpenAiVision(image);
+            if (isUsableResult(scanResult)) {
+                return scanResult;
+            }
+            log.warn("OpenAI returned an unusable result, falling back to Gemini");
+        } catch (Exception e) {
+            log.warn("OpenAI Vision call failed ({}), falling back to Gemini", e.getMessage());
+        }
+
+        scanResult = callGeminiVision(image);
+        validateScanResult(scanResult);
+        return scanResult;
+    }
+    private boolean isUsableResult(ScanResponseDto scanResult) {
+        return scanResult != null
+                && scanResult.success()
+                && scanResult.medicines() != null
+                && !scanResult.medicines().isEmpty();
+    }
     private String encodeImageToBase64(MultipartFile image) {
         try {
             return Base64.getEncoder().encodeToString(image.getBytes());
@@ -389,75 +500,4 @@ public class AIService {
         }
     }
 
-//    public PageResponse<pharmacyProductResponse> scanPrescription(
-//            MultipartFile image,
-//            Double userLatitude,
-//            Double userLongitude
-//    ) {
-//        ScanResponseDto scanResult = callPythonApi(image);
-//        validateScanResult(scanResult);
-//
-//        PharmacyProductFilter filter = buildFilter(scanResult.prediction(), userLatitude, userLongitude);
-//        Pageable pageable = PageRequest.of(0, 10, Sort.by("price").ascending());
-//
-//        return pharmacyProductService.getPharmacyProducts(filter, pageable);
-//    }
-
-//    private ScanResponseDto callPythonApi(MultipartFile image) {
-//        MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
-//        bodyBuilder.part("file", image.getResource());
-//
-//        try {
-//            return webClient.post()
-//                    .uri("/predict")
-//                    .contentType(MediaType.MULTIPART_FORM_DATA)
-//                    .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
-//                    .retrieve()
-//                    .onStatus(
-//                            status -> status.is4xxClientError() || status.is5xxServerError(),
-//                            response -> response.bodyToMono(String.class)
-//                                    .map(body -> new PrescriptionScanFailedException(
-//                                            "OCR service returned an error: " + body
-//                                    ))
-//                    )
-//                    .bodyToMono(ScanResponseDto.class)
-//                    .timeout(Duration.ofSeconds(120))
-//                    .block();
-//
-//        } catch (TimeoutException e) {
-//            throw new PrescriptionScanTimeoutException("");
-//        } catch (WebClientResponseException e) {
-//            throw new PrescriptionScanFailedException("OCR service error: " + e.getMessage());
-//        }
-//    }
-
-//    private void validateScanResult(ScanResponseDto scanResult) {
-//        if (scanResult == null) {
-//            throw new PrescriptionScanFailedException("No response received from OCR service");
-//        }
-//        if (!scanResult.success()) {
-//            throw new PrescriptionScanFailedException("OCR service could not process the prescription");
-//        }
-//        if (scanResult.prediction() == null) {
-//            throw new PrescriptionScanFailedException("Could not extract medicine details from prescription");
-//        }
-//        if (scanResult.prediction().drugName() == null || scanResult.prediction().drugName().isBlank()) {
-//            throw new PrescriptionScanFailedException("Could not identify the medicine name from prescription");
-//        }
-//    }
-
-    private PharmacyProductFilter buildFilter(PredictionDto prediction, Double lat, Double lng) {
-        return new PharmacyProductFilter(
-                null,              // productId
-                prediction.drugName(),      // productName
-                prediction.category(),      // categoryName
-                prediction.form(),          // dosageForm
-                lat,                        // userLatitude
-                lng,                        // userLongitude
-                10.0,                       // maxDistanceKm
-                null,                       // minPrice
-                null,                       // maxPrice
-                true                        // inStock
-        );
-    }
 }
