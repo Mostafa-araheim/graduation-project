@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +30,15 @@ public class PharmacyOwnerController {
     private final PharmacyOwnerService pharmacyOwnerService;
 
     @PreAuthorize("hasRole('OWNER')")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<PharmacyDto> createPharmacy(
-            @Valid @RequestBody CreatePharmacyRequest request,
+            @ModelAttribute CreatePharmacyRequest request,
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
-        return ApiResponse.success("Pharmacy created successfully",
-                pharmacyOwnerService.createPharmacy(request, authenticatedUser.userId()));
+        return ApiResponse.success(
+                "Pharmacy created successfully",
+                pharmacyOwnerService.createPharmacy(request, authenticatedUser.userId())
+        );
     }
 
     @PreAuthorize("hasRole('OWNER')")

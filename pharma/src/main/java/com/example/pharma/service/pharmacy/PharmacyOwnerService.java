@@ -3,13 +3,13 @@ package com.example.pharma.service.pharmacy;
 import com.example.pharma.dto.Product.ProductFilter;
 import com.example.pharma.dto.Product.ProductResponse;
 import com.example.pharma.dto.common.PageResponse;
+import com.example.pharma.dto.events.ProductAvailableEvent;
 import com.example.pharma.dto.order.response.OwnerOrderResponse;
 import com.example.pharma.dto.pharmacy.PharmacyDto;
 import com.example.pharma.dto.pharmacy.owner.*;
 import com.example.pharma.dto.pharmacyProduct.AddPharmacyProductRequest;
 import com.example.pharma.dto.pharmacyProduct.PharmacyProductDto;
 import com.example.pharma.dto.pharmacyProduct.UpdatePharmacyProductRequest;
-import com.example.pharma.dto.events.ProductAvailableEvent;
 import com.example.pharma.dto.review.PharmacyReviewDetailDto;
 import com.example.pharma.exception.access.AccessDeniedException;
 import com.example.pharma.exception.resource.EntityNotFoundException;
@@ -28,14 +28,6 @@ import com.example.pharma.repository.Catalog.ProductRepository;
 import com.example.pharma.repository.Core.OwnerProfileRepository;
 import com.example.pharma.repository.Inventory.PharmacyProductRepository;
 import com.example.pharma.repository.Order.OrderItemRepository;
-import com.example.pharma.dto.pharmacy.owner.*;
-import java.time.LocalDateTime;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import org.springframework.data.domain.PageRequest;
-
 import com.example.pharma.repository.Order.OrderRepository;
 import com.example.pharma.repository.Pharmacy.PharmacyRepository;
 import com.example.pharma.repository.Review.PharmacyRatingRepository;
@@ -45,9 +37,24 @@ import com.example.pharma.specification.ProductSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,10 +78,18 @@ public class PharmacyOwnerService {
 
     @Transactional
     public PharmacyDto createPharmacy(CreatePharmacyRequest request, Long ownerUserId) {
+
         OwnerProfile owner = ownerProfileRepository.findById(ownerUserId)
-                .orElseThrow(() -> new EntityNotFoundException("Owner profile not found"));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Owner profile not found"));
 
         Pharmacy pharmacy = pharmacyMapper.toEntity(request);
+
+        if (request.image() != null && !request.image().isEmpty()) {
+            String imageUrl = saveImage(request.image());
+            pharmacy.setImageUrl(imageUrl);
+        }
+
         pharmacy.setOwner(owner);
 
         if (pharmacy.getAddress() != null) {
@@ -537,5 +552,37 @@ public class PharmacyOwnerService {
                 bestSellers,
                 statusDistribution
         );
+    }
+    private String saveImage(MultipartFile image) {
+
+        try {
+
+            String uploadDir = System.getProperty("user.dir")
+                    + "/images/pharmacies/";
+
+            File directory = new File(uploadDir);
+
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = image.getOriginalFilename();
+
+            String fileName = UUID.randomUUID()
+                    + "_" + originalFilename;
+
+            Path filePath = Paths.get(uploadDir, fileName);
+
+            Files.copy(
+                    image.getInputStream(),
+                    filePath,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            return "/images/pharmacies/" + fileName;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save image", e);
+        }
     }
 }
