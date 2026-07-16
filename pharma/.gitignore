@@ -42,3 +42,4 @@ import_drugs.sql
 pharmacy_owner_api_docs.md
 ../desktop.ini
 
+.env
