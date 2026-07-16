@@ -36,6 +36,8 @@ public interface PharmacyProductMapper {
     @Mapping(source = "product.manufacturer",         target = "manufacturer")
     @Mapping(source = "product.category.categoryId",  target = "categoryId")
     @Mapping(source = "product.category.categoryName",        target = "categoryName")
+    @Mapping(source = "product.imageUrl",        target = "productImage")
+
     @Mapping(source = "product.brand.brandId",        target = "brandId")
     @Mapping(source = "product.brand.brandName",           target = "brandName")
     @Mapping(source = "inventory.pharmacy.name",      target = "pharmacyName")
