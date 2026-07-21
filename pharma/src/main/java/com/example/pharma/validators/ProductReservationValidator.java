@@ -29,7 +29,7 @@ public class ProductReservationValidator {
     }
 
     public void validateReservationOwnership(Long userId, ProductReservation reservation) {
-        if (!userId.equals(reservation.getUser().getUserId())) {
+        if (!userId.equals(reservation.getCustomerProfile().getUserId())) {
             throw new AccessDeniedException("You do not have permission to modify or delete this reservation.");
         }
     }

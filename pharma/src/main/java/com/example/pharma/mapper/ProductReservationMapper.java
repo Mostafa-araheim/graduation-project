@@ -11,12 +11,12 @@ import org.mapstruct.Mapping;
 public interface ProductReservationMapper {
 
     @Mapping(target = "createdAt", expression = "java(reservation.getCreatedAt() != null && reservation.getCreatedAt().getValue() != null ? reservation.getCreatedAt().getValue() : java.time.LocalDateTime.now())")
-    @Mapping(target = "userId", source = "user.userId")
+    @Mapping(target = "userId", source = "userId")
     @Mapping(target = "productId", source = "product.productId")
     ReservationResponse toResponse(ProductReservation reservation);
 
     @Mapping(target = "reservationId", ignore = true)
-    @Mapping(target = "user", source = "user")
+    @Mapping(target = "customerProfile", source = "user")
     @Mapping(target = "product", source = "product")
     @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "status", constant = "PENDING")

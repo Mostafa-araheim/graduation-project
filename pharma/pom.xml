@@ -181,6 +181,19 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- ─── Flyway: Database Migration Tool ──────────────────────── -->
+        <!-- بيتتبع ويطبق الـ SQL migrations بالترتيب تلقائياً           -->
+        <!-- Spring Boot بيحدد الـ version تلقائياً من الـ BOM بتاعه     -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <!-- Flyway بيحتاج integration خاصة مع PostgreSQL -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
 	</dependencies>
 
 
