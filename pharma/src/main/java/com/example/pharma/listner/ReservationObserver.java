@@ -31,11 +31,11 @@ public class ReservationObserver implements IReservationObserver {
         for(ProductReservation res : waitingReservations)
         {
             log.info("Notifying user {} about availability of product {}", res.getUserId(), event.productName());
-            if (res.getUser() != null && res.getUser().getUser() != null) {
-                String email = res.getUser().getUser().getEmail();
+            if (res.getCustomerProfile() != null && res.getCustomerProfile().getUser() != null) {
+                String email = res.getCustomerProfile().getUser().getEmail();
                 String subject = "Product Available: " + event.productName();
                 String body = String.format("Hello %s,\n\nThe product '%s' is now available from %s (%s).\n\nBest regards,\nPharma Team",
-                        res.getUser().getUser().getName(), event.productName(), event.producerName(), event.source());
+                        res.getCustomerProfile().getUser().getName(), event.productName(), event.producerName(), event.source());
                 notificationService.sendEmailNotification(email, body, subject);
             }
         }

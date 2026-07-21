@@ -21,11 +21,11 @@ public class ProductReservation {
     private Long reservationId;
 
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private CustomerProfile user;
+    private CustomerProfile customerProfile;
 
-    @Column(name = "user_id", insertable = false, updatable = false)
+    @Column(name = "user_id", insertable = false, updatable = false, nullable = false)
     private Long userId;
 
     private String productName;
@@ -35,7 +35,7 @@ public class ProductReservation {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(name = "product_id", insertable = false, updatable = false)
+    @Column(name = "product_id", insertable = false, updatable = false,nullable = false)
     private Long productId;
 
     @Enumerated(EnumType.STRING)
