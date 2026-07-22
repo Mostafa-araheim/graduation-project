@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: pharma-test
+
+  # ─── Isolated Database Setup for Testing (In-Memory H2) ───
+  # قاعدة بيانات في الذاكرة معزولة تماماً وسريعة جداً للاختبارات
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+
+  # ─── Disable Flyway during fast Unit / Slice Tests ───
+  # إيقاف Flyway في بيئة التست لسرعة تشغيل الاختبارات بدون الحاجة لـ PostgreSQL حقيقي
+  flyway:
+    enabled: false
+
+  # ─── Dummy / Mock Settings for Redis & External APIs ───
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      repositories:
+        enabled: false
+
+  jwt:
+    secret: test_secret_key_that_must_be_long_enough_for_hs256_algorithm_1234567890
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: dummy-client-id
+            client-secret: dummy-client-secret
+
+  mail:
+    host: localhost
+    port: 3025
+    username: test@pharma.com
+    password: dummy-password
+
+# ─── Dummy External Service Keys for Testing ───
+stripe:
+  secret-key: sk_test_dummy_key_for_testing_only
+  publishable-key: pk_test_dummy_key_for_testing_only
+  webhook-secret: whsec_dummy_webhook_secret_for_testing_only
+
+api:
+  openai:
+    key: dummy-openai-key-for-testing
+  gemini:
+    key: dummy-gemini-key-for-testing
+
+ors:
+  apiKey: dummy-ors-key-for-testing
+
+app:
+  frontend:
+    success-url: http://localhost:4200/test-success
+    cancel-url: http://localhost:4200/test-cancel
+
+logging:
+  level:
+    root: INFO
+    com.example.pharma: DEBUG

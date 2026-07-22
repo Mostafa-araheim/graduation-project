@@ -65,6 +65,11 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa-test</artifactId>
             <scope>test</scope>
         </dependency>
@@ -154,6 +159,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- H2 In-Memory Database for Fast & Isolated Testing -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -181,14 +193,11 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- ─── Flyway: Database Migration Tool ──────────────────────── -->
-        <!-- بيتتبع ويطبق الـ SQL migrations بالترتيب تلقائياً           -->
-        <!-- Spring Boot بيحدد الـ version تلقائياً من الـ BOM بتاعه     -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
-        <!-- Flyway بيحتاج integration خاصة مع PostgreSQL -->
+
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
@@ -233,6 +242,15 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                </configuration>
+            </plugin>
+
 		</plugins>
 	</build>
 
