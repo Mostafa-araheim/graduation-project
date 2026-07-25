@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+*.log
+
+# Build directories
+target/
+build/
+out/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Environment and Secrets
+.env
+*.env
+
+# Documentation and extra files
+*.md
+*.txt
+images/
