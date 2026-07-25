@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    # Overriding localhost with 'postgres' for the docker network
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/Pharma}
+  
+  data:
+    redis:
+      # Overriding localhost with 'redis' for the docker network
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+
+app:
+  frontend:
+    # Example overriding frontend URLs for docker environment if needed, 
+    # though usually handled by environment variables anyway
+    success-url: ${FRONTEND_SUCCESS_URL:http://localhost:80/profile}
+    cancel-url: ${FRONTEND_CANCEL_URL:http://localhost:80/cancel}
