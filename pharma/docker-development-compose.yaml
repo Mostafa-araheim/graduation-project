@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: pharma_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=Pharma
+      - POSTGRES_USER=${DB_USERNAME:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-5519}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d Pharma"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pharma_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: pharma_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pharma_network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: pharma_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - pharma_network
+    restart: unless-stopped
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    container_name: pharma_stripe_cli
+    command: listen --forward-to host.docker.internal:8080/api/v1/payments/stripe/webhook
+    environment:
+      - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - pharma_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  pharma_network:
+    driver: bridge
