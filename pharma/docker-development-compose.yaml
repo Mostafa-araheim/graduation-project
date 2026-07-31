@@ -37,8 +37,10 @@ services:
     container_name: pharma_nginx
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
