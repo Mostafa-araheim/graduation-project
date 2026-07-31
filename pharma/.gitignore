@@ -43,3 +43,5 @@ pharmacy_owner_api_docs.md
 ../desktop.ini
 
 .env
+
+certs/nginx-selfsigned.key
