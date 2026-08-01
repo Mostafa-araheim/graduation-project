@@ -26,6 +26,9 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
         cache-dependency-path: 'pharma/pom.xml'
+    
+    - name: Make mvnw executable
+      run: chmod +x ./mvnw
 
     - name: Build and Test with Maven
       run: ./mvnw clean package
