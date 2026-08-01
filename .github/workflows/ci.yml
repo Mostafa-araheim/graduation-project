@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,13 +7,14 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build:
+  # Job 1: Build & Test
+  build-and-test:
     runs-on: ubuntu-latest
-
-    # بيحدد إن كل أوامر الـ run تتنفذ جوة فولدر pharma تلقائياً
+    
+    # عشان المشروع الفعلي جوه مجلد pharma، بنقول للـ runner ينفذ الأوامر جواه
     defaults:
       run:
-        working-directory: pharma
+        working-directory: ./pharma
 
     steps:
     - name: Checkout Code
@@ -25,20 +26,34 @@ jobs:
         java-version: '25'
         distribution: 'temurin'
         cache: 'maven'
-        cache-dependency-path: 'pharma/pom.xml'
-    
-    - name: Make mvnw executable
-      run: chmod +x ./mvnw
+        # تحديد المسار عشان الـ cache يشتغل صح مع pom.xml الموجود جوا pharma
+        cache-dependency-path: ./pharma/pom.xml
 
     - name: Build and Test with Maven
       run: ./mvnw clean package
 
+  # Job 2: Docker Build & Push
+  docker-build-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Test Docker Build
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
         context: ./pharma
-        push: false
-        tags: pharma-backend:test
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/pharma-backend:latest
