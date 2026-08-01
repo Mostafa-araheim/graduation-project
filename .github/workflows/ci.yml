@@ -29,6 +29,9 @@ jobs:
         # تحديد المسار عشان الـ cache يشتغل صح مع pom.xml الموجود جوا pharma
         cache-dependency-path: ./pharma/pom.xml
 
+    - name: Make mvnw executable
+      run: chmod +x ./mvnw
+
     - name: Build and Test with Maven
       run: ./mvnw clean package
 
