@@ -1,0 +1,161 @@
+<div class="auth-container">
+    <!-- Left Side - Form -->
+    <div class="left-side">
+        <div class="form-wrapper">
+            <!-- Logo -->
+            <div class="logo-section">
+                <div class="logo-icon bg-primary">
+                    <svg class="icon-pill" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <span class="logo-text">MediConnect</span>
+            </div>
+
+            <!-- Header -->
+            <div class="header-section">
+                <h1 class="title">Create your account</h1>
+                <p class="subtitle">Sign up with your name and email to get started</p>
+            </div>
+
+            <!-- Google Sign In -->
+
+            <!-- Email Magic Link Form -->
+            <form class="email-form" [formGroup]="registerForm" (ngSubmit)="submitRegister()">
+
+                <div class="input-group">
+                    <label for="username" class="input-label">User Name</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon inputfocus" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5.121 17.804A9 9 0 1118.879 17.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <input id="username" type="email" placeholder="Your Name" class="email-input"
+                            formControlName="name" />
+                    </div>
+                    @if (registerForm.get("name")?.errors && registerForm.get('name')?.touched) {
+
+                    <div class=" rounded-md text-red-600 text-sm">
+                        <ul class="list-disc p-3 px-6">
+                            @if (registerForm.get('name')?.errors?.["required"]) {
+
+                            <li><span>Name is Required</span></li>
+                            }
+                            @if (registerForm.get('name')?.errors?.['minlength']) {
+
+                            <li><span>Name must be more than 3 charactars</span></li>
+                            }
+                            @if (registerForm.get('name')?.errors?.['maxlength']) {
+
+                            <li><span>Name must be less than or equal than 20 charactars</span></li>
+                            }
+                        </ul>
+                    </div>
+                    }
+                </div>
+
+                <div class="input-group">
+                    <label for="email" class="input-label">Email Address</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon inputfocus" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <input id="email" type="email" placeholder="you@example.com" class="email-input"
+                            formControlName="email" />
+                    </div>
+                    @if (registerForm.get("email")?.errors && registerForm.get('email')?.touched) {
+
+                    <div class=" rounded-md text-red-600 text-sm">
+                        <ul class="list-disc p-3 px-6">
+                            @if (registerForm.get('email')?.errors?.["required"]) {
+
+                            <li><span>Email is Required</span></li>
+                            }
+                            @if (registerForm.get('email')?.errors?.['email']) {
+
+                            <li><span>Email should be like this yyyyy&#64;example.com</span></li>
+                            }
+                        </ul>
+                    </div>
+                    }
+                </div>
+
+
+                <button type="submit" [disabled]="registerForm.invalid || isLoading"
+                    class="submit-btn transition-all duration-200" [class]="isLoading
+    ? 'submit-btn bg-primary/60 opacity-50 cursor-not-allowed'
+    : 'submit-btn bg-primary'">
+                    <svg class="submit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+
+                    @if (!isLoading) {
+                    Send Verification Code
+                    } @else {
+                    Sending...
+                    }
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-muted-foreground">Already have an account? <a
+                    class="text-primary font-semibold hover:underline" routerLink="/signin">Sign in</a></p>
+        </div>
+    </div>
+
+    <!-- Right Side - Branding -->
+    <div class="right-side bg-primary">
+        <div class="branding-wrapper">
+            <div class="branding-icon">
+                <div class="branding-icon-circle">
+                    <svg class="branding-pill" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+            </div>
+            <h2 class="branding-title">
+                Access Medicines from Trusted Pharmacies
+            </h2>
+            <p class="branding-subtitle">
+                Join thousands of users who trust MediConnect for their healthcare needs.
+            </p>
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Access 500+ verified pharmacies</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Compare prices instantly</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Fast doorstep delivery</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Passwordless, secure sign-in</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

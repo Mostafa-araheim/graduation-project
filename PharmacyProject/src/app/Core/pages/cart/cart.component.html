@@ -1,0 +1,360 @@
+<main class="flex-1">
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="flex items-center gap-4 mb-8">
+            <a routerLink="/search"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-100 h-10 w-10 shrink-0">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </a>
+
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Shopping Cart</h1>
+                <p class="text-gray-500">
+                    {{ cartItems().length }} {{ cartItems().length === 1 ? 'item' : 'items' }} in your cart
+                </p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="cartItems().length === 0" class="text-center py-16">
+            <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6M18 13l1.5 6M9 21h6M12 18v3" />
+                </svg>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
+            <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                Looks like you haven't added any medicines yet. Start exploring to find what you need.
+            </p>
+
+            <a routerLink="/search"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors gradient-primary text-white h-11 px-8 py-2">
+                Browse Medicines
+                <svg class="h-5 w-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <!-- CART -->
+        <div *ngIf="cartItems().length > 0">
+            <div class="grid lg:grid-cols-3 gap-8">
+
+                <!-- LEFT: CART ITEMS -->
+                <div class="lg:col-span-2 space-y-4">
+
+                    <div *ngFor="let cart of cartItems()" (click)="setSelectedPharmacy(cart.cartName)"
+                        class="bg-white rounded-2xl border-2 overflow-hidden cursor-pointer transition-all"
+                        [class.border-primary]="selectedPharmacy() === cart.cartName"
+                        [class.shadow-card]="selectedPharmacy() === cart.cartName"
+                        [class.border-gray-200]="selectedPharmacy() !== cart.cartName"
+                        [class.hover:border-primary]="selectedPharmacy() !== cart.cartName">
+
+                        <!-- Pharmacy Header -->
+                        <div class="px-6 py-3 border-b border-gray-200"
+                            [class.bg-gray-200]="selectedPharmacy() === cart.cartName"
+                            [class.bg-gray-100]="selectedPharmacy() !== cart.cartName">
+
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-gray-900">{{ cart.cartName }}</span>
+
+                                    <span *ngIf="selectedPharmacy() === cart.cartName"
+                                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-primary text-white">
+                                        Selected
+                                    </span>
+                                </div>
+
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-900">
+                                    {{ cart.items.length }} items
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- ITEMS -->
+                        <div class="divide-y divide-gray-200">
+
+                            <div *ngFor="let item of cart.items"
+                                class="p-4 md:p-6 flex gap-4 hover:bg-gray-50 transition-colors">
+
+                                <!-- Image -->
+                                <a [routerLink]="['/product', item.pharmacyProductId]" class="shrink-0">
+                                    <img [src]="item.productImage || 'assets/photo-1587854692152-cbe660dbde88.jpg'"
+                                        [alt]="item.productName"
+                                        class="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover" />
+                                </a>
+
+                                <!-- Details -->
+                                <div class="flex-1 min-w-0">
+
+                                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
+
+                                        <div>
+                                            <a [routerLink]="['/product', item.pharmacyProductId]"
+                                                class="font-semibold text-gray-900 hover:text-primary transition-colors line-clamp-2">
+                                                {{ item.productName }}
+                                            </a>
+
+                                            <span
+                                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-700 mt-1">
+                                                ${{ item.pricePerUnit }}
+                                            </span>
+                                        </div>
+
+                                        <p class="text-lg font-bold text-primary whitespace-nowrap">
+                                            ${{ (item.pricePerUnit * item.quantity).toFixed(2) }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Quantity -->
+                                    <div class="flex items-center justify-between mt-4">
+
+                                        <div class="flex items-center gap-2">
+
+                                            <button (click)="updateQuantity(cart.cartId, item.pharmacyProductId, -1)"
+                                                class="h-8 w-8 border rounded-lg hover:bg-gray-100">
+                                                -
+                                            </button>
+
+                                            <span class="w-10 text-center font-semibold">{{ item.quantity }}</span>
+
+                                            <button (click)="updateQuantity(cart.cartId, item.pharmacyProductId, 1)"
+                                                class="h-8 w-8 border rounded-lg hover:bg-gray-100">
+                                                +
+                                            </button>
+
+                                        </div>
+
+                                        <button (click)="removeItem(cart.cartId, item.pharmacyProductId)"
+                                            class="text-red-600 hover:text-red-700 text-sm">
+                                            Remove
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: SUMMARY -->
+                <div class="lg:col-span-1" *ngIf="summaryData() as summary">
+
+                    <div class="bg-white rounded-2xl border p-6 sticky top-24 space-y-6">
+
+                        <div>
+                            <h2 class="text-xl font-bold">Order Summary</h2>
+                            <p class="text-sm text-gray-500 mt-1">
+                                From <span class="text-primary font-semibold">{{ selectedPharmacy() }}</span>
+                            </p>
+                        </div>
+
+                        <!-- Promo -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Promo Code</label>
+
+                            <input type="text" [(ngModel)]="promoCodes[selectedPharmacy()!]"
+                                class="w-full border rounded-md h-10 px-3" />
+
+                            <button (click)="applyPromoCode(selectedPharmacy()!)" class="w-full h-10 border rounded-md">
+                                Apply
+                            </button>
+                        </div>
+
+                        <hr />
+
+                        <!-- Totals -->
+                        <div class="space-y-2 text-sm">
+
+                            <div class="flex justify-between">
+                                <span>Subtotal</span>
+                                <span>${{ summary.subtotal.toFixed(2) }}</span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span>Delivery</span>
+                                <span>
+                                    <span *ngIf="summary.deliveryFee === 0" class="text-green-600">FREE</span>
+                                    <span *ngIf="summary.deliveryFee > 0">
+                                        ${{ summary.deliveryFee.toFixed(2) }}
+                                    </span>
+                                </span>
+                            </div>
+
+                            <div class="flex justify-between font-bold text-lg">
+                                <span>Total</span>
+                                <span>${{ summary.total.toFixed(2) }}</span>
+                            </div>
+
+                        </div>
+
+                        <!-- Checkout -->
+                        <button (click)="showCheckoutModal = true" class="w-full h-11 bg-primary text-white rounded-md">
+                            Checkout
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- Checkout Modal -->
+    <!-- Checkout Modal -->
+
+</main>
+
+<!-- Checkout Modal -->
+<!-- Checkout Modal -->
+<div *ngIf="showCheckoutModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3">
+
+    <div class="w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden">
+
+        <!-- HEADER -->
+        <div class="px-6 py-4 border-b">
+            <div class="flex items-center justify-between">
+
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Checkout</h2>
+                    <p class="text-sm text-gray-500">Complete your order</p>
+                </div>
+
+                <button type="button" (click)="showCheckoutModal = false"
+                    class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
+                    ✕
+                </button>
+
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <div class="p-5 space-y-5">
+
+            <!-- DELIVERY TYPE -->
+            <div>
+                <h3 class="font-semibold mb-2 text-sm text-gray-900">
+                    Delivery Type
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3">
+
+                    <!-- PICKUP -->
+                    <button type="button" (click)="checkoutData.deliveryType='PICKUP'" [ngClass]="checkoutData.deliveryType==='PICKUP'
+              ? 'border-primary bg-primary/10 shadow-sm'
+              : 'border-gray-200'" class="p-3 rounded-xl border-2 text-left transition">
+
+                        <div class="text-xl mb-1">🏪</div>
+                        <div class="font-semibold text-sm">Pickup</div>
+
+                    </button>
+
+                    <!-- DELIVERY -->
+                    <button type="button" (click)="checkoutData.deliveryType='DELIVERY'" [ngClass]="checkoutData.deliveryType==='DELIVERY'
+              ? 'border-primary bg-primary/10 shadow-sm'
+              : 'border-gray-200'" class="p-3 rounded-xl border-2 text-left transition">
+
+                        <div class="text-xl mb-1">🚚</div>
+                        <div class="font-semibold text-sm">Delivery</div>
+
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- PAYMENT METHOD -->
+            <div>
+                <h3 class="font-semibold mb-2 text-sm text-gray-900">
+                    Payment Method
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3">
+
+                    <!-- CASH -->
+                    <button type="button" (click)="checkoutData.paymentMethod='CASH'" [ngClass]="checkoutData.paymentMethod==='CASH'
+              ? 'border-primary bg-primary/10 shadow-sm'
+              : 'border-gray-200'" class="p-3 rounded-xl border-2 text-left transition">
+
+                        💵 <span class="text-sm font-semibold">Cash</span>
+
+                    </button>
+
+                    <!-- CARD -->
+                    <button type="button" (click)="checkoutData.paymentMethod='CARD'" [ngClass]="checkoutData.paymentMethod==='CARD'
+              ? 'border-primary bg-primary/10 shadow-sm'
+              : 'border-gray-200'" class="p-3 rounded-xl border-2 text-left transition">
+
+                        💳 <span class="text-sm font-semibold">Card</span>
+
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- ADDRESS -->
+            <div *ngIf="checkoutData.deliveryType === 'DELIVERY'">
+
+                <label class="text-sm font-medium">Address*</label>
+
+                <p-dropdown [options]="adresses()" [(ngModel)]="checkoutData.deliveryAddressId" name="deliveryAddress"
+                    optionLabel="street" optionValue="addressId" placeholder="Select Address" appendTo="body"
+                     filterBy="street,city,country" styleClass="custom-dropdown w-full h-12 rounded-xl border border-gray-200 bg-white px-3 py-2
+            flex items-center justify-between text-sm 
+            focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                    panelStyleClass="custom-dropdown-panel mt-2">
+
+                    <ng-template pTemplate="item" let-address>
+                        <div class="flex flex-col">
+                            <span>
+                                {{ address.street }}, {{ address.apartmentNumber }}
+                            </span>
+                            <small class="text-gray-500">
+                                {{ address.city }}, {{ address.country }}
+                            </small>
+                        </div>
+                    </ng-template>
+
+                    <ng-template pTemplate="selectedItem" let-address>
+                        <span *ngIf="address">
+                            {{ address.street }}, {{ address.city }}
+                        </span>
+                    </ng-template>
+
+                </p-dropdown>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="px-6 py-4 bg-gray-50 border-t flex gap-3">
+
+            <!-- CANCEL -->
+            <button type="button" (click)="showCheckoutModal = false" class="flex-1 h-11 rounded-xl border border-gray-300 bg-white
+               font-semibold hover:bg-gray-100 transition">
+
+                Cancel
+
+            </button>
+
+            <!-- CONFIRM -->
+            <button type="button" (click)="confirmCheckout()" class="flex-1 h-11 rounded-xl bg-primary text-white
+               font-semibold shadow-md hover:scale-[1.02]
+               transition">
+
+                Place Order
+
+            </button>
+
+        </div>
+
+    </div>
+</div>

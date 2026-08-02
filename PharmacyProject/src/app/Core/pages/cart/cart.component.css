@@ -1,0 +1,173 @@
+.saving{
+    background: var(--gradient-accent);
+    transition: 0.5s all;
+}
+.saving:hover{
+    background: var(--gradient-primary);
+}
+
+Button:hover .icon
+{
+    transform: translateX(4px);
+}
+
+.icon{
+    transition: 0.5s all;
+}
+::ng-deep .custom-dropdown-panel .p-dropdown-items-wrapper {
+    overflow: hidden !important;
+    max-height: none !important;
+}
+
+::ng-deep .custom-dropdown-panel {
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    padding: 12px;
+}
+
+/* Remove gray background from all items */
+::ng-deep .custom-dropdown-panel .p-dropdown-item {
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    background-color: transparent !important; /* No background by default */
+}
+
+/* Remove bottom margin from last item */
+::ng-deep .custom-dropdown-panel .p-dropdown-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Hover effect - orange gradient */
+::ng-deep .custom-dropdown-panel .p-dropdown-item:hover {
+    background: var(--gradient-accent) !important;
+    color: white !important;
+}
+
+/* Selected item - orange gradient */
+::ng-deep .custom-dropdown-panel .p-dropdown-item.p-highlight {
+    background: var(--gradient-accent) !important;
+    color: white !important;
+}
+
+/* Check icon styling */
+::ng-deep .custom-dropdown-panel .p-dropdown-item .pi-check {
+    color: white !important;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Remove any background from first item */
+::ng-deep .custom-dropdown-panel .p-dropdown-item:first-child {
+    background-color: transparent !important;
+}
+
+
+/* Define the ring color variable */
+:root {
+    --ring: #f97316; /* Orange color - adjust to match your theme */
+    --background: #ffffff;
+    --border: #e5e7eb;
+}
+
+/* Remove ALL default PrimeNG focus styles */
+::ng-deep .custom-dropdown.p-dropdown:focus,
+::ng-deep .custom-dropdown.p-dropdown:focus-visible,
+::ng-deep .custom-dropdown.p-dropdown:focus-within,
+::ng-deep .custom-dropdown .p-dropdown-trigger:focus,
+::ng-deep .custom-dropdown .p-dropdown-trigger:focus-visible,
+::ng-deep .custom-dropdown .p-dropdown-label:focus,
+::ng-deep .custom-dropdown .p-dropdown-label:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* ONLY focus ring and border - nothing else */
+::ng-deep .custom-dropdown.p-dropdown.p-focus,
+::ng-deep .custom-dropdown.p-dropdown:focus,
+::ng-deep .custom-dropdown.p-dropdown:focus-within,
+::ng-deep .custom-dropdown.p-dropdown:focus-visible,
+::ng-deep .custom-dropdown.p-dropdown[data-focus="true"],
+::ng-deep .custom-dropdown.p-dropdown.p-dropdown-open {
+    /* border-color: #f97316 !important; */
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px hsl(var(--primary)) !important;
+    outline: none !important;
+}
+
+/* Remove any internal focus styles that might interfere */
+::ng-deep .custom-dropdown .p-dropdown-trigger:focus,
+::ng-deep .custom-dropdown .p-dropdown-label:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+
+/* Only target inputs with the custom class */
+::ng-deep .custom-input-style.p-inputtext:focus,
+::ng-deep .custom-input-style.p-inputtext.p-focus,
+::ng-deep .custom-input-style.p-inputtext:focus-within,
+::ng-deep .custom-input-style.p-inputtext:focus-visible {
+    border-color: #e5e7eb !important; 
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px hsl(var(--primary)) !important;
+    outline: none !important;
+}
+
+/* Base styles for this specific input */
+::ng-deep .custom-input-style.p-inputtext {
+    width: 100% !important;
+    height: 48px !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e5e7eb !important;
+    background-color: white !important;
+    font-size: 14px !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+::ng-deep .custom-input-style.p-inputtext::placeholder {
+    color: #9ca3af !important;
+}
+/* Base styles */
+/* Base styles */
+::ng-deep .custom-textarea-style.p-inputtextarea {
+    width: 100% !important;
+    min-height: 6rem !important; /* min-h-24 = 6rem */
+    padding: 1rem !important; /* p-4 = 1rem */
+    border-radius: 0.75rem !important; /* rounded-xl = 0.75rem */
+    border: 1px solid #e5e7eb !important; /* border-gray-200 */
+    background-color: white !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    resize: none !important; /* resize-none */
+    outline: none !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Focus styles - MATCHING YOUR DROPDOWN EXACTLY */
+::ng-deep .custom-textarea-style.p-inputtextarea:focus,
+::ng-deep .custom-textarea-style.p-inputtextarea.p-focus,
+::ng-deep .custom-textarea-style.p-inputtextarea:focus-within,
+::ng-deep .custom-textarea-style.p-inputtextarea:focus-visible {
+    border-color: #e5e7eb !important; /* Keep original border color */
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px hsl(var(--primary)) !important;
+    outline: none !important;
+}
+
+/* Placeholder styles */
+::ng-deep .custom-textarea-style.p-inputtextarea::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Auto-resize specific */
+::ng-deep .custom-textarea-style.p-inputtextarea.p-inputtextarea-resize {
+    overflow: hidden;
+}
+
+.inputfocus:focus{
+    border-color: #e5e7eb !important; /* Keep original border color */
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px hsl(var(--primary)) !important;
+    outline: none !important;
+}

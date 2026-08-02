@@ -1,0 +1,228 @@
+<app-loader *ngIf="loading()"></app-loader>
+
+<div *ngIf="error() && !loading()" class="text-red-500 text-center py-8">
+  {{ error() }}
+</div>
+
+<div *ngIf="product() && !loading()" class="max-w-7xl mx-auto px-4 py-8">
+
+  <div class="grid lg:grid-cols-2 gap-10">
+
+    <!-- Product Image -->
+    <div class="bg-white rounded-3xl shadow-sm border p-6">
+
+      <img
+        [src]="product()?.product_image == null ? '../../../../assets/photo-1587854692152-cbe660dbde88.jpg' : baseurl + product()?.product_image "
+        [alt]="product()?.product_name" class="w-full h-[450px] object-contain rounded-2xl">
+
+    </div>
+
+    <!-- Product Info -->
+    <div>
+
+      <!-- Badges -->
+      <div class="flex flex-wrap gap-2 mb-4">
+
+        <span class="px-3 py-1 rounded-full text-sm font-medium" [ngClass]="product()?.in_stock
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'">
+
+          {{ product()?.in_stock ? 'In Stock' : 'Out Of Stock' }}
+        </span>
+
+        <span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
+
+          {{ product()?.category_name }}
+        </span>
+
+        <span *ngIf="product()?.requires_prescription"
+          class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700">
+
+          Prescription Required
+        </span>
+
+      </div>
+
+      <!-- Name -->
+      <h1 class="text-4xl font-bold text-gray-900">
+        {{ product()?.product_name }}
+      </h1>
+
+      <!-- Brand -->
+      <p class="mt-2 text-lg text-gray-500">
+        {{ product()?.brand_name }}
+      </p>
+
+      <!-- Price -->
+      <div class="mt-6">
+        <span class="text-5xl font-bold text-emerald-600">
+          EGP {{ product()?.price | number:'1.2-2' }}
+        </span>
+      </div>
+
+      <!-- Description -->
+      <div class="mt-6">
+        <p class="text-gray-600 leading-7">
+          {{ product()?.description }}
+        </p>
+      </div>
+
+      <!-- Quick Info -->
+      <div class="grid grid-cols-2 gap-4 mt-8">
+
+        <div class="bg-gray-50 rounded-2xl p-4 border">
+          <p class="text-sm text-gray-500">Dosage Form</p>
+          <p class="font-semibold mt-1">
+            {{ product()?.dosage_form }}
+          </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 border">
+          <p class="text-sm text-gray-500">Strength</p>
+          <p class="font-semibold mt-1">
+            {{ product()?.strength }}
+          </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 border">
+          <p class="text-sm text-gray-500">Manufacturer</p>
+          <p class="font-semibold mt-1">
+            {{ product()?.manufacturer }}
+          </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 border">
+          <p class="text-sm text-gray-500">Available Quantity</p>
+          <p class="font-semibold mt-1">
+            {{ product()?.quantity }}
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex flex-wrap gap-4 mt-10">
+
+        <button [disabled]="!product()?.in_stock" (click)="handleAddToCart(product()!)"
+          class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-semibold transition">
+
+          Add To Cart
+        </button>
+
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Details Cards -->
+  <div class="grid md:grid-cols-2 gap-6 mt-12">
+
+    <!-- Product Details -->
+    <div class="bg-white rounded-3xl border shadow-sm p-6">
+
+      <h2 class="text-xl font-bold mb-6">
+        Product Information
+      </h2>
+
+      <div class="space-y-4">
+
+
+
+        <div class="flex justify-between border-b pb-3">
+          <span class="text-gray-500">Brand</span>
+          <span class="font-medium">
+            {{ product()?.brand_name }}
+          </span>
+        </div>
+
+        <div class="flex justify-between border-b pb-3">
+          <span class="text-gray-500">Category</span>
+          <span class="font-medium">
+            {{ product()?.category_name }}
+          </span>
+        </div>
+
+        <div class="flex justify-between border-b pb-3">
+          <span class="text-gray-500">Dosage Form</span>
+          <span class="font-medium">
+            {{ product()?.dosage_form }}
+          </span>
+        </div>
+
+        <div class="flex justify-between border-b pb-3">
+          <span class="text-gray-500">Strength</span>
+          <span class="font-medium">
+            {{ product()?.strength }}
+          </span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Manufacturer</span>
+          <span class="font-medium">
+            {{ product()?.manufacturer }}
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Pharmacy Details -->
+    <div class="bg-white rounded-3xl border shadow-sm p-6">
+
+      <h2 class="text-xl font-bold mb-6">
+        Pharmacy Information
+      </h2>
+
+      <div class="space-y-4">
+
+        <div class="flex justify-between border-b pb-3">
+          <span class="text-gray-500">Pharmacy</span>
+          <span class="font-medium">
+            {{ product()?.pharmacy_name }}
+          </span>
+        </div>
+
+        <div class="flex justify-between border-b pb-3">
+          <span class="text-gray-500">Stock Quantity</span>
+          <span class="font-medium">
+            {{ product()?.quantity }}
+          </span>
+        </div>
+
+        <div class="flex justify-between border-b pb-3">
+          <span class="text-gray-500">Availability</span>
+
+          <span [class]="product()?.in_stock
+                            ? 'text-green-600 font-semibold'
+                            : 'text-red-600 font-semibold'">
+
+            {{ product()?.in_stock ? 'Available' : 'Unavailable' }}
+          </span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Prescription</span>
+
+          <span [class]="product()?.requires_prescription
+                            ? 'text-orange-600 font-semibold'
+                            : 'text-green-600 font-semibold'">
+
+            {{
+            product()?.requires_prescription
+            ? 'Required'
+            : 'Not Required'
+            }}
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<p-toast></p-toast>

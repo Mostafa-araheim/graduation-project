@@ -1,0 +1,8 @@
+Button:hover .icon
+{
+    transform: translateX(4px);
+}
+
+.icon{
+    transition: 0.5s all;
+}

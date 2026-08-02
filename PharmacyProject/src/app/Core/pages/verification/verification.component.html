@@ -1,0 +1,90 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-6">
+
+  <div class="w-full max-w-md space-y-6">
+
+    <!-- Logo -->
+    <a routerLink="/" class="flex items-center justify-center gap-3">
+      <div class="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center shadow-md">
+        <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16v16H4z" />
+          <circle cx="12" cy="12" r="3" />
+          <path d="M8 4v4M16 4v4M8 20v-4M16 20v-4" />
+        </svg>
+      </div>
+
+      <span class="text-2xl font-bold text-foreground">MediConnect</span>
+    </a>
+
+    <!-- Card -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 space-y-6">
+
+      <!-- Header -->
+      <div class="text-center space-y-3">
+
+        <div class="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+          <svg class="h-7 w-7 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+        </div>
+
+        <h1 class="text-xl font-bold text-foreground">
+          Verify your email
+        </h1>
+
+        <p class="text-sm text-muted-foreground">
+          We sent an 8-digit verification code to
+        </p>
+
+        <p class="font-semibold text-primary">
+          userexample.com
+        </p>
+      </div>
+
+      <!-- OTP Inputs -->
+      <div class="flex justify-center">
+        <div class="grid grid-cols-8 gap-2 sm:gap-3">
+
+          @for (item of otpArray; track $index) {
+          <input id="otp-{{ $index }}" type="text" maxlength="1" [(ngModel)]="otpArray[$index]"
+            (input)="onOtpInput($event, $index)" (keydown)="onOtpKeydown($event, $index)" (paste)="onOtpPaste($event)"
+            class="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg border rounded-lg
+                     focus:outline-none focus:ring-2 focus:ring-primary/30
+                     focus:border-primary transition shadow-sm" />
+          }
+
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="text-center text-sm text-red-500">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Verify Button -->
+      <button (click)="verifyCode()" [disabled]="isLoading" class="w-full py-3 rounded-lg font-semibold text-white
+               bg-primary hover:bg-primary/90 transition
+               disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="!isLoading">Verify Code</span>
+        <span *ngIf="isLoading">Verifying...</span>
+      </button>
+
+      <!-- Resend Section -->
+      <div class="text-center space-y-2">
+
+        <p class="text-sm text-muted-foreground">
+          Didn’t receive the code?
+          <button class="text-primary font-medium hover:underline">
+            Resend code
+          </button>
+        </p>
+
+        <p class="text-xs text-muted-foreground">
+          The code expires in 10 minutes. Check your spam folder if you don’t see it.
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+</div>
