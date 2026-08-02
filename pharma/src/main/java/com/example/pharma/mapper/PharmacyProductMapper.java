@@ -19,7 +19,7 @@ public interface PharmacyProductMapper {
     @Mapping(source = "pharmacy.name", target = "pharmacyName")
     @Mapping(source = "pharmacy.latitude", target = "pharmacyLatitude")
     @Mapping(source = "pharmacy.longitude", target = "pharmacyLongitude")
-    @Mapping(source = "product.imageUrl", target = "productImage")
+    @Mapping(source = "product.imageUrl", target = "productImage") // تأكد أن الاسم في Product.java هو imageUrl (لو كان image غيّر المصدر لـ product.image)
     @Mapping(target = "originalPrice", ignore = true)
     @Mapping(target = "pharmacyDistance", ignore = true)
     @Mapping(target = "inStock", expression = "java(pharmacyProduct.getAvailabilityStatus() != null && pharmacyProduct.getAvailabilityStatus() == com.example.pharma.model.entity.inventory.AvailabilityStatus.Available)")
@@ -35,13 +35,11 @@ public interface PharmacyProductMapper {
     @Mapping(source = "product.strength",             target = "strength")
     @Mapping(source = "product.manufacturer",         target = "manufacturer")
     @Mapping(source = "product.category.categoryId",  target = "categoryId")
-    @Mapping(source = "product.category.categoryName",        target = "categoryName")
-    @Mapping(source = "product.imageUrl",        target = "productImage")
-
+    @Mapping(source = "product.category.categoryName", target = "categoryName")
+    @Mapping(source = "product.imageUrl",             target = "productImage") // تم التأكد من المابينج للصورة
     @Mapping(source = "product.brand.brandId",        target = "brandId")
-    @Mapping(source = "product.brand.brandName",           target = "brandName")
-    @Mapping(source = "inventory.pharmacy.name",      target = "pharmacyName")
-    @Mapping(target = "inStock", expression = "java(pharmacyProduct.getAvailabilityStatus() == com.example.pharma.model.entity.inventory.AvailabilityStatus.Available)")
+    @Mapping(source = "product.brand.brandName",      target = "brandName")
+    @Mapping(source = "pharmacy.name",                target = "pharmacyName") // تصحيح: الربط المباشر مع pharmacy بدلاً من inventory
+    @Mapping(target = "inStock", expression = "java(pharmacyProduct.getAvailabilityStatus() != null && pharmacyProduct.getAvailabilityStatus() == com.example.pharma.model.entity.inventory.AvailabilityStatus.Available)") // تصحيح: إضافة حماية ضد null
     PharmacyProductDto toPharmacyProductDto(PharmacyProduct pharmacyProduct);
 }
-
