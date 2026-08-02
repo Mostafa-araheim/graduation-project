@@ -1,0 +1,40 @@
+/* reset */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+/* track */
+.slider::-webkit-slider-runnable-track {
+  height: 8px;
+  background: transparent;
+}
+
+.slider::-moz-range-track {
+  height: 8px;
+  background: transparent;
+}
+
+/* ✅ THUMB — Chrome, Edge, Safari */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: rgb(248, 245, 245);
+  border: 5px solid  rgb(39, 165, 152); 
+  cursor: pointer;
+  margin-top: -7.5px; /* centers thumb */
+}
+
+/* ✅ THUMB — Firefox */
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: white;
+  border: 2px solid #2563eb;
+  cursor: pointer;
+}

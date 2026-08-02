@@ -1,0 +1,108 @@
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <lucide-icon [name]="filter" class="w-5 h-5 text-primary"></lucide-icon>
+            <span class="font-semibold text-gray-900">Filters</span>
+
+            @if (activeFiltersCount() > 0) {
+            <span class="bg-primary text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                {{ activeFiltersCount() }}
+            </span>
+            }
+        </div>
+
+        @if (activeFiltersCount() > 0) {
+        <button (click)="clearAll()" class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
+            <lucide-icon [name]="x" class="w-4 h-4"></lucide-icon>
+            Clear all
+        </button>
+        }
+    </div>
+
+    <!-- Mobile Toggle -->
+    <div class="lg:hidden mb-4">
+        <button (click)="toggleMobile()"
+            class="w-full flex items-center justify-between px-4 py-2 border-2 border-primary rounded-lg text-primary hover:bg-primary hover:text-white transition-colors">
+            <span>{{ isMobileOpen() ? 'Hide Filters' : 'Show Filters' }}</span>
+            <lucide-icon [name]="chevronDown" class="w-4 h-4 transition-transform" [class.rotate-180]="isMobileOpen()">
+            </lucide-icon>
+        </button>
+    </div>
+
+    <!-- Filters Content -->
+    <div class="space-y-6" [class.hidden]="!isMobileOpen()" [class.lg:block]="true">
+
+        <!-- Categories - SINGLE SELECTION with PRIMARY COLOR -->
+        <div class="border-b border-gray-200 pb-4">
+            <button (click)="toggleSection('categories')"
+                class="flex items-center justify-between w-full py-2 font-medium text-gray-900">
+                <span>Categories</span>
+                <lucide-icon [name]="chevronDown" class="w-4 h-4 transition-transform"
+                    [class.rotate-[-90deg]]="!openSections()['categories']">
+                </lucide-icon>
+            </button>
+
+            @if (openSections()['categories']) {
+            <div class="pt-3 space-y-3">
+                @for (cat of categories; track cat.category_name) {
+                <label class="flex items-center gap-3 cursor-pointer group" (click)="selectCategory(cat.category_name)">
+
+                    <!-- Custom Radio Button with PRIMARY color -->
+                    <div class="relative flex items-center justify-center">
+                        <div class="w-5 h-5 rounded-full border-2 transition-all duration-200
+                                  group-hover:border-primary"
+                            [class.border-primary]="selectedCategory() === cat.category_name"
+                            [class.border-gray-300]="selectedCategory() !== cat.category_name">
+
+                            <!-- Inner circle when selected -->
+                            @if (selectedCategory() === cat.category_name) {
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+                                            w-2.5 h-2.5 rounded-full bg-primary">
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <span
+                        class="text-sm text-gray-700 flex-1 cursor-pointer group-hover:text-primary transition-colors">
+                        {{ cat.category_name }}
+                    </span>
+                </label>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Availability - In Stock Only -->
+        <div class="pt-2">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" class="sr-only peer" [ngModel]="inStockOnly()"
+                    (ngModelChange)="onStockFilterChange($event)" />
+
+                <!-- Custom Checkbox with PRIMARY color -->
+                <div class="w-5 h-5 rounded border-2 flex items-center justify-center
+                          transition-all duration-200
+                          group-hover:border-primary" [class.bg-primary]="inStockOnly()"
+                    [class.border-primary]="inStockOnly()" [class.border-gray-300]="!inStockOnly()">
+
+                    @if (inStockOnly()) {
+                    <lucide-icon [name]="check" class="h-3 w-3 text-white"></lucide-icon>
+                    }
+                </div>
+
+                <span class="text-sm font-medium text-gray-900 group-hover:text-primary transition-colors">
+                    In Stock Only
+                </span>
+            </label>
+        </div>
+
+        <!-- Apply Button -->
+        <button (click)="applyFilters()"
+            class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+            Apply Filters
+        </button>
+
+    </div>
+</div>

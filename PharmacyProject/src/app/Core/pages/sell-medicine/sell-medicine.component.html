@@ -1,0 +1,210 @@
+<main class="flex-1 container mx-auto px-4 py-8 max-w-3xl">
+
+
+
+    <!-- header -->
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Sell Your Medicine
+        </h1>
+        <p class="text-gray-500">
+            List your unused medicines and help others while earning money
+        </p>
+    </div>
+
+    <!-- info banner -->
+    <div class="bg-primary-light rounded-2xl p-4 mb-8 flex items-start gap-3 border border-blue-100">
+        <lucide-icon [name]="info" class="w-5 h-5 text-primary shrink-0 mt-0.5"></lucide-icon>
+        <div class="text-sm">
+            <p class="font-semibold text-primary mb-1">Before you list:</p>
+            <ul class="text-primary space-y-1">
+                <li>• Only list medicines that are sealed and unexpired</li>
+                <li>• Prescription medicines require verification</li>
+                <li>• All listings are reviewed within 24 hours</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- FORM -->
+    <form (ngSubmit)="submit()" class="space-y-8">
+
+        <!-- ================= IMAGES ================= -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-6">
+            <label class="text-lg font-semibold mb-4 block">
+                Product Images
+            </label>
+
+            <p class="text-sm text-gray-500 mb-4">
+                Upload up to 5 clear photos of your medicine.
+            </p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <div *ngFor="let img of images; let i = index"
+                    class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group bg-gray-100">
+                    <img [src]="img" class="w-full h-full object-cover" />
+
+                    <button type="button" (click)="removeImage(i)"
+                        class="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        ✕
+                    </button>
+
+                    <span *ngIf="i === 0"
+                        class="absolute bottom-2 left-2 bg-primary text-white text-xs px-2 py-0.5 rounded-full">
+                        Main
+                    </span>
+                </div>
+
+                <!-- add photo -->
+                <label *ngIf="images.length < 5"
+                    class="aspect-square rounded-xl border-2 border-dashed border-gray-300 hover:border-primary cursor-pointer flex flex-col items-center justify-center gap-2 transition-colors bg-gray-50">
+                    <input type="file" hidden multiple accept="image/*" (change)="onFileChange($event)" />
+                    <span class="text-sm text-gray-500">Add Photo</span>
+                </label>
+            </div>
+
+            <p *ngIf="imageError" class="text-sm text-red-500 mt-2">
+                {{ imageError }}
+            </p>
+        </div>
+
+        <!-- ================= MEDICINE DETAILS ================= -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
+            <h3 class="text-lg font-semibold">Medicine Details</h3>
+
+            <div class="grid sm:grid-cols-2 gap-6 w-full">
+                <!-- name -->
+                <div class="space-y-2 block sm:col-span-2">
+                    <label class="text-sm font-medium">Product Name*</label>
+
+                    <div class="relative w-full">
+                        <p-dropdown [options]="displayedProducts" [(ngModel)]="form.productId" optionLabel="name"
+                            name="products" optionValue="id" [filter]="true" filterBy="name"
+                            (onFilter)="onFilter($event)" placeholder="Search or select..." styleClass="custom-dropdown w-full h-12 rounded-xl border border-gray-200 bg-white px-3 py-2
+            flex items-center justify-between text-sm 
+            focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                            panelStyleClass="custom-dropdown-panel mt-2">
+                            <ng-template let-displayedProducts pTemplate="item">
+                                <div class="flex justify-between items-center w-full">
+                                    <span>{{ displayedProducts.name }}</span>
+
+                                    <i *ngIf="form.productId === displayedProducts.id" class="pi pi-check"></i>
+                                </div>
+                            </ng-template>
+
+                        </p-dropdown>
+                    </div>
+                </div>
+
+                <!-- category -->
+                <div class="space-y-2 block">
+                    <label class="text-sm font-medium ">City*</label>
+
+                    <div class="relative w-full">
+                        <p-dropdown [options]="displayedCity" [(ngModel)]="form.city" optionLabel="location" name="city"
+                            optionValue="location" [filter]="true" filterBy="location"
+                            (onFilter)="onCitiesFilter($event)" placeholder="Search or select..." styleClass="custom-dropdown w-full h-12 rounded-xl border border-gray-200 bg-white px-3 py-2
+            flex items-center justify-between text-sm 
+            focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                            panelStyleClass="custom-dropdown-panel mt-2">
+                            <ng-template let-displayedCity pTemplate="item">
+                                <div class="flex justify-between items-center w-full">
+                                    <span>{{ displayedCity.location }}</span>
+
+                                    <i *ngIf="form.city === displayedCity.location" class="pi pi-check"></i>
+                                </div>
+                            </ng-template>
+
+                        </p-dropdown>
+                    </div>
+
+                    <p *ngIf="errors.city" class="text-sm text-red-500 scroll-m-0">
+                        {{ errors.city }}
+                    </p>
+                </div>
+
+
+
+
+                <div class="space-y-2 block">
+                    <label class="text-sm font-medium">Conditions*</label>
+
+                    <div class="relative w-full">
+                        <p-dropdown [options]="conditions" [(ngModel)]="form.condition" name="condition"
+                            optionLabel="name" optionValue="name" placeholder="Search or select..." appendTo="body"
+                            [filter]="true" filterBy="name" [scrollHeight]="'auto'" styleClass="custom-dropdown w-full h-12 rounded-xl border border-gray-200 bg-white px-3 py-2
+            flex items-center justify-between text-sm 
+            focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                            panelStyleClass="custom-dropdown-panel mt-2">
+
+                            <ng-template let-option pTemplate="item">
+                                <div class="custom-dropdown-item flex justify-between items-center w-full">
+                                    <span>{{ option.name }}</span>
+                                    <i *ngIf="form.condition === option.name" class="pi pi-check"></i>
+                                </div>
+                            </ng-template>
+
+                        </p-dropdown>
+                    </div>
+
+                    <p *ngIf="errors.category" class="text-sm text-red-500 scroll-m-0">
+                        {{ errors.category }}
+                    </p>
+                </div>
+
+                <!-- description ✅ ADDED -->
+                <div class="space-y-2 sm:col-span-2">
+                    <label class="text-sm font-medium">Description</label>
+                    <textarea pInputTextarea [(ngModel)]="form.description" name="description"
+                        placeholder="Describe your medicine..." rows="5" [autoResize]="true"
+                        class="custom-textarea-style w-full min-h-24 p-4 rounded-xl border border-gray-200 resize-none outline-none"></textarea>
+                    <!-- Note: Tags are closed on the same line -->
+                    <!-- <p *ngIf="errors?.description" class="text-sm text-red-500">
+                        {{ errors.description }}
+                    </p> -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PRICING & DETAILS ✅ ADDED ================= -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
+            <h3 class="text-lg font-semibold">Pricing & Details</h3>
+
+            <div class="grid sm:grid-cols-3 gap-6">
+                <!-- price -->
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Price ($) *</label>
+                    <input type="number" step="0.01" min="0" [(ngModel)]="form.price" name="price" placeholder="0.00"
+                        class=" inputfocus w-full h-12 px-4 rounded-xl border border-gray-200" />
+                    <p *ngIf="errors.price" class="text-sm text-red-500">
+                        {{ errors.price }}
+                    </p>
+                </div>
+
+                <!-- quantity -->
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Quantity</label>
+                    <input type="number" min="1" [(ngModel)]="form.quantity" name="quantity" placeholder="1"
+                        class="inputfocus w-full h-12 px-4 rounded-xl border border-gray-200" />
+                </div>
+
+                <!-- expiry -->
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Expiry Date *</label>
+                    <input type="date" [(ngModel)]="form.expiry" name="expiry"
+                        class="inputfocus w-full h-12 px-4 rounded-xl border border-gray-200" />
+                    <p *ngIf="errors.expiry" class="text-sm text-red-500">
+                        {{ errors.expiry }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- submit -->
+        <button type="submit" [disabled]="isSubmitting"
+            class="w-full bg-primary  text-white font-semibold py-3 px-8 rounded-xl">
+            <span *ngIf="!isSubmitting">List Medicine for Sale</span>
+            <span *ngIf="isSubmitting">Loading...</span>
+        </button>
+    </form>
+</main>
+<p-toast></p-toast>

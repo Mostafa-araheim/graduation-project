@@ -1,0 +1,134 @@
+<div class="auth-container">
+    <!-- Left Side - Form -->
+    <div class="left-side">
+        <div class="form-wrapper">
+            <!-- Logo -->
+            <div class="logo-section">
+                <div class="logo-icon bg-primary">
+                    <svg class="icon-pill" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <span class="logo-text">MediConnect</span>
+            </div>
+
+            <!-- Header -->
+            <div class="header-section">
+                <h1 class="title">Welcome</h1>
+                <p class="subtitle">Sign in or create an account to continue</p>
+            </div>
+
+            <!-- Google Sign In -->
+
+            <!-- Email Magic Link Form -->
+            <form class="email-form" [formGroup]="loginForm" (ngSubmit)="submitForm()">
+                <div class="input-group">
+                    <label for="email" class="input-label">Email Address</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon inputfocus" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <input id="email" type="email" placeholder="you@example.com" class="email-input"
+                            formControlName="email" />
+                    </div>
+                    @if (loginForm.get("email")?.errors && loginForm.get('email')?.touched) {
+
+                    <div class=" rounded-md text-red-600 text-sm">
+                        <ul class="list-disc p-3 px-6">
+                            @if (loginForm.get('email')?.errors?.["required"]) {
+
+                            <li><span>Email is Required</span></li>
+                            }
+                            @if (loginForm.get('email')?.errors?.['email']) {
+
+                            <li><span>Email should be like this yyyyy&#64;example.com</span></li>
+                            }
+                        </ul>
+                    </div>
+                    }
+                </div>
+
+                <button type="submit" [disabled]="sending || loginForm.invalid"
+                    class="submit-btn transition-all duration-200"
+                    [class]="sending ? 'submit-btn bg-primary/60 opacity-50 cursor-not-allowed' : 'submit-btn bg-primary'">
+                    <svg class="submit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+
+                    <ng-container *ngIf="!sending; else loading">
+                        Send Verification Code
+                    </ng-container>
+
+                    <ng-template #loading>
+                        Sending...
+                    </ng-template>
+
+                </button>
+            </form>
+
+            <p class="footer-text">
+                No password needed. We'll send you a secure link to sign in.
+            </p>
+
+            <p class="text-center text-sm footer-text mt-5">Don't have an account? <a
+                    class="text-primary font-semibold hover:underline" routerLink="/signup">Sign up</a></p>
+        </div>
+    </div>
+
+    <!-- Right Side - Branding -->
+    <div class="right-side bg-primary">
+        <div class="branding-wrapper">
+            <div class="branding-icon">
+                <div class="branding-icon-circle">
+                    <svg class="branding-pill" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+            </div>
+            <h2 class="branding-title">
+                Access Medicines from Trusted Pharmacies
+            </h2>
+            <p class="branding-subtitle">
+                Join thousands of users who trust MediConnect for their healthcare needs.
+            </p>
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Access 500+ verified pharmacies</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Compare prices instantly</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Fast doorstep delivery</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span>Passwordless, secure sign-in</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

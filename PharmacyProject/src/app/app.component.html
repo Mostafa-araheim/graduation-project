@@ -1,0 +1,15 @@
+@if(!isSigninPage)
+{
+<app-navbar></app-navbar>
+
+}
+<!-- <app-home></app-home> -->
+<!-- <app-pharmacies></app-pharmacies> -->
+<!-- <app-medicines></app-medicines> -->
+<!-- <app-search-filter></app-search-filter> -->
+<router-outlet></router-outlet>
+@if(!isSigninPage)
+{
+
+<app-footer></app-footer>
+}

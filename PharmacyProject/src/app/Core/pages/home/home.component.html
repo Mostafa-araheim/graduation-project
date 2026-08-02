@@ -1,0 +1,292 @@
+<div class="min-h-screen bg-white">
+    <!-- Hero Section -->
+    <section class="relative gradient-hero overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-30">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="container mx-auto px-4 py-16 md:py-24 relative">
+            <div class="max-w-3xl mx-auto text-center space-y-6">
+                <span
+                    class="inline-flex items-center rounded-full border-0 bg-primary-light text-primary px-4 py-1.5 text-sm font-semibold">
+                    Trusted by 100,000+ users
+                </span>
+
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                    Your Trusted <span class="text-primary">Medicine</span> Marketplace
+                </h1>
+
+                <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+                    Connect with nearby pharmacies, buy medicines at the best prices, or sell your unused medicines
+                    safely.
+                </p>
+
+                <!-- Search Bar -->
+                <div class="max-w-xl mx-auto mt-8">
+                    <div class="relative bg-white rounded-2xl shadow-elevated p-2 flex flex-col sm:flex-row gap-2">
+                        <div class="relative flex-1">
+                            <lucide-icon [name]="search"
+                                class="absolute left-2 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></lucide-icon>
+                            <input type="text" placeholder="Search medicines, pharmacies..."
+                                class="w-full pl-12 h-12 border-0 bg-gray-100/50 rounded-xl text-base focus:ring-2 focus:ring-primary focus:ring-offset-2" />
+                        </div>
+                        <div class="relative flex-1 sm:max-w-[180px]">
+                            <lucide-icon [name]="map_pin"
+                                class="absolute left-2 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></lucide-icon>
+                            <input type="text" placeholder="Location"
+                                class="w-full pl-12 h-12 border-0 bg-gray-100/50 rounded-xl text-base focus:ring-2 focus:ring-primary focus:ring-offset-2" />
+                        </div>
+                        <a href="/search">
+                            <button
+                                class="  gradient-primary bg-green-200 text-white font-bold shadow-card hover:shadow-elevated active:scale-[0.98] transition-all w-full sm:w-auto h-12 px-8 rounded-xl flex items-center justify-center gap-2">
+                                Search
+                                <lucide-icon [name]="arrowRight" class="h-4 w-4 icon"></lucide-icon>
+                            </button>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="flex flex-wrap justify-center gap-3 mt-6">
+                    @for (action of quickActions; track $index) {
+                    <a href="/prescription">
+                        <button
+                            class="border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white transition-all rounded-full px-4 py-2 flex items-center gap-2">
+                            <lucide-icon [name]="action.icon" class="h-4 w-4"></lucide-icon>
+                            {{action.label}}
+                        </button>
+                    </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-primary">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+                @for (stat of stats; track $index ; let last = $last) {
+                <div class="text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <span class="text-3xl md:text-4xl font-bold text-white">
+                            {{stat.value}}
+                        </span>
+                        @if (stat.icon) {
+                        <lucide-icon [name]="stat.icon"
+                            class="h-6 w-6 text-warning fill-[#FFD700] text-[#FFD700]"></lucide-icon>
+                        }
+                    </div>
+                    <p class="text-white/80 mt-1">{{stat.label}}</p>
+                </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 md:py-24">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Why Choose MediConnect?
+                </h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    We make healthcare accessible by connecting you with trusted pharmacies and ensuring safe, fast
+                    delivery of medicines.
+                </p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                @for (feature of features; track $index) {
+                <div
+                    class="bg-white rounded-2xl p-6 shadow-card hover:shadow-elevated transition-all duration-300 border border-gray-200 group">
+                    <div
+                        class="h-14 w-14 rounded-xl gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <lucide-icon [name]="feature.icon" class="h-7 w-7 text-white" />
+                    </div>
+                    <h3 class="font-semibold text-lg text-gray-900 mb-2">
+                        {{ feature.title }}
+                    </h3>
+                    <p class="text-gray-600 text-sm">
+                        {{ feature.description }}
+                    </p>
+                </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="py-16 bg-gray-50/50">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">
+                        Browse Categories
+                    </h2>
+                    <p class="text-gray-600">
+                        Find medicines by category for quick access
+                    </p>
+                </div>
+                <a href="/search">
+                    <button
+                        class="border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white transition-all px-4 py-2 rounded-lg flex items-center gap-2">
+                        View All Categories
+                        <lucide-icon [name]="chevronRight" class="h-4 w-4 icon"></lucide-icon>
+                    </button>
+                </a>
+            </div>
+
+            <app-slider class="w-full"></app-slider>
+
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-16 md:py-24">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    How It Works
+                </h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    Get started in three simple steps
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto relative">
+                <!-- Step 1 -->
+                <div class="relative text-center">
+                    <div class="inline-flex flex-col items-center">
+                        <div class="relative">
+                            <div class="h-24 w-24 rounded-full bg-primary-light flex items-center justify-center mb-4">
+                                <lucide-icon [name]="search" class="h-10 w-10 text-primary"></lucide-icon>
+                            </div>
+                            <span
+                                class="absolute -top-2 -right-2 h-8 w-8 rounded-full gradient-primary text-white text-sm font-bold flex items-center justify-center">
+                                01
+                            </span>
+                        </div>
+                        <h3 class="font-semibold text-xl text-gray-900 mb-2">Search</h3>
+                        <p class="text-gray-600 text-sm max-w-xs">Find the medicine you need or browse nearby pharmacies
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Dash between 1 and 2 -->
+                <div class="hidden md:block absolute" style="left: 23%; top: 48px; width: 20%;">
+                    <div class="border-t-2 border-dashed border-gray-300 w-full"></div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative text-center">
+                    <div class="inline-flex flex-col items-center">
+                        <div class="relative">
+                            <div class="h-24 w-24 rounded-full bg-primary-light flex items-center justify-center mb-4">
+                                <lucide-icon [name]="store" class="h-10 w-10 text-primary"></lucide-icon>
+                            </div>
+                            <span
+                                class="absolute -top-2 -right-2 h-8 w-8 rounded-full gradient-primary text-white text-sm font-bold flex items-center justify-center">
+                                02
+                            </span>
+                        </div>
+                        <h3 class="font-semibold text-xl text-gray-900 mb-2">Compare</h3>
+                        <p class="text-gray-600 text-sm max-w-xs">Compare prices and availability across multiple
+                            pharmacies</p>
+                    </div>
+                </div>
+
+                <!-- Dash between 2 and 3 -->
+                <div class="hidden md:block absolute" style="left: 57%; top: 48px; width: 20%;">
+                    <div class="border-t-2 border-dashed border-gray-300 w-full"></div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="relative text-center">
+                    <div class="inline-flex flex-col items-center">
+                        <div class="relative">
+                            <div class="h-24 w-24 rounded-full bg-primary-light flex items-center justify-center mb-4">
+                                <lucide-icon [name]="truck" class="h-10 w-10 text-primary"></lucide-icon>
+                            </div>
+                            <span
+                                class="absolute -top-2 -right-2 h-8 w-8 rounded-full gradient-primary text-white text-sm font-bold flex items-center justify-center">
+                                03
+                            </span>
+                        </div>
+                        <h3 class="font-semibold text-xl text-gray-900 mb-2">Order</h3>
+                        <p class="text-gray-600 text-sm max-w-xs">Place your order and get it delivered to your doorstep
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section for Pharmacies -->
+    <section class="py-16 bg-primary">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="text-white max-w-xl">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">
+                        Are You a Pharmacy Owner?
+                    </h2>
+                    <p class="text-white/80 text-lg">
+                        Join our platform and reach thousands of customers looking for medicines. Increase your sales
+                        and grow your business.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="/pharmacy/register">
+                        <button
+                            class="bg-white text-gray-900 hover:bg-white/90 transition-all rounded-xl px-6 py-3 h-14 text-lg flex items-center gap-2">
+                            <lucide-icon [name]="users" class="h-5 w-5"></lucide-icon>
+                            <i data-lucide="users"></i>
+                            Join as Pharmacy
+                        </button>
+                    </a>
+                    <a href="/pricing">
+                        <button
+                            class="border-2 border-white text-white hover:bg-white hover:text-primary transition-all rounded-xl px-6 py-3 h-14 text-lg">
+                            View Plans
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Download CTA -->
+    <section class="py-16 md:py-24">
+        <div class="container mx-auto px-4">
+            <div
+                class="bg-white rounded-3xl shadow-elevated border border-gray-200 p-8 md:p-12 text-center max-w-3xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Ready to Get Started?
+                </h2>
+                <p class="text-gray-600 mb-8 max-w-lg mx-auto">
+                    Create an account today and start accessing affordable medicines from trusted pharmacies near you.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="/register">
+                        <button
+                            class="gradient-primary text-white font-bold shadow-card hover:shadow-elevated active:scale-[0.98] transition-all h-14 rounded-xl px-10 text-lg flex items-center justify-center gap-2">
+                            Create Free Account
+                            <lucide-icon [name]="arrowRight" class="h-5 w-5 icon"></lucide-icon>
+                        </button>
+                    </a>
+                    <a href="/search">
+                        <button
+                            class="border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white transition-all h-14 rounded-xl px-10 text-lg">
+                            Browse Medicines
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+</div>

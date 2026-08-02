@@ -1,0 +1,160 @@
+<div
+    class="group bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+
+    <!-- Image Section -->
+    <a [routerLink]="'/productDetails/' + productData().pharmacy_product_id"
+        class="relative block bg-gradient-to-br from-slate-50 to-white">
+
+        <!-- Prescription Badge -->
+        @if(productData().requires_prescription){
+        <span class="absolute top-3 left-3 z-20 px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
+            Prescription
+        </span>
+        }
+
+        <!-- Wishlist -->
+        <button
+            class="absolute top-3 right-3 z-20 h-10 w-10 rounded-full bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center text-slate-500 hover:text-red-500 hover:scale-110 transition"
+            (click)="$event.preventDefault(); $event.stopPropagation()">
+
+            <lucide-icon [name]="heart" class="w-5 h-5"></lucide-icon>
+
+        </button>
+
+        <!-- Product Image -->
+        <div class="aspect-square flex items-center justify-center p-6">
+
+            <img [src]="productData().product_image
+            ? base + productData().product_image
+            : '../../../assets/photo-1587854692152-cbe660dbde88.jpg'" [alt]="productData().product_name"
+                class="max-h-52 object-contain transition-transform duration-500 group-hover:scale-110" />
+
+        </div>
+
+        <!-- Stock Badge -->
+        <div class="absolute bottom-4 left-4">
+
+            @if(productData().in_stock){
+            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                In Stock
+            </span>
+            }
+            @else {
+            <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                Out of Stock
+            </span>
+            }
+
+        </div>
+
+    </a>
+
+    <!-- Content -->
+    <div class="p-5">
+
+        <!-- Category -->
+        <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            {{ productData().category_name }}
+        </span>
+
+        <!-- Product Name -->
+        <a [routerLink]="'/productDetails/' + productData().pharmacy_product_id">
+
+            <h3 class="mt-3 text-lg font-bold text-slate-800 line-clamp-2 group-hover:text-primary transition-colors">
+
+                {{ productData().product_name }}
+
+            </h3>
+
+        </a>
+
+        <!-- Strength + Dosage -->
+        <p class="mt-1 text-sm text-slate-500">
+
+            {{ productData().strength }}
+
+            @if(productData().dosage_form){
+            • {{ productData().dosage_form }}
+            }
+
+        </p>
+
+        <!-- Manufacturer -->
+        <p class="mt-2 text-sm text-slate-500">
+
+            By
+            <span class="font-medium text-slate-700">
+                {{ productData().manufacturer }}
+            </span>
+
+        </p>
+
+        <!-- Pharmacy -->
+        <div class="mt-3 flex items-center gap-2 text-sm text-slate-600">
+
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 12.414a4 4 0 10-5.657
+             5.657l4.243 4.243a8 8 0 0011.314
+             0 8 8 0 00-11.314-11.314" />
+
+            </svg>
+
+            <span class="truncate">
+                {{ productData().pharmacy_name }}
+            </span>
+
+        </div>
+
+        <!-- Quantity -->
+        <div class="mt-2 text-xs text-slate-500">
+
+            Available:
+            <span class="font-semibold">
+                {{ productData().quantity }}
+            </span>
+
+        </div>
+
+        <!-- Bottom -->
+        <div class="mt-5 flex items-center justify-between">
+
+            <!-- Price -->
+            <div>
+
+                <div class="text-2xl font-extrabold text-primary">
+
+                    EGP {{ productData().price }}
+
+                </div>
+
+                <div class="text-xs text-slate-400">
+
+                    VAT included
+
+                </div>
+
+            </div>
+
+            <!-- Add Button -->
+            <button (click)="OnAddClick()" [disabled]="!productData().in_stock" class="h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300
+        enabled:bg-primary enabled:hover:bg-primary/90 enabled:hover:scale-110
+        disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+
+                @if(productData().in_stock){
+                <lucide-icon [name]="plus" class="w-5 h-5 text-white">
+                </lucide-icon>
+                }
+                @else {
+                <lucide-icon [name]="shoppingCart" class="w-5 h-5">
+                </lucide-icon>
+                }
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>

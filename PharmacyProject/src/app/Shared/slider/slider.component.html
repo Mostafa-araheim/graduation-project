@@ -1,0 +1,18 @@
+<owl-carousel-o [options]="customOptions" class="">
+    @for (cat of categories; track $index) {
+
+    <ng-template carouselSlide class="p-6">
+        <a
+            class="bg-white rounded-xl p-4 text-center shadow-soft hover:shadow-card transition-all duration-300 border border-gray-200 hover:border-primary group block">
+
+            <h3 class="font-medium text-gray-900 group-hover:text-primary transition-colors">
+                {{ cat.category_name }}
+            </h3>
+            <p class="text-sm text-gray-600 mt-1">
+                {{ cat.item_count }} products
+            </p>
+            <img [src]="cat.image_url" alt="">
+        </a>
+    </ng-template>
+    }
+</owl-carousel-o>

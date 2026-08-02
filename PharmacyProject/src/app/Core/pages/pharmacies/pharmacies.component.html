@@ -1,0 +1,291 @@
+@if(isLoading)
+{
+<app-loader></app-loader>
+}
+
+<div class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Location Dialog -->
+    @if (showLocationDialog()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 text-center">
+            <div class="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                <lucide-icon [name]="map_pin" class="h-8 w-8 text-primary"></lucide-icon>
+            </div>
+
+            <h3 class="text-xl font-bold mb-2">Enable Location Services</h3>
+            <p class="text-gray-600 mb-6 text-[14px]">
+                Allow us to find pharmacies near you for faster delivery and pickup options.
+            </p>
+
+            <button
+                class="mb-3 inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-soft hover:shadow-card active:scale-[0.98] h-12 rounded-xl px-8 text-base w-full "
+                (click)="getUserLocation()">
+                <lucide-icon [name]="navigate"></lucide-icon>
+                Use My Current Location
+            </button>
+
+            <button
+                class="mb-3 inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground h-12 rounded-xl px-8 text-base w-full"
+                (click)="closeDialog()">
+                <lucide-icon [name]="map_pin"></lucide-icon>
+                Enter Location Manually
+            </button>
+            <button (click)="closeDialog()"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-muted hover:text-foreground h-11 px-5 py-2.5 w-full">
+                Skip for now
+            </button>
+        </div>
+    </div>
+    }
+
+    <!-- Main -->
+    <main class="flex-1 container mx-auto px-4 py-8">
+
+        <h1 class="text-3xl font-bold mb-6">Nearby Pharmacies</h1>
+
+        <!-- Search -->
+        <div class="flex flex-col md:flex-row gap-2 mb-8">
+
+            <!-- Search -->
+            <div class="relative flex-1">
+                <lucide-icon [name]="searchIcon"
+                    class="absolute left-2 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></lucide-icon>
+                <input type="text" [value]="search()" (input)="onSearch($event)" placeholder="Search pharmacies..."
+                    class="w-full rounded-md border border-gray-300 bg-white pl-10 pr-3 h-12 text-base focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="relative " #sortdropdown>
+                <button type="button" (click)="toggleSortDropdown($event)"
+                    class="flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&amp;&gt;span]:line-clamp-1 w-[160px] h-12">
+                    <span>{{ selectedSortLabel() }}</span>
+                    <lucide-icon [name]="chevronDown" class="h-4 w-4 opacity-60"></lucide-icon>
+                </button>
+
+                <!-- Dropdown -->
+                <div *ngIf="isSortOpen()"
+                    class="absolute z-50 mt-2 p-2  bg-card border border-border rounded-xl shadow-lg overflow-hidden bg-white w-[160px] ">
+                    <button *ngFor="let option of sortOptions; trackBy: trackByValue" (click)="selectSort(option.value)"
+                        class="flex items-center justify-between w-full px-4 py-3 text-sm hover:bg-muted transition hover:bg-primary rounded-md text-center">
+                        <span>{{ option.label }}</span>
+                        <lucide-icon *ngIf="sortBy() === option.value" [name]="check" class="h-4 w-4"></lucide-icon>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative " #statusdropdown>
+                <button type="button" (click)="toggleStatusDropdown($event)"
+                    class="flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&amp;&gt;span]:line-clamp-1 w-[160px] h-12">
+                    <span>{{ selectedStatusLabel() }}</span>
+                    <lucide-icon [name]="chevronDown" class="h-4 w-4 opacity-60"></lucide-icon>
+                </button>
+
+                <!-- Dropdown -->
+                <div *ngIf="isStatusOpen()"
+                    class="absolute z-50 mt-2 p-2 bg-card bg-white border border-border rounded-xl shadow-lg overflow-hidden w-[160px]">
+                    <button *ngFor="let option of statusOptions; trackBy: trackByValue"
+                        (click)="selectStatus(option.value)"
+                        class="flex items-center justify-between w-full px-4 py-3 text-sm hover:bg-muted transition hover:bg-primary rounded-md">
+                        <span>{{ option.label }}</span>
+                        <lucide-icon *ngIf="statusFilter() === option.value" [name]="check"
+                            class="h-4 w-4"></lucide-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Results -->
+        <p class="text-gray-600 mb-6">
+            Showing
+            <span class="font-semibold text-gray-900">
+                {{ filteredPharmacies().length }}
+            </span>
+            pharmacies
+        </p>
+
+        <div>
+            <app-pharmacy-map [userLocation]="userLocation"></app-pharmacy-map>
+        </div>
+        <!-- Grid -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-5">
+
+            @for (pharmacy of filteredPharmacies(); track pharmacy.pharmacy_id) {
+
+            <a [routerLink]="'/pharmacyDetails/' + pharmacy.pharmacy_id"
+                class="group block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+
+                <!-- Image Section -->
+                <div class="relative h-56 overflow-hidden bg-slate-100">
+
+                    <img [src]="pharmacy.image_url == null
+                ? 'assets/photo-1587854692152-cbe660dbde88.jpg'
+                : base + pharmacy.image_url" [alt]="pharmacy.name"
+                        class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+
+                    <!-- Dark Gradient -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent">
+                    </div>
+
+                    <!-- Distance Badge -->
+                    <div
+                        class="absolute top-4 right-4 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 backdrop-blur-md shadow-md">
+
+                        <lucide-icon [name]="navigate" class="h-4 w-4 text-primary">
+                        </lucide-icon>
+
+                        <span class="text-sm font-semibold text-slate-800">
+                            {{ pharmacy.distance_in_kilometers ?? 0 }}
+                            km
+                        </span>
+                    </div>
+
+                    <!-- Open / Closed Badge -->
+                    <div class="absolute top-4 left-4">
+
+                        @if (!pharmacy.is_closed) {
+
+                        <span
+                            class="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white shadow-lg">
+
+                            <span class="h-2 w-2 rounded-full bg-white animate-pulse"></span>
+
+                            Open Now
+
+                        </span>
+
+                        } @else {
+
+                        <span
+                            class="inline-flex items-center gap-2 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-lg">
+
+                            <span class="h-2 w-2 rounded-full bg-white"></span>
+
+                            Closed
+
+                        </span>
+
+                        }
+
+                    </div>
+
+                    <!-- Pharmacy Name -->
+                    <div class="absolute bottom-5 left-5 right-5">
+
+                        <h3 class="line-clamp-2 text-2xl font-bold text-white">
+
+                            {{ pharmacy.name }}
+
+                        </h3>
+
+                    </div>
+
+                </div>
+
+                <!-- Content -->
+                <div class="p-5">
+
+                    <!-- Rating -->
+                    <div class="mb-4 flex items-center justify-between">
+
+                        <div class="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-amber-700">
+
+                            <lucide-icon [name]="star" class="h-4 w-4 fill-amber-400 text-amber-400">
+                            </lucide-icon>
+
+                            <span class="font-semibold">
+
+                                {{ pharmacy.rating ?? 'New' }}
+
+                            </span>
+
+                            <span class="text-xs opacity-70">
+
+                                ({{ pharmacy.review_count ?? 0 }})
+
+                            </span>
+
+                        </div>
+
+                        @if (!pharmacy.is_closed && pharmacy.closing_time) {
+
+                        <div class="text-right">
+
+                            <div class="text-xs text-slate-400">
+
+                                Open Until
+
+                            </div>
+
+                            <div class="text-sm font-semibold text-emerald-600">
+
+                                {{ ('1970-01-01T' + pharmacy.closing_time) | date:'shortTime' }}
+
+                            </div>
+
+                        </div>
+
+                        }
+
+                    </div>
+
+                    <!-- Address -->
+                    <div class="flex items-center gap-3 text-sm text-slate-500">
+
+                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+
+                            <lucide-icon [name]="map_pin" class="h-4 w-4 text-primary">
+                            </lucide-icon>
+
+                        </div>
+
+                        <span class="line-clamp-2 leading-5">
+
+                            {{ pharmacy.address }}
+
+                        </span>
+
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="mt-5 flex items-center justify-end border-t border-slate-100 pt-5">
+
+                        <div class="flex items-center gap-2 font-semibold text-primary">
+
+                            <span>
+
+                                View Pharmacy
+
+                            </span>
+
+                            <div
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 transition-all duration-300 group-hover:bg-primary">
+
+                                <lucide-icon [name]="chevronRight"
+                                    class="h-5 w-5 transition-all duration-300 group-hover:translate-x-1 group-hover:text-white">
+                                </lucide-icon>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </a>
+
+            }
+
+
+
+        </div>
+        <div class="flex justify-center items-center my-3">
+
+            <app-pagination [currentPage]="currentPage + 1" [totalPages]="this.totalPages"
+                (pageChange)="onPageChange($event)"></app-pagination>
+        </div>
+    </main>
+
+</div>

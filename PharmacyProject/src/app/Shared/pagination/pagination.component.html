@@ -1,0 +1,70 @@
+<nav role="navigation" aria-label="pagination" class="mx-auto flex w-full justify-center">
+    <ul class="flex flex-row items-center gap-1">
+
+        <!-- First -->
+        <li>
+            <button (click)="first()" [disabled]="currentPage === 1"
+                class="flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50">
+                «
+            </button>
+        </li>
+
+        <!-- Previous -->
+        <li>
+            <button (click)="previous()" [disabled]="currentPage === 1"
+                class="gap-1 pl-2.5 flex items-center px-3 py-2 rounded-md hover:bg-gray-100 disabled:opacity-50">
+                ←
+            </button>
+        </li>
+
+        <!-- Start Ellipsis -->
+        @if(pages[0] > 1)
+        {
+        <li>
+            <span class="flex h-9 w-9 items-center justify-center">
+                ...
+            </span>
+        </li>
+        }
+
+
+        <!-- Pages -->
+        @for (page of pages; track $index) {
+
+        <li>
+            <button (click)="goToPage(page)" [class.border]="page === currentPage"
+                [class.bg-gray-100]="page === currentPage"
+                class="flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100">
+                {{ page }}
+            </button>
+        </li>
+        }
+
+
+        <!-- End Ellipsis -->
+        @if(pages[pages.length - 1] < totalPages) { <li>
+            <span class="flex h-9 w-9 items-center justify-center">
+                ...
+            </span>
+            </li>
+            }
+
+
+            <!-- Next -->
+            <li>
+                <button (click)="next()" [disabled]="currentPage === totalPages"
+                    class="gap-1 pr-2.5 flex items-center px-3 py-2 rounded-md hover:bg-gray-100 disabled:opacity-50">
+                    →
+                </button>
+            </li>
+
+            <!-- Last -->
+            <li>
+                <button (click)="last()" [disabled]="currentPage === totalPages"
+                    class="flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50">
+                    »
+                </button>
+            </li>
+
+    </ul>
+</nav>

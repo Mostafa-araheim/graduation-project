@@ -1,0 +1,407 @@
+<div class="min-h-screen flex flex-col bg-background">
+
+
+
+
+    <main class="flex-1">
+        <div class="container mx-auto px-4 py-8">
+
+            <div class="grid lg:grid-cols-4 gap-6">
+
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="bg-card rounded-2xl border p-6 sticky top-24">
+
+                        <!-- User -->
+                        <!-- User -->
+                        <div class="text-center mb-6">
+                            <div class="relative inline-block mb-4">
+
+                                <!-- Profile Image -->
+                                <img *ngIf="profileImage" [src]="base + profileImage"
+                                    class="h-24 w-24 rounded-full object-cover border" />
+
+                                <!-- Default Avatar -->
+                                <div *ngIf="!profileImage"
+                                    class="h-24 w-24 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-3xl font-bold text-primary">
+                                        {{ userName.charAt(0) }}
+                                    </span>
+                                </div>
+
+                                <!-- Hidden File Input -->
+                                <input #fileInput type="file" accept="image/*" class="hidden"
+                                    (change)="onImageSelected($event)" />
+
+                                <!-- Upload Button -->
+                                <button (click)="fileInput.click()"
+                                    class="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary-light text-white flex items-center justify-center">
+                                    📷
+                                </button>
+                            </div>
+
+                            <h2 class="text-xl font-bold">
+                                {{userName}}
+                            </h2>
+
+                            <p class="text-gray-500">
+                                {{userEmail}}
+                            </p>
+
+                            <p class="text-gray-500">
+                                {{phoneNumber}}
+                            </p>
+
+                            <button (click)="openEditModal()" class="mt-3 border px-3 py-1 rounded hover:bg-gray-100">
+                                Edit Profile
+                            </button>
+                        </div>
+
+                        <!-- Navigation -->
+                        <nav class="space-y-1">
+                            <button *ngFor="let item of navItems" (click)="setActiveTab(item.value)"
+                                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left" [class]="activeTab === item.value
+                  ? 'bg-blue-100 text-primary'
+                  : 'hover:bg-gray-100'">
+                                <span>{{ item.label }}</span>
+                            </button>
+
+                            <button class="w-full text-red-500 px-4 py-3 text-left">
+                                Log Out
+                            </button>
+                        </nav>
+
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="lg:col-span-3">
+
+                    <!-- ORDERS -->
+                    <div *ngIf="activeTab === 'orders'" class="space-y-6">
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold">My Orders</h2>
+                                <p class="text-sm text-gray-500">
+                                    {{ orders().length }} {{ orders.length === 1 ? 'order' : 'orders' }} placed
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+
+                        <div *ngIf="orders().length === 0" class="text-center py-16">
+                            <div
+                                class="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                                📦
+                            </div>
+                            <h2 class="text-xl font-bold mb-2">No orders yet</h2>
+                            <p class="text-gray-500 mb-6">Your placed orders will appear here.</p>
+                        </div>
+
+                        <!-- Orders List -->
+                        <div *ngIf="orders().length > 0" class="space-y-4 max-w-4xl">
+
+                            <div *ngFor="let order of orders()"
+                                class="bg-white border rounded-2xl overflow-hidden hover:shadow-md transition">
+
+                                <!-- HEADER -->
+                                <div
+                                    class="px-6 py-4 bg-gray-50 border-b flex justify-between items-center flex-wrap gap-3">
+
+                                    <div>
+
+                                        <p class="text-xs text-gray-500">
+                                            {{ order.createdAt | date:'medium' }}
+                                        </p>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <span class="px-3 py-1 text-xs rounded-full"
+                                            [ngClass]="statusColors[order.status]">
+                                            {{ order.status }}
+                                        </span>
+
+                                        <span class="px-3 py-1 text-xs rounded-full bg-gray-200">
+                                            {{ order.pharmacyName }}
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                                <!-- ITEMS -->
+                                <div class="p-6 space-y-4">
+
+                                    <div *ngFor="let item of order.items" class="flex items-center gap-4">
+
+                                        <img [src]="item.productImage == null ? '../../../../assets/photo-1587854692152-cbe660dbde88.jpg' : base + item.productImage"
+                                            class="w-16 h-16 rounded-xl object-cover" />
+
+                                        <div class="flex-1">
+                                            <p class="font-medium truncate">{{ item.productName }}</p>
+                                            <p class="text-sm text-gray-500">
+                                                Qty: {{ item.quantity }} × {{ item.priceAtPurchase | currency }}
+                                            </p>
+                                        </div>
+
+                                        <p class="font-semibold">
+                                            {{ item.subtotal | currency }}
+                                        </p>
+
+                                    </div>
+
+                                    <hr />
+
+                                    <!-- SUMMARY -->
+                                    <div class="flex justify-between items-end">
+
+                                        <div class="text-sm text-gray-500 space-y-1">
+                                            <p>Payment Method: {{ order.paymentMethod }}</p>
+
+                                            <p>
+                                                Delivery Type:
+                                                {{ order.deliveryType }}
+                                            </p>
+
+
+                                        </div>
+
+                                        <div class="text-right">
+                                            <p class="text-xs text-gray-500">Total</p>
+                                            <p class="text-2xl font-bold text-primary">
+                                                {{ order.totalPrice | currency }}
+                                            </p>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ADDRESSES TAB -->
+                    <div *ngIf="activeTab === 'addresses'" class="space-y-6">
+
+                        <!-- HEADER -->
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-2xl font-bold">My Addresses</h2>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6">
+
+                            <!-- ADD NEW ADDRESS FORM -->
+                            <div class="bg-white border rounded-2xl p-6 space-y-4">
+
+                                <h3 class="text-lg font-semibold">Add New Address</h3>
+
+                                <input class="w-full border p-2 rounded" placeholder="Country"
+                                    [(ngModel)]="newAddress.country" />
+
+                                <input class="w-full border p-2 rounded" placeholder="City"
+                                    [(ngModel)]="newAddress.city" />
+
+                                <input class="w-full border p-2 rounded" placeholder="Street"
+                                    [(ngModel)]="newAddress.street" />
+
+                                <input class="w-full border p-2 rounded" placeholder="Postal Code"
+                                    [(ngModel)]="newAddress.postalcode" />
+
+                                <input class="w-full border p-2 rounded" placeholder="Building No."
+                                    [(ngModel)]="newAddress.apartmentNumber" />
+
+
+
+                                <!-- <label class="flex items-center gap-2 text-sm">
+                                    <input type="checkbox" [(ngModel)]="newAddress.isDefault" />
+                                    Set as default address
+                                </label> -->
+
+                                <button (click)="addAddress()" class="bg-primary text-white px-4 py-2 rounded w-full">
+                                    Add Address
+                                </button>
+
+                            </div>
+
+                            <!-- ADDRESS LIST -->
+                            <div class="space-y-4">
+
+                                <div *ngFor="let address of addresses()"
+                                    class="border rounded-2xl p-4 space-y-2 bg-white">
+
+                                    <!-- <div class="flex justify-between items-center">
+                                        <p class="font-semibold">{{ address.fullName }}</p>
+
+                                        <span *ngIf="address.isDefault"
+                                            class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">
+                                            Default
+                                        </span>
+                                    </div> -->
+
+                                    <p class="text-sm text-gray-600">
+                                        {{ address.postalcode }}
+                                    </p>
+
+                                    <p class="text-sm text-gray-600">
+                                        {{address.country}} - {{ address.city }} - {{ address.street }} {{
+                                        address.apartmentNumber }}
+                                    </p>
+
+                                    <div class="flex gap-2 pt-2">
+                                        <button (click)="deleteAddress(address.addressId)" class="text-red-500 text-sm">
+                                            Delete
+                                        </button>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- SELLING -->
+                    <!-- Empty State -->
+                    <div *ngIf="listItems().length === 0" class="text-center py-16">
+                        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                            💊
+                        </div>
+
+                        <h2 class="text-xl font-bold mb-2">
+                            No medicines listed yet
+                        </h2>
+
+                        <p class="text-gray-500 mb-6">
+                            The medicines you put up for sale will appear here.
+                        </p>
+                    </div>
+
+                    <!-- Selling List -->
+                    <div *ngIf="listItems().length > 0" class="space-y-4">
+
+                        <div *ngFor="let item of listItems()"
+                            class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200">
+
+                            <div class="flex gap-4">
+
+                                <!-- Product Image -->
+                                <img [src]="item.imageUrl == null
+                    ? '../../../../assets/photo-1587854692152-cbe660dbde88.jpg'
+                    : base + item.imageUrl" [alt]="item.productName"
+                                    class="w-24 h-24 rounded-xl object-cover border" />
+
+                                <!-- Product Details -->
+                                <div class="flex-1 min-w-0">
+
+                                    <!-- Header -->
+                                    <div class="flex justify-between items-start gap-2">
+                                        <h3 class="font-semibold text-gray-900 text-lg truncate">
+                                            {{ item.productName }}
+                                        </h3>
+
+                                        <span class="px-3 py-1 text-xs font-medium rounded-full" [ngClass]="{
+                            'bg-green-100 text-green-700': item.status === 'AVAILABLE',
+                            'bg-yellow-100 text-yellow-700': item.status === 'PENDING',
+                            'bg-red-100 text-red-700': item.status === 'SOLD'
+                        }">
+                                            {{ item.status }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Category -->
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        {{ item.categoryName }}
+                                    </p>
+
+                                    <!-- Price -->
+                                    <div class="mt-3">
+                                        <span class="text-2xl font-bold text-primary">
+                                            {{ item.price }} EGP
+                                        </span>
+                                    </div>
+
+                                    <!-- Extra Info -->
+                                    <div class="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
+
+                                        <div class="flex items-center gap-1">
+                                            <i class="pi pi-box"></i>
+                                            <span>{{ item.quantity }} available</span>
+                                        </div>
+
+                                        <div class="flex items-center gap-1">
+                                            <i class="pi pi-calendar"></i>
+                                            <span>
+                                                Exp: {{ item.expiryDate | date:'MMM yyyy' }}
+                                            </span>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- PLACEHOLDER TABS -->
+                    <div *ngIf="
+              activeTab !== 'orders' && activeTab !== 'selling' && activeTab !== 'addresses'
+            " class="border p-12 text-center rounded-2xl">
+                        <h3 class="text-xl font-bold capitalize">
+                            {{ activeTab }} Settings
+                        </h3>
+                        <p class="text-gray-500 mt-2">This section is coming soon.</p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+
+    <!-- EDIT PROFILE MODAL -->
+    <div *ngIf="showEditModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+
+            <h2 class="text-xl font-bold mb-4">
+                Edit Profile
+            </h2>
+
+            <div class="space-y-4">
+
+                <input type="text" [(ngModel)]="editUserName" placeholder="Name" class="w-full border rounded p-2">
+
+                <input type="text" [(ngModel)]="editPhoneNumber" placeholder="Phone Number"
+                    class="w-full border rounded p-2">
+
+            </div>
+
+            <div class="flex justify-end gap-2 mt-5">
+
+                <button (click)="closeEditModal()" class="border px-4 py-2 rounded">
+                    Cancel
+                </button>
+
+                <button (click)="saveProfile()" class="bg-primary text-white px-4 py-2 rounded">
+                    Save
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+@if (loading()) {
+
+<app-loader></app-loader>
+}

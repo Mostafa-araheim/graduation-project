@@ -1,0 +1,93 @@
+.gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Specific styles for the cart badge */
+.bg-accent {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.text-accent-foreground {
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+/* Login button specific styles */
+.border-primary {
+  border-color: hsl(var(--primary)) !important;
+}
+
+.text-primary {
+  color: hsl(var(--primary)) !important;
+}
+
+.hover\:bg-primary:hover {
+  background-color: hsl(var(--primary)) !important;
+}
+
+.hover\:text-primary-foreground:hover {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* General hover styles */
+.hover\:bg-muted:hover {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.hover\:bg-primary\/90:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+}
+
+.hover\:text-foreground:hover {
+  color: hsl(var(--foreground)) !important;
+}
+/* navbar.component.css */
+/* Prevent the darkening effect on click */
+nav {
+  /* -webkit-tap-highlight-color: transparent; */
+  background-color: hsl(var(--card));
+  z-index: 1000;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* Remove any active state styles that cause darkening */
+button:active {
+  background-color: inherit !important;
+}
+
+/* Specifically target the menu toggle button */
+.menu-toggle:active {
+  background-color: inherit !important;
+  transform: none !important;
+}
+
+/* Ensure hover states work without active interference */
+.hover\:bg-muted:hover {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.hover\:bg-primary:hover {
+  background-color: hsl(var(--primary)) !important;
+}
+
+.hover\:bg-primary\/90:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+}
