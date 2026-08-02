@@ -11,7 +11,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
-    # عشان المشروع الفعلي جوه مجلد pharma، بنقول للـ runner ينفذ الأوامر جواه
     defaults:
       run:
         working-directory: ./pharma
@@ -26,7 +25,6 @@ jobs:
         java-version: '25'
         distribution: 'temurin'
         cache: 'maven'
-        # تحديد المسار عشان الـ cache يشتغل صح مع pom.xml الموجود جوا pharma
         cache-dependency-path: ./pharma/pom.xml
 
     - name: Make mvnw executable
@@ -60,3 +58,30 @@ jobs:
         context: ./pharma
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/pharma-backend:latest
+
+  # Job 3: Deploy to VPS
+  deploy:
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Deploy to VPS using SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          # الأوامر دي هتشتغل على سيرفر صاحبك
+          # 1. بنروح للفولدر اللي فيه المشروع على السيرفر
+          cd /path/to/your/project/pharma
+          
+          # 2. بنعمل تسجيل دخول لدوكر عشان نقدر نسحب الصورة لو كانت private
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          
+          # 3. بنسحب أحدث نسخة من الصورة اللي لسة مرفوعة في الخطوة اللي قبلها
+          docker-compose pull
+          
+          # 4. بنرستر الكونتينرز عشان تشتغل بالنسخة الجديدة
+          docker-compose up -d --remove-orphans
